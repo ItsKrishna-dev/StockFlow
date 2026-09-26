@@ -6,7 +6,7 @@ dependency that every protected route depends on. Role checks (RBAC) are
 built on top of this via `require_role(...)`.
 """
 from datetime import datetime, timedelta, timezone
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -38,6 +38,7 @@ def _create_token(subject: str, expires_delta: timedelta, token_type: str) -> st
         "type": token_type,
         "iat": now,
         "exp": now + expires_delta,
+        "jti": str(uuid4()),
     }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
