@@ -11,20 +11,15 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
   const sessionUser = sessionStore.getUser();
   const session = sessionStore.getSession();
 
-  const [showOperationsMenu, setShowOperationsMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
 
-  const opsMenuRef = useRef(null);
   const userMenuRef = useRef(null);
   const notifMenuRef = useRef(null);
 
   // Close menus on outside click
   useEffect(() => {
     function handleClickOutside(e) {
-      if (opsMenuRef.current && !opsMenuRef.current.contains(e.target)) {
-        setShowOperationsMenu(false);
-      }
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
         setShowUserMenu(false);
       }
@@ -38,6 +33,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
 
   const displayName = sessionUser?.fullName || sessionUser?.name || session?.email || user?.name || 'Admin User';
   const displayRole = sessionUser?.role || 'Administrator';
+  const displayEmail = sessionUser?.email || session?.email || 'admin@stockflow.com';
 
   const handleLogout = async () => {
     try {
@@ -53,144 +49,86 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
     }
   };
 
+  // Check if current route belongs to Operations section
+  const isOperationsRoute = [
+    ROUTES.OPERATIONS,
+    ROUTES.RECEIPTS,
+    ROUTES.DELIVERY_ORDERS,
+    ROUTES.TRANSFERS,
+    ROUTES.ADJUSTMENTS,
+  ].some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
+
+  // Main top navbar items (Receipts and Deliveries are moved inside Operations)
   const navItems = [
     { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: 'dashboard' },
-    { label: 'Receipts', path: ROUTES.RECEIPTS, icon: 'move_to_inbox', badge: 'In' },
-    { label: 'Deliveries', path: ROUTES.DELIVERY_ORDERS, icon: 'local_shipping', badge: 'Out' },
-    {
-      label: 'Operations',
-      icon: 'swap_horiz',
-      isDropdown: true,
-      children: [
-        { label: 'Internal Transfers', path: ROUTES.TRANSFERS, icon: 'swap_horiz', desc: 'Move stock between internal locations' },
-        { label: 'Stock Adjustments', path: ROUTES.ADJUSTMENTS, icon: 'tune', desc: 'Physical inventory count reconciliation' },
-      ],
-    },
+    { label: 'Operations', path: ROUTES.RECEIPTS, icon: 'swap_horiz' },
     { label: 'Stock', path: ROUTES.STOCK, icon: 'inventory_2' },
     { label: 'Move History', path: ROUTES.MOVE_HISTORY, icon: 'receipt_long' },
     { label: 'Settings', path: ROUTES.SETTINGS, icon: 'settings' },
   ];
 
+  // Secondary subnavbar tabs for the Operations section
+  const operationsTabs = [
+    {
+      label: 'Receipts',
+      path: ROUTES.RECEIPTS,
+      icon: 'move_to_inbox',
+      badge: 'In',
+      isActive: (p) => p === ROUTES.RECEIPTS || p.startsWith('/receipts'),
+    },
+    {
+      label: 'Deliveries',
+      path: ROUTES.DELIVERY_ORDERS,
+      icon: 'local_shipping',
+      badge: 'Out',
+      isActive: (p) => p === ROUTES.DELIVERY_ORDERS || p === ROUTES.OPERATIONS || p.startsWith('/delivery-orders'),
+    },
+    {
+      label: 'Transfers',
+      path: ROUTES.TRANSFERS,
+      icon: 'swap_horiz',
+      isActive: (p) => p === ROUTES.TRANSFERS || p.startsWith('/transfers'),
+    },
+    {
+      label: 'Adjustments',
+      path: ROUTES.ADJUSTMENTS,
+      icon: 'tune',
+      isActive: (p) => p === ROUTES.ADJUSTMENTS || p.startsWith('/adjustments'),
+    },
+  ];
+
   const isItemActive = (itemPath) => {
     if (!itemPath) return false;
-    if (itemPath === ROUTES.DASHBOARD) return location.pathname === ROUTES.DASHBOARD || location.pathname === ROUTES.HOME;
-    if (itemPath === ROUTES.RECEIPTS) return location.pathname === ROUTES.RECEIPTS || location.pathname.startsWith('/receipts');
-    if (itemPath === ROUTES.DELIVERY_ORDERS) return (
-      location.pathname === ROUTES.DELIVERY_ORDERS ||
-      location.pathname === ROUTES.OPERATIONS ||
-      location.pathname.startsWith('/delivery-orders')
-    );
+    if (itemPath === ROUTES.DASHBOARD) {
+      return location.pathname === ROUTES.DASHBOARD || location.pathname === ROUTES.HOME;
+    }
+    if (itemPath === ROUTES.RECEIPTS || itemPath === ROUTES.OPERATIONS) {
+      return isOperationsRoute;
+    }
     if (itemPath === ROUTES.STOCK) return location.pathname === ROUTES.STOCK;
     if (itemPath === ROUTES.MOVE_HISTORY) return location.pathname === ROUTES.MOVE_HISTORY;
     if (itemPath === ROUTES.SETTINGS) return location.pathname.startsWith('/settings');
-    if (itemPath === ROUTES.TRANSFERS) return location.pathname === ROUTES.TRANSFERS;
-    if (itemPath === ROUTES.ADJUSTMENTS) return location.pathname === ROUTES.ADJUSTMENTS;
     return location.pathname === itemPath;
-  };
-
-  const isDropdownActive = (item) => {
-    if (!item.children) return false;
-    return item.children.some(c => isItemActive(c.path));
   };
 
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
+        {/* Left Section: Brand & Main Navigation */}
         <div className={styles.leftSection}>
-          {/* App Switcher button */}
-          <button
-            type="button"
-            className={styles.iconBtn}
-            title="StockFlow Workspace"
-            onClick={() => navigate(ROUTES.DASHBOARD)}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '21px' }}>
-              apps
-            </span>
-          </button>
-
-          {/* Brand & module badge */}
-          <Link to={ROUTES.HOME} className={styles.brand}>
+          {/* Brand Logo & Name */}
+          <Link to={ROUTES.HOME} className={styles.brand} title="StockFlow Inventory">
             <div className={styles.brandIconContainer}>
               <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#ffffff' }}>
                 inventory_2
               </span>
             </div>
             <span className={styles.brandName}>StockFlow</span>
-            <span className={styles.appBadge}>
-              <span className={styles.livePulseDot} />
-              Live
-            </span>
           </Link>
 
-          {/* Navigation */}
+          {/* Main Top Navigation */}
           <nav className={styles.nav}>
             {navItems.map((item) => {
-              if (item.isDropdown) {
-                const isActive = isDropdownActive(item);
-                return (
-                  <div
-                    key={item.label}
-                    ref={opsMenuRef}
-                    className={styles.dropdownContainer}
-                  >
-                    <button
-                      type="button"
-                      className={cn(styles.navLink, isActive ? styles.navLinkActive : '')}
-                      onClick={() => setShowOperationsMenu(prev => !prev)}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                        {item.icon}
-                      </span>
-                      <span>{item.label}</span>
-                      <span
-                        className="material-symbols-outlined"
-                        style={{
-                          fontSize: '16px',
-                          transition: 'transform 0.2s',
-                          transform: showOperationsMenu ? 'rotate(180deg)' : 'none',
-                        }}
-                      >
-                        expand_more
-                      </span>
-                    </button>
-                    {showOperationsMenu && (
-                      <div className={styles.dropdownMenu}>
-                        <div className={styles.dropdownHeader}>
-                          Operations Management
-                        </div>
-                        {item.children.map(child => {
-                          const isChildActive = isItemActive(child.path);
-                          return (
-                            <Link
-                              key={child.label}
-                              to={child.path}
-                              className={cn(styles.dropdownItem, isChildActive ? styles.dropdownItemActive : '')}
-                              onClick={() => setShowOperationsMenu(false)}
-                            >
-                              <div className={styles.dropdownItemIcon}>
-                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                                  {child.icon}
-                                </span>
-                              </div>
-                              <div className={styles.dropdownItemContent}>
-                                <div className={styles.dropdownItemTitle}>{child.label}</div>
-                                <div className={styles.dropdownItemDesc}>{child.desc}</div>
-                              </div>
-                              {isChildActive && (
-                                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#714b67' }}>
-                                  check
-                                </span>
-                              )}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
               const isActive = isItemActive(item.path);
               return (
                 <Link
@@ -202,16 +140,13 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
-                  {item.badge && (
-                    <span className={styles.navBadge}>{item.badge}</span>
-                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Right utility buttons */}
+        {/* Right Section: Quick Utilities & Profile */}
         <div className={styles.rightSection}>
           <button
             type="button"
@@ -230,7 +165,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
               type="button"
               className={styles.iconBtn}
               title="Recent Activities"
-              onClick={() => setShowNotifs(prev => !prev)}
+              onClick={() => setShowNotifs((prev) => !prev)}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>
                 schedule
@@ -242,18 +177,22 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
               <div className={styles.notifMenu}>
                 <div className={styles.dropdownHeader}>
                   <span>System Activity</span>
-                  <span className={styles.notifStatusBadge}>Live</span>
+                  <span className={styles.notifStatusBadge}>Active</span>
                 </div>
                 <div className={styles.notifList}>
                   <div className={styles.notifItem}>
-                    <span className="material-symbols-outlined" style={{ color: '#006443', fontSize: '18px' }}>check_circle</span>
+                    <span className="material-symbols-outlined" style={{ color: '#006443', fontSize: '18px' }}>
+                      check_circle
+                    </span>
                     <div>
                       <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#1b1c1c' }}>Auto-sync Completed</div>
-                      <div style={{ fontSize: '11px', color: '#80747a' }}>Database synced with Neon Cloud</div>
+                      <div style={{ fontSize: '11px', color: '#80747a' }}>Database synchronized in real-time</div>
                     </div>
                   </div>
                   <div className={styles.notifItem}>
-                    <span className="material-symbols-outlined" style={{ color: '#006398', fontSize: '18px' }}>swap_horiz</span>
+                    <span className="material-symbols-outlined" style={{ color: '#006398', fontSize: '18px' }}>
+                      swap_horiz
+                    </span>
                     <div>
                       <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#1b1c1c' }}>Live Warehouse Tracking</div>
                       <div style={{ fontSize: '11px', color: '#80747a' }}>Multi-warehouse nodes active</div>
@@ -264,11 +203,14 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
             )}
           </div>
 
-          {/* User profile dropdown */}
+          {/* User profile dropdown - ONLY clicking here displays user menu with Log Out */}
           <div ref={userMenuRef} className={styles.menuContainer}>
             <div
               className={styles.userProfile}
-              onClick={() => setShowUserMenu(prev => !prev)}
+              onClick={() => setShowUserMenu((prev) => !prev)}
+              role="button"
+              tabIndex={0}
+              title="User Account"
             >
               <div className={styles.avatar}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
@@ -279,7 +221,15 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
                 <span className={styles.userName}>{displayName}</span>
                 <span className={styles.userRole}>{displayRole}</span>
               </div>
-              <span className="material-symbols-outlined" style={{ fontSize: '16px', opacity: 0.8 }}>
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: '16px',
+                  opacity: 0.8,
+                  transition: 'transform 0.2s ease',
+                  transform: showUserMenu ? 'rotate(180deg)' : 'none',
+                }}
+              >
                 expand_more
               </span>
             </div>
@@ -292,18 +242,31 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
                       person
                     </span>
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#1b1c1c' }}>{displayName}</div>
-                    <div style={{ fontSize: '11.5px', color: '#80747a' }}>{sessionUser?.email || session?.email || 'admin@gmail.com'}</div>
+                  <div className={styles.userMenuHeaderInfo}>
+                    <div className={styles.userMenuHeaderName}>{displayName}</div>
+                    <div className={styles.userMenuHeaderEmail}>{displayEmail}</div>
+                    <span className={styles.userMenuRoleBadge}>{displayRole}</span>
                   </div>
                 </div>
                 <div className={styles.menuDivider} />
-                <Link to={ROUTES.SETTINGS} className={styles.userMenuItem} onClick={() => setShowUserMenu(false)}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>settings</span>
+                <Link
+                  to={ROUTES.SETTINGS}
+                  className={styles.userMenuItem}
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
+                    settings
+                  </span>
                   <span>Warehouse Settings</span>
                 </Link>
-                <Link to={ROUTES.STOCK} className={styles.userMenuItem} onClick={() => setShowUserMenu(false)}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>inventory_2</span>
+                <Link
+                  to={ROUTES.STOCK}
+                  className={styles.userMenuItem}
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
+                    inventory_2
+                  </span>
                   <span>Manage Stock</span>
                 </Link>
                 <div className={styles.menuDivider} />
@@ -312,48 +275,52 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
                   className={styles.logoutBtn}
                   onClick={handleLogout}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
-                  <span>Sign Out</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                    logout
+                  </span>
+                  <span>Log Out</span>
                 </button>
               </div>
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            title="Log Out"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: '1px solid rgba(239, 68, 68, 0.4)',
-              backgroundColor: 'rgba(239, 68, 68, 0.12)',
-              color: '#fca5a5',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 600,
-              transition: 'all 0.15s ease-in-out',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.25)';
-              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.12)';
-              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>
-              logout
-            </span>
-            <span>Logout</span>
-          </button>
         </div>
       </div>
+
+      {/* Operations Subnavbar - Rendered when inside Operations section */}
+      {isOperationsRoute && (
+        <div className={styles.subnav}>
+          <div className={styles.subnavInner}>
+            <div className={styles.subnavLabel}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                alt_route
+              </span>
+              <span>Operations:</span>
+            </div>
+            <div className={styles.subnavTabs}>
+              {operationsTabs.map((tab) => {
+                const isActive = tab.isActive(location.pathname);
+                return (
+                  <Link
+                    key={tab.label}
+                    to={tab.path}
+                    className={cn(styles.subnavTab, isActive ? styles.subnavTabActive : '')}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>
+                      {tab.icon}
+                    </span>
+                    <span>{tab.label}</span>
+                    {tab.badge && (
+                      <span className={styles.subnavBadge}>{tab.badge}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
+
 export default AppHeader;

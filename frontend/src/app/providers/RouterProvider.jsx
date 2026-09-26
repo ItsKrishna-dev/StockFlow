@@ -37,7 +37,7 @@ export function AppRouterProvider() {
         <Route path={ROUTES.STOCK} element={<StockPage />} />
 
         {/* Delivery Orders & Operations Routes */}
-        <Route path={ROUTES.OPERATIONS} element={<DeliveryOrdersPage />} />
+        <Route path={ROUTES.OPERATIONS} element={<Navigate to={ROUTES.RECEIPTS} replace />} />
         <Route path={ROUTES.DELIVERY_ORDERS} element={<DeliveryOrdersPage />} />
         <Route path={ROUTES.DELIVERY_DETAIL} element={<DeliveryOrderDetailView />} />
 

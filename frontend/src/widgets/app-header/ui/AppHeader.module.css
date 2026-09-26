@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   width: 100%;
-  height: 54px;
+  min-height: 54px;
   background-color: #714b67;
   color: #ffffff;
   z-index: 1000;
@@ -12,10 +12,12 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   user-select: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .inner {
-  height: 100%;
+  height: 54px;
   width: 100%;
   max-width: 1540px;
   margin: 0 auto;
@@ -28,7 +30,7 @@
 .leftSection {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   height: 100%;
 }
 
@@ -82,44 +84,21 @@
   color: #ffffff;
 }
 
-.appBadge {
-  font-size: 10.5px;
-  font-weight: 700;
-  background-color: rgba(0, 0, 0, 0.25);
-  color: #6ffbbe;
-  padding: 2px 8px;
-  border-radius: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: 1px solid rgba(111, 251, 190, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.livePulseDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #6ffbbe;
-  animation: pulseGlow 2s infinite ease-in-out;
-}
-
 .nav {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   height: 100%;
 }
 
 .navLink {
   color: #f2eef2;
-  padding: 6px 11px;
+  padding: 6px 13px;
   border-radius: 7px;
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -140,88 +119,92 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.navBadge {
-  font-size: 10px;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  padding: 1px 5px;
-  border-radius: 4px;
+/* Secondary Subnavbar (Inside Operations) */
+.subnav {
+  width: 100%;
+  background: linear-gradient(180deg, #5f3b56 0%, #523049 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: slideDownSubnav 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Dropdown styling */
-.dropdownContainer {
-  position: relative;
+.subnavInner {
+  width: 100%;
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.dropdownMenu {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  min-width: 260px;
-  background: #ffffff;
-  border: 1px solid #d1c3ca;
-  border-radius: 10px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
-  z-index: 1050;
-  padding: 6px;
-  animation: slideDownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.dropdownHeader {
+.subnavLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #80747a;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 8px 10px 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  text-decoration: none;
-  color: #1b1c1c;
-  border-radius: 6px;
-  transition: all 0.15s ease;
-}
-
-.dropdownItem:hover {
-  background: #f5f3f3;
-}
-
-.dropdownItemActive {
-  background: #f6eaf3;
-  color: #57344f;
-}
-
-.dropdownItemIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: #f5f3f3;
-  color: #57344f;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  letter-spacing: 0.08em;
+  color: #f0bfe0;
+  padding-right: 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  user-select: none;
   flex-shrink: 0;
 }
 
-.dropdownItemTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1b1c1c;
+.subnavTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.dropdownItemDesc {
-  font-size: 11px;
-  color: #80747a;
-  margin-top: 1px;
+.subnavTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.subnavTab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #eddbe8;
+  text-decoration: none;
+  transition: all 0.16s ease-in-out;
+  white-space: nowrap;
+}
+
+.subnavTab:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.subnavTabActive {
+  background-color: #ffffff !important;
+  color: #57344f !important;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.subnavBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.subnavTabActive .subnavBadge {
+  background: #eddbe8;
+  color: #57344f;
 }
 
 /* Right Section */
@@ -249,7 +232,7 @@
 
 .notifMenu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   right: 0;
   width: 300px;
   background: #ffffff;
@@ -259,6 +242,18 @@
   z-index: 1050;
   padding: 8px;
   animation: slideDownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdownHeader {
+  font-size: 11px;
+  font-weight: 700;
+  color: #80747a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 10px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .notifStatusBadge {
@@ -286,16 +281,18 @@
   border: 1px solid #efeded;
 }
 
+/* User Profile */
 .userProfile {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   transition: all 0.2s ease;
+  user-select: none;
 }
 
 .userProfile:hover {
@@ -335,34 +332,72 @@
 
 .userMenu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   right: 0;
-  min-width: 230px;
+  min-width: 250px;
   background: #ffffff;
   border: 1px solid #d1c3ca;
-  border-radius: 10px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.08);
   z-index: 1050;
-  padding: 8px;
+  padding: 10px;
   animation: slideDownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .userMenuHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px;
+  gap: 12px;
+  padding: 6px 6px 10px;
 }
 
 .avatarLarge {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: #f6eaf3;
   color: #57344f;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.userMenuHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.userMenuHeaderName {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #1b1c1c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userMenuHeaderEmail {
+  font-size: 11.5px;
+  color: #80747a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userMenuRoleBadge {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  background-color: #f6eaf3;
+  color: #714b67;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .menuDivider {
@@ -393,24 +428,51 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 9px 12px;
+  border-radius: 8px;
   color: #ba1a1a;
   font-size: 13px;
   font-weight: 600;
-  background: transparent;
-  border: none;
+  background: rgba(186, 26, 26, 0.06);
+  border: 1px solid rgba(186, 26, 26, 0.18);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s ease-in-out;
+  margin-top: 4px;
 }
 
 .logoutBtn:hover {
-  background-color: #ffdad6;
+  background-color: #ba1a1a;
+  color: #ffffff;
+  border-color: #ba1a1a;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownSubnav {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 900px) {
   .nav {
     display: none;
   }
+  .subnavInner {
+    overflow-x: auto;
+  }
 }
-
