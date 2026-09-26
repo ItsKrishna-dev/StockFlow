@@ -4,6 +4,7 @@ app/features/dashboard/service.py
 Computes live dashboard statistics and inventory alert lists directly from
 stock_quants, stock_documents, and reorder_rules.
 """
+import uuid
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -37,7 +38,7 @@ def build_warehouse_stock_subquery():
     )
 
 
-async def get_kpis(db: AsyncSession) -> DashboardKPIs:
+async def get_kpis(db: AsyncSession, warehouse_id: uuid.UUID | None = None) -> DashboardKPIs:
     total_products_result = await db.execute(
         select(func.count()).select_from(Product).where(Product.is_active.is_(True))
     )
@@ -45,7 +46,7 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
 
     product_totals = build_warehouse_stock_subquery()
 
-    low_stock_result = await db.execute(
+    low_stock_query = (
         select(func.count())
         .select_from(ReorderRule)
         .outerjoin(
@@ -58,9 +59,12 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
             func.coalesce(product_totals.c.total_qty, Decimal("0")) <= ReorderRule.min_qty,
         )
     )
+    if warehouse_id:
+        low_stock_query = low_stock_query.where(ReorderRule.warehouse_id == warehouse_id)
+    low_stock_result = await db.execute(low_stock_query)
     low_stock_count = int(low_stock_result.scalar_one())
 
-    out_of_stock_result = await db.execute(
+    out_of_stock_query = (
         select(func.count())
         .select_from(ReorderRule)
         .outerjoin(
@@ -73,9 +77,12 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
             func.coalesce(product_totals.c.total_qty, Decimal("0")) == Decimal("0"),
         )
     )
+    if warehouse_id:
+        out_of_stock_query = out_of_stock_query.where(ReorderRule.warehouse_id == warehouse_id)
+    out_of_stock_result = await db.execute(out_of_stock_query)
     out_of_stock_count = int(out_of_stock_result.scalar_one())
 
-    pending_receipts_result = await db.execute(
+    pending_receipts_query = (
         select(func.count())
         .select_from(StockDocument)
         .where(
@@ -83,9 +90,12 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
             StockDocument.status.in_(PENDING_STATUSES),
         )
     )
+    if warehouse_id:
+        pending_receipts_query = pending_receipts_query.where(StockDocument.warehouse_id == warehouse_id)
+    pending_receipts_result = await db.execute(pending_receipts_query)
     pending_receipts = int(pending_receipts_result.scalar_one())
 
-    pending_deliveries_result = await db.execute(
+    pending_deliveries_query = (
         select(func.count())
         .select_from(StockDocument)
         .where(
@@ -93,9 +103,12 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
             StockDocument.status.in_(PENDING_STATUSES),
         )
     )
+    if warehouse_id:
+        pending_deliveries_query = pending_deliveries_query.where(StockDocument.warehouse_id == warehouse_id)
+    pending_deliveries_result = await db.execute(pending_deliveries_query)
     pending_deliveries = int(pending_deliveries_result.scalar_one())
 
-    scheduled_transfers_result = await db.execute(
+    scheduled_transfers_query = (
         select(func.count())
         .select_from(StockDocument)
         .where(
@@ -103,6 +116,9 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
             StockDocument.status.in_(PENDING_STATUSES),
         )
     )
+    if warehouse_id:
+        scheduled_transfers_query = scheduled_transfers_query.where(StockDocument.warehouse_id == warehouse_id)
+    scheduled_transfers_result = await db.execute(scheduled_transfers_query)
     scheduled_transfers = int(scheduled_transfers_result.scalar_one())
 
     return DashboardKPIs(
@@ -115,7 +131,7 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
     )
 
 
-async def get_low_stock_items(db: AsyncSession) -> list[LowStockItem]:
+async def get_low_stock_items(db: AsyncSession, warehouse_id: uuid.UUID | None = None) -> list[LowStockItem]:
     product_totals = build_warehouse_stock_subquery()
 
     query = (
@@ -141,8 +157,10 @@ async def get_low_stock_items(db: AsyncSession) -> list[LowStockItem]:
             ReorderRule.is_active.is_(True),
             func.coalesce(product_totals.c.total_qty, Decimal("0")) <= ReorderRule.min_qty,
         )
-        .order_by(Product.name.asc())
     )
+    if warehouse_id:
+        query = query.where(ReorderRule.warehouse_id == warehouse_id)
+    query = query.order_by(Product.name.asc())
 
     result = await db.execute(query)
 

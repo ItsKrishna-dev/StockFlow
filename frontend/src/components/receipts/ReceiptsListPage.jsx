@@ -6,18 +6,29 @@ import { AppFooter } from '../../widgets/app-footer';
 import { receiptsApi } from '../../shared/api/operationsApi';
 import { warehousesApi } from '../../shared/api/warehousesApi';
 import { productApi } from '../../entities/product/api/productApi';
+import { usePermissions } from '../../shared/lib/usePermissions';
 import './ReceiptsList.css';
 
 export default function ReceiptsListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isStaff, assignedWarehouseId, hasMultiFacilityAccess } = usePermissions();
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState('all');
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState(
+    isStaff && assignedWarehouseId ? assignedWarehouseId : 'all'
+  );
   const [activeView, setActiveView] = useState('list'); // list | kanban
   const [toastMessage, setToastMessage] = useState('');
+
+  // Sync assigned warehouse for staff
+  useEffect(() => {
+    if (isStaff && assignedWarehouseId) {
+      setSelectedWarehouseId(assignedWarehouseId);
+    }
+  }, [isStaff, assignedWarehouseId]);
 
   // Modal State for New Receipt
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -36,9 +47,10 @@ export default function ReceiptsListPage() {
   };
 
   // ── Queries ───────────────────────────────────────────────────────────────
+  const effectiveQueryWarehouse = (isStaff && assignedWarehouseId) ? assignedWarehouseId : selectedWarehouseId;
   const { data: rawReceipts = [] } = useQuery({
-    queryKey: ['receipts', filterStatus, selectedWarehouseId],
-    queryFn: () => receiptsApi.list({ status: filterStatus, warehouse_id: selectedWarehouseId }),
+    queryKey: ['receipts', filterStatus, effectiveQueryWarehouse],
+    queryFn: () => receiptsApi.list({ status: filterStatus, warehouse_id: effectiveQueryWarehouse }),
   });
 
   const { data: locations = [] } = useQuery({
@@ -203,7 +215,7 @@ export default function ReceiptsListPage() {
 
   // Open creation modal
   const handleOpenCreateModal = () => {
-    const defaultWh = defaultWarehouseId;
+    const defaultWh = (isStaff && assignedWarehouseId) ? assignedWarehouseId : defaultWarehouseId;
     const matchingLocs = internalLocations.filter((l) => l.warehouse_id === defaultWh);
     const validInternal = matchingLocs.length > 0 ? matchingLocs[0] : internalLocations[0];
     setModalForm({
@@ -357,22 +369,44 @@ export default function ReceiptsListPage() {
 
         <div className="receipts-ribbon-right">
           {/* Warehouse Filter */}
-          <div className="receipts-warehouse-selector-box" title="Filter by Warehouse">
+          <div
+            className="receipts-warehouse-selector-box"
+            title={hasMultiFacilityAccess ? 'Filter by Warehouse' : 'Assigned Warehouse Facility'}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#714b67' }}>
               warehouse
             </span>
-            <select
-              className="receipts-warehouse-select"
-              value={selectedWarehouseId}
-              onChange={(e) => setSelectedWarehouseId(e.target.value)}
-            >
-              <option value="all">🏢 All Warehouses</option>
-              {warehouses.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name || w.code}
-                </option>
-              ))}
-            </select>
+            {hasMultiFacilityAccess ? (
+              <select
+                className="receipts-warehouse-select"
+                value={selectedWarehouseId}
+                onChange={(e) => setSelectedWarehouseId(e.target.value)}
+              >
+                <option value="all">🏢 All Warehouses</option>
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name || w.code}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#374151',
+                  padding: '2px 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                }}
+              >
+                <span>{warehouses.find((w) => w.id === assignedWarehouseId)?.name || 'Bhiwandi Central'}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#6b7280' }}>
+                  lock
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Search bar */}
@@ -763,6 +797,8 @@ export default function ReceiptsListPage() {
                   <select
                     className="receipts-field-select"
                     value={modalForm.warehouse_id}
+                    disabled={isStaff && !!assignedWarehouseId}
+                    title={isStaff && !!assignedWarehouseId ? 'Locked to your assigned warehouse' : 'Select Warehouse'}
                     onChange={(e) => {
                       const whId = e.target.value;
                       const match = internalLocations.filter((l) => l.warehouse_id === whId);

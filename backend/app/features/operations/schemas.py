@@ -57,6 +57,25 @@ class AdjustmentCreate(BaseModel):
     warehouse_id: uuid.UUID
     notes: str | None = None
     lines: list[AdjustmentLineIn] = Field(min_length=1)
+    auto_validate: bool = False
+
+
+class StockAdjustmentItemOut(BaseModel):
+    id: str
+    product_id: uuid.UUID
+    product_name: str
+    sku: str
+    uom_id: uuid.UUID
+    uom_name: str | None = None
+    category_name: str | None = None
+    location_id: uuid.UUID
+    location_name: str
+    warehouse_id: uuid.UUID
+    warehouse_name: str
+    quantity_on_hand: Decimal
+    reserved_qty: Decimal
+    available_qty: Decimal
+    model_config = {"from_attributes": True}
 
 
 class LineUpdate(BaseModel):

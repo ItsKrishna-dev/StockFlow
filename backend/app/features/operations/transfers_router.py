@@ -5,7 +5,7 @@ Internal movements: internal location -> internal location.
 """
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -25,12 +25,17 @@ async def create_transfer(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> DocumentOut:
+    target_warehouse_id = (
+        current_user.warehouse_id
+        if current_user.role == "warehouse_staff" and current_user.warehouse_id
+        else payload.warehouse_id
+    )
     document = await service.create_document(
         db,
         doc_type="internal_transfer",
         source_location_id=payload.source_location_id,
         dest_location_id=payload.dest_location_id,
-        warehouse_id=payload.warehouse_id,
+        warehouse_id=target_warehouse_id,
         partner_id=None,
         notes=payload.notes,
         created_by=current_user.id,
@@ -42,10 +47,14 @@ async def create_transfer(
 @router.get("", response_model=list[DocumentOut])
 async def list_transfers(
     status: str | None = None,
+    warehouse_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[DocumentOut]:
-    docs = await service.list_documents(db, doc_type="internal_transfer", status_filter=status)
+    effective_warehouse_id = warehouse_id
+    if current_user.role == "warehouse_staff" and current_user.warehouse_id:
+        effective_warehouse_id = current_user.warehouse_id
+    docs = await service.list_documents(db, doc_type="internal_transfer", status_filter=status, warehouse_id=effective_warehouse_id)
     return [DocumentOut.model_validate(d) for d in docs]
 
 
@@ -53,9 +62,19 @@ async def list_transfers(
 async def get_transfer(
     document_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> DocumentOut:
     document = await service.get_document(db, document_id)
+    if (
+        current_user.role == "warehouse_staff"
+        and current_user.warehouse_id
+        and document.warehouse_id
+        and document.warehouse_id != current_user.warehouse_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: you can only view transfers for your assigned warehouse.",
+        )
     return DocumentOut.model_validate(document)
 
 

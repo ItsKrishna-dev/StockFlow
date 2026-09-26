@@ -27,13 +27,16 @@ async def move_history(
     warehouse_id: uuid.UUID | None = None,
     location_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[DocumentOut]:
+    effective_warehouse_id = warehouse_id
+    if current_user.role == "warehouse_staff" and current_user.warehouse_id:
+        effective_warehouse_id = current_user.warehouse_id
     return await service.get_move_history(
         db,
         document_type=document_type,
         status_filter=status,
-        warehouse_id=warehouse_id,
+        warehouse_id=effective_warehouse_id,
         location_id=location_id,
     )
 

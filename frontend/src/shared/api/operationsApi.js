@@ -166,6 +166,14 @@ export const adjustmentsApi = {
     return apiClient.get(`/adjustments${query}`);
   },
 
+  async listStockItems({ warehouse_id, search } = {}) {
+    const params = new URLSearchParams();
+    if (warehouse_id && warehouse_id !== 'ALL') params.set('warehouse_id', warehouse_id);
+    if (search) params.set('search', search);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiClient.get(`/adjustments/stock-items${query}`);
+  },
+
   async get(id) {
     return apiClient.get(`/adjustments/${id}`);
   },

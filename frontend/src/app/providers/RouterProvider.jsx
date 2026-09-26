@@ -17,6 +17,7 @@ import ReceiptsListPage from '../../components/receipts/ReceiptsListPage';
 import ReceiptDetailPage from '../../components/receipts/ReceiptDetailPage';
 import InternalTransfersPage from '../../components/transfers/InternalTransfersPage';
 import StockAdjustmentsPage from '../../components/transfers/StockAdjustmentsPage';
+import { RequireRole } from '../../shared/ui/RequireRole';
 import { ROUTES } from '../../shared/config/routes';
 
 export function AppRouterProvider() {
@@ -54,10 +55,31 @@ export function AppRouterProvider() {
         {/* Move History Audit Route */}
         <Route path={ROUTES.MOVE_HISTORY} element={<MoveHistoryPage />} />
 
-        {/* Settings & Warehouse/Location Configuration Routes */}
-        <Route path={ROUTES.SETTINGS} element={<WarehouseSettingsPage />} />
-        <Route path={ROUTES.WAREHOUSE_SETTINGS} element={<WarehouseSettingsPage />} />
-        <Route path={ROUTES.LOCATION_SETTINGS} element={<LocationSettingsPage />} />
+        {/* Settings & Warehouse/Location Configuration Routes (Admin & Managers only) */}
+        <Route
+          path={ROUTES.SETTINGS}
+          element={
+            <RequireRole>
+              <WarehouseSettingsPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path={ROUTES.WAREHOUSE_SETTINGS}
+          element={
+            <RequireRole>
+              <WarehouseSettingsPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path={ROUTES.LOCATION_SETTINGS}
+          element={
+            <RequireRole>
+              <LocationSettingsPage />
+            </RequireRole>
+          }
+        />
 
         {/* Catch-all route */}
         <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />

@@ -90,6 +90,7 @@ async def authenticate_and_issue_tokens(
         access_token=access_token,
         refresh_token=refresh_token,
         token_type="bearer",
+        user=UserOut.model_validate(user),
     )
 
 
@@ -205,10 +206,15 @@ async def refresh_tokens(payload: RefreshRequest, db: AsyncSession) -> TokenResp
     db.add(new_db_refresh)
     await db.commit()
 
+    res_user = await db.execute(select(User).where(User.id == db_token.user_id))
+    current_usr = res_user.scalar_one_or_none()
+    user_out = UserOut.model_validate(current_usr) if current_usr else None
+
     return TokenResponse(
         access_token=new_access,
         refresh_token=new_refresh,
         token_type="bearer",
+        user=user_out,
     )
 
 

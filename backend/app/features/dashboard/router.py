@@ -3,6 +3,8 @@ app/features/dashboard/router.py
 
 FastAPI router for Dashboard metrics and Low-Stock notifications.
 """
+import uuid
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,15 +19,23 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/kpis", response_model=DashboardKPIs)
 async def get_kpis(
+    warehouse_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> DashboardKPIs:
-    return await service.get_kpis(db)
+    effective_warehouse_id = warehouse_id
+    if current_user.role == "warehouse_staff" and current_user.warehouse_id:
+        effective_warehouse_id = current_user.warehouse_id
+    return await service.get_kpis(db, warehouse_id=effective_warehouse_id)
 
 
 @router.get("/low-stock", response_model=list[LowStockItem])
 async def get_low_stock_items(
+    warehouse_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[LowStockItem]:
-    return await service.get_low_stock_items(db)
+    effective_warehouse_id = warehouse_id
+    if current_user.role == "warehouse_staff" and current_user.warehouse_id:
+        effective_warehouse_id = current_user.warehouse_id
+    return await service.get_low_stock_items(db, warehouse_id=effective_warehouse_id)

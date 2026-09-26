@@ -8,12 +8,14 @@ import { receiptsApi } from '../../shared/api/operationsApi';
 import { warehousesApi } from '../../shared/api/warehousesApi';
 import { productApi } from '../../entities/product/api/productApi';
 import { sessionStore } from '../../entities/session/model/sessionStore';
+import { usePermissions } from '../../shared/lib/usePermissions';
 import './ReceiptDetail.css';
 
 export default function ReceiptDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const { canValidate, canCancel, isStaff } = usePermissions();
 
   const [activeTab, setActiveTab] = useState('operations'); // operations | additional | note
   const [showComposer, setShowComposer] = useState(false);
@@ -262,17 +264,39 @@ export default function ReceiptDetailPage() {
               </button>
             )}
 
-            {/* If Ready -> Show 'Validate' (moves to Done) */}
+            {/* If Ready -> Show 'Validate' (moves to Done) for Manager/Admin, or status badge for Staff */}
             {currentReceipt.stage === 'ready' && (
-              <button
-                className="btn-action-primary"
-                type="button"
-                onClick={handleValidate}
-                disabled={validateMutation.isPending}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
-                <span>{validateMutation.isPending ? 'Validating...' : 'Validate'}</span>
-              </button>
+              canValidate ? (
+                <button
+                  className="btn-action-primary"
+                  type="button"
+                  onClick={handleValidate}
+                  disabled={validateMutation.isPending}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+                  <span>{validateMutation.isPending ? 'Validating...' : 'Validate'}</span>
+                </button>
+              ) : (
+                <div
+                  className="badge-awaiting-validation"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 14px',
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    border: '1px solid #fde68a',
+                  }}
+                  title="Warehouse staff cannot validate stock entries. An inventory manager or admin must review and validate."
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>hourglass_empty</span>
+                  <span>Awaiting Manager Validation</span>
+                </div>
+              )
             )}
 
             {/* Print Button */}
@@ -286,8 +310,8 @@ export default function ReceiptDetailPage() {
               <span>Print</span>
             </button>
 
-            {/* Cancel Button (when not done/cancelled) */}
-            {currentReceipt.stage !== 'cancelled' && currentReceipt.stage !== 'done' && (
+            {/* Cancel Button (Managers and Admins only, when not done/cancelled) */}
+            {canCancel && currentReceipt.stage !== 'cancelled' && currentReceipt.stage !== 'done' && (
               <button
                 className="btn-action-secondary"
                 type="button"
