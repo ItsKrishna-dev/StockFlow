@@ -268,7 +268,6 @@ export default function WarehouseSettingsPage() {
   const [activeSection, setActiveSection] = useState('overview');
   const [isModified, setIsModified] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [expandedWarehouseIds, setExpandedWarehouseIds] = useState(['WH-01']);
 
   // Search queries
   const [warehouseSearchQuery, setWarehouseSearchQuery] = useState('');
@@ -343,13 +342,6 @@ export default function WarehouseSettingsPage() {
   const handleDiscard = () => {
     setIsModified(false);
     showToast('Changes discarded');
-  };
-
-  // Toggle Accordion in Master Warehouses Table
-  const toggleWarehouseExpand = (whId) => {
-    setExpandedWarehouseIds((prev) =>
-      prev.includes(whId) ? prev.filter((id) => id !== whId) : [...prev, whId]
-    );
   };
 
   // Create New Warehouse Submit
@@ -543,11 +535,6 @@ export default function WarehouseSettingsPage() {
     });
     showToast(`Assigned ${newStaff.name} to ${targetWh.name}`);
   };
-
-  // Calculate totals
-  const totalHeldItemsGlobal = subLocations.reduce((sum, l) => sum + l.itemsHeld, 0);
-  const totalCapacityGlobal = subLocations.reduce((sum, l) => sum + l.maxCapacity, 0);
-  const globalOccupancyRate = totalCapacityGlobal > 0 ? Math.round((totalHeldItemsGlobal / totalCapacityGlobal) * 100) : 0;
 
   // Filtered warehouses
   const filteredWarehouses = warehousesList.filter((wh) => {
@@ -802,374 +789,129 @@ export default function WarehouseSettingsPage() {
       {/* Main Canvas Container */}
       <main className="settings-canvas">
         {/* ============================================================== */}
-        {/* SECTION 1: MASTER ALL WAREHOUSES DIRECTORY (ADMIN OVERVIEW)   */}
+        {/* SECTION 1: MASTER ALL WAREHOUSES DIRECTORY (SIMPLE & CLEAN)   */}
         {/* ============================================================== */}
         {activeSection === 'overview' && (
           <div className="settings-sheet-card">
-            {/* KPI Metrics Row */}
-            <div className="wh-kpi-grid">
-              <div className="wh-kpi-card">
-                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#f3e8ff', color: '#714b67' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>domain</span>
-                </div>
-                <div>
-                  <div className="wh-kpi-val">{warehousesList.length} Facilities</div>
-                  <div className="wh-kpi-lbl">Operational Warehouses</div>
-                </div>
-              </div>
-
-              <div className="wh-kpi-card">
-                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>shelves</span>
-                </div>
-                <div>
-                  <div className="wh-kpi-val">{subLocations.length} Sub-Locations</div>
-                  <div className="wh-kpi-lbl">Total Storage Zones & Racks</div>
-                </div>
-              </div>
-
-              <div className="wh-kpi-card">
-                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>groups</span>
-                </div>
-                <div>
-                  <div className="wh-kpi-val">{staffMembers.length} Personnel</div>
-                  <div className="wh-kpi-lbl">Active Staff Deployed</div>
-                </div>
-              </div>
-
-              <div className="wh-kpi-card">
-                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#fef3c7', color: '#b45309' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>speed</span>
-                </div>
-                <div>
-                  <div className="wh-kpi-val">{globalOccupancyRate}% Occupancy</div>
-                  <div className="wh-kpi-lbl">{totalHeldItemsGlobal.toLocaleString()} / {totalCapacityGlobal.toLocaleString()} Units</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Header with Search and Create Button */}
-            <div className="enterprise-section-header" style={{ marginTop: '16px' }}>
+            {/* Simple Top Header */}
+            <div className="enterprise-section-header">
               <div>
-                <h2 className="section-heading-title">Multi-Facility Warehouse Master Table</h2>
+                <h2 className="section-heading-title">Warehouses</h2>
                 <p className="section-heading-sub">
-                  Unified administrator matrix of all registered warehouses, their localized sub-locations, and stationed staff members.
+                  Overview of all operating facilities, storage sub-locations, and stationed staff.
                 </p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div className="table-search-box">
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#756f82' }}>search</span>
-                  <input
-                    type="text"
-                    className="table-search-input"
-                    placeholder="Search warehouse, code, manager..."
-                    value={warehouseSearchQuery}
-                    onChange={(e) => setWarehouseSearchQuery(e.target.value)}
-                  />
-                  {warehouseSearchQuery && (
-                    <button
-                      type="button"
-                      className="search-clear-btn"
-                      onClick={() => setWarehouseSearchQuery('')}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
-                    </button>
-                  )}
-                </div>
-
                 <button
                   type="button"
                   className="btn-add-entity"
                   onClick={() => setShowNewWarehouseModal(true)}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_business</span>
-                  <span>+ Create Warehouse</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+                  <span>New Warehouse</span>
                 </button>
               </div>
             </div>
 
-            {/* Warehouses Directory Master Table */}
+            {/* Simple Warehouses Master Table */}
             <div className="settings-table-wrapper">
               <table className="settings-data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '40px' }}></th>
-                    <th>Warehouse & Code</th>
-                    <th>Facility Category</th>
-                    <th>City / Location</th>
-                    <th>Facility Manager</th>
+                    <th>Warehouse</th>
+                    <th>Code</th>
+                    <th>Manager</th>
+                    <th>Location / City</th>
                     <th>Sub-Locations</th>
-                    <th>Staff Deployed</th>
-                    <th>Logistics Capabilities</th>
+                    <th>Stationed Staff</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'center' }}>Quick Actions</th>
+                    <th style={{ textAlign: 'right' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredWarehouses.map((wh) => {
                     const whLocs = subLocations.filter((l) => l.warehouseCode === wh.code);
                     const whStaff = staffMembers.filter((s) => s.warehouseCode === wh.code);
-                    const isExpanded = expandedWarehouseIds.includes(wh.id);
-                    const totalHeld = whLocs.reduce((sum, l) => sum + l.itemsHeld, 0);
-                    const totalCap = whLocs.reduce((sum, l) => sum + l.maxCapacity, 0);
-                    const percentUsed = totalCap > 0 ? Math.round((totalHeld / totalCap) * 100) : 0;
 
                     return (
-                      <React.Fragment key={wh.id}>
-                        <tr className={isExpanded ? 'warehouse-row-expanded' : ''}>
-                          <td>
-                            <button
-                              type="button"
-                              className="expand-row-toggle"
-                              onClick={() => toggleWarehouseExpand(wh.id)}
-                              title={isExpanded ? 'Collapse breakdown' : 'Expand sub-locations and staff'}
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                                {isExpanded ? 'expand_less' : 'expand_more'}
-                              </span>
-                            </button>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div className="wh-table-icon">
-                                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>warehouse</span>
-                              </div>
-                              <div>
-                                <div style={{ fontWeight: 800, color: '#212529', fontSize: '14.5px' }}>
-                                  {wh.name}
-                                </div>
-                                <span className="wh-code-badge">{wh.code}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#4e444a' }}>
-                              {wh.category || 'Fulfillment Hub'}
+                      <tr
+                        key={wh.id}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          setSelectedWarehouseId(wh.id);
+                          setActiveSection('profile');
+                        }}
+                      >
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="material-symbols-outlined" style={{ color: '#714b67', fontSize: '20px' }}>
+                              warehouse
                             </span>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#4e444a' }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#714b67' }}>location_on</span>
-                              <span>{wh.city}, {wh.country}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ fontWeight: 700, color: '#212529' }}>{wh.manager}</div>
-                            <div style={{ fontSize: '11.5px', color: '#756f82' }}>{wh.operatingHours}</div>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                              <button
-                                type="button"
-                                className="count-badge-btn"
-                                onClick={() => {
-                                  setSelectedWarehouseId(wh.id);
-                                  setLocationWarehouseFilter(wh.code);
-                                  setActiveSection('locations');
-                                }}
-                                title="Inspect sub-locations"
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>shelves</span>
-                                <span>{whLocs.length} Racks/Zones ({percentUsed}% cap)</span>
-                              </button>
-                            </div>
-                          </td>
-                          <td>
-                            <button
-                              type="button"
-                              className="count-badge-btn staff-badge"
-                              onClick={() => {
-                                setStaffWarehouseFilter(wh.code);
-                                setActiveSection('staff');
-                              }}
-                              title="Inspect stationed staff"
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>badge</span>
-                              <span>{whStaff.length} Members</span>
-                            </button>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                              {wh.incomingShipments && <span className="feature-chip">Inbound</span>}
-                              {wh.outgoingShipments && <span className="feature-chip">Outbound</span>}
-                              {wh.resupplySubcontractors && <span className="feature-chip resupply">Resupply</span>}
-                            </div>
-                          </td>
-                          <td>
-                            <span className="status-badge-active">
-                              <span className="sync-dot-green"></span>
-                              {wh.status}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                              <button
-                                type="button"
-                                className="action-pill-btn"
-                                onClick={() => {
-                                  setSelectedWarehouseId(wh.id);
-                                  setActiveSection('profile');
-                                }}
-                                title="Edit Warehouse Profile"
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                type="button"
-                                className="action-pill-btn"
-                                onClick={() => {
-                                  setNewLocationForm((p) => ({ ...p, warehouseCode: wh.code }));
-                                  setShowLocationModal(true);
-                                }}
-                                title="Add Sub-Location to this warehouse"
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add_location</span>
-                              </button>
-                              <button
-                                type="button"
-                                className="action-pill-btn"
-                                onClick={() => {
-                                  setNewStaffForm((p) => ({ ...p, warehouseCode: wh.code, assignedZone: `${wh.code}/Stock1` }));
-                                  setShowStaffModal(true);
-                                }}
-                                title="Assign Staff to this warehouse"
-                              >
-                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person_add</span>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-
-                        {/* Expandable Child Row: Sub-Locations & Stationed Staff for this Warehouse */}
-                        {isExpanded && (
-                          <tr className="expanded-detail-row">
-                            <td colSpan={10}>
-                              <div className="expanded-detail-container">
-                                {/* Left Sub-Locations Card */}
-                                <div className="expanded-subcard">
-                                  <div className="expanded-subcard-header">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <span className="material-symbols-outlined" style={{ color: '#714b67' }}>shelves</span>
-                                      <span style={{ fontWeight: 800, color: '#212529', fontSize: '14px' }}>
-                                        Sub-Locations & Racks in {wh.name} ({whLocs.length})
-                                      </span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      className="action-pill-btn"
-                                      onClick={() => {
-                                        setNewLocationForm((p) => ({ ...p, warehouseCode: wh.code }));
-                                        setShowLocationModal(true);
-                                      }}
-                                    >
-                                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>add</span>
-                                      <span>Add Rack</span>
-                                    </button>
-                                  </div>
-
-                                  {whLocs.length === 0 ? (
-                                    <div className="empty-state-notice">
-                                      No sub-locations configured for this warehouse yet.
-                                    </div>
-                                  ) : (
-                                    <div className="mini-locations-grid">
-                                      {whLocs.map((loc) => {
-                                        const locLoadPercent = loc.maxCapacity > 0 ? Math.round((loc.itemsHeld / loc.maxCapacity) * 100) : 0;
-                                        return (
-                                          <div key={loc.id} className="mini-loc-item">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                              <div>
-                                                <div style={{ fontWeight: 800, color: '#212529', fontSize: '13.5px' }}>
-                                                  {loc.name}
-                                                </div>
-                                                <div style={{ fontFamily: 'monospace', color: '#714b67', fontWeight: 700, fontSize: '12px' }}>
-                                                  {loc.path}
-                                                </div>
-                                              </div>
-                                              <span className="barcode-badge">{loc.barcode}</span>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11.5px', color: '#756f82', marginTop: '6px' }}>
-                                              <span>{loc.zone} • {loc.type}</span>
-                                              <span style={{ fontWeight: 700, color: '#212529' }}>
-                                                {loc.itemsHeld} / {loc.maxCapacity} units ({locLoadPercent}%)
-                                              </span>
-                                            </div>
-                                            <div className="progress-bar-bg">
-                                              <div
-                                                className="progress-bar-fill"
-                                                style={{
-                                                  width: `${Math.min(locLoadPercent, 100)}%`,
-                                                  backgroundColor: locLoadPercent > 85 ? '#e11d48' : '#714b67',
-                                                }}
-                                              ></div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Right Stationed Staff Card */}
-                                <div className="expanded-subcard">
-                                  <div className="expanded-subcard-header">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <span className="material-symbols-outlined" style={{ color: '#006443' }}>badge</span>
-                                      <span style={{ fontWeight: 800, color: '#212529', fontSize: '14px' }}>
-                                        Stationed Personnel at {wh.code} ({whStaff.length})
-                                      </span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      className="action-pill-btn"
-                                      onClick={() => {
-                                        setNewStaffForm((p) => ({ ...p, warehouseCode: wh.code, assignedZone: `${wh.code}/Stock1` }));
-                                        setShowStaffModal(true);
-                                      }}
-                                    >
-                                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>add</span>
-                                      <span>Assign Staff</span>
-                                    </button>
-                                  </div>
-
-                                  {whStaff.length === 0 ? (
-                                    <div className="empty-state-notice">
-                                      No staff members assigned to this facility yet.
-                                    </div>
-                                  ) : (
-                                    <div className="mini-staff-list">
-                                      {whStaff.map((staff) => (
-                                        <div key={staff.id} className="mini-staff-item">
-                                          <div className="staff-avatar-circle" style={{ width: '30px', height: '30px', fontSize: '11px' }}>
-                                            {staff.initials}
-                                          </div>
-                                          <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontWeight: 800, color: '#212529', fontSize: '13px' }}>
-                                              {staff.name}
-                                            </div>
-                                            <div style={{ fontSize: '11.5px', color: '#756f82' }}>
-                                              {staff.role} • <span style={{ color: '#714b67', fontWeight: 600 }}>{staff.assignedZone}</span>
-                                            </div>
-                                          </div>
-                                          <div style={{ textAlign: 'right' }}>
-                                            <span className="shift-pill" style={{ fontSize: '10.5px' }}>{staff.shift}</span>
-                                            <div style={{ fontSize: '11px', color: '#006443', fontWeight: 700, marginTop: '2px' }}>
-                                              {staff.status}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
+                            <span style={{ fontWeight: 700, color: '#212529' }}>{wh.name}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="wh-code-badge">{wh.code}</span>
+                        </td>
+                        <td>
+                          <span style={{ color: '#4e444a', fontWeight: 600 }}>{wh.manager}</span>
+                        </td>
+                        <td>
+                          <span style={{ color: '#756f82' }}>{wh.city || wh.country}</span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="count-badge-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedWarehouseId(wh.id);
+                              setLocationWarehouseFilter(wh.code);
+                              setActiveSection('locations');
+                            }}
+                            title="View locations for this warehouse"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>shelves</span>
+                            <span>{whLocs.length} locations</span>
+                          </button>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="count-badge-btn staff-badge"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStaffWarehouseFilter(wh.code);
+                              setActiveSection('staff');
+                            }}
+                            title="View staff stationed here"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>badge</span>
+                            <span>{whStaff.length} staff</span>
+                          </button>
+                        </td>
+                        <td>
+                          <span className="status-badge-active">
+                            <span className="sync-dot-green"></span>
+                            {wh.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="action-pill-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedWarehouseId(wh.id);
+                              setActiveSection('profile');
+                            }}
+                          >
+                            <span>Manage</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>arrow_forward</span>
+                          </button>
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>
