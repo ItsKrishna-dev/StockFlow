@@ -267,7 +267,6 @@ export default function WarehouseSettingsPage() {
   // Active navigation tab: 'overview' | 'profile' | 'locations' | 'staff'
   const [activeSection, setActiveSection] = useState('overview');
   const [isModified, setIsModified] = useState(false);
-  const [showActionMenu, setShowActionMenu] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [expandedWarehouseIds, setExpandedWarehouseIds] = useState(['WH-01']);
 
@@ -590,48 +589,146 @@ export default function WarehouseSettingsPage() {
       <AppHeader />
 
       {/* Control Ribbon */}
-      <div className="settings-control-ribbon">
-        <div className="settings-ribbon-left">
-          <div className="settings-breadcrumbs">
-            <Link to={ROUTES.DASHBOARD} className="settings-crumb-link">
-              Inventory
-            </Link>
-            <span style={{ color: '#b0a8b4' }}>/</span>
-            <span style={{ color: '#756f82' }}>Configuration</span>
-            <span style={{ color: '#b0a8b4' }}>/</span>
-            <span style={{ color: '#756f82' }}>Warehouses & Locations</span>
-            <span style={{ color: '#b0a8b4' }}>/</span>
-            <span className="settings-crumb-active">
+      <div className="control-ribbon">
+        <div className="ribbon-left">
+          <button
+            className="btn-new-record"
+            type="button"
+            onClick={() => {
+              if (activeSection === 'overview') setShowNewWarehouseModal(true);
+              else if (activeSection === 'locations') setShowLocationModal(true);
+              else if (activeSection === 'staff') setShowStaffModal(true);
+              else setShowNewWarehouseModal(true);
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+            <span>
               {activeSection === 'overview'
-                ? 'All Warehouses Directory'
-                : currentWarehouse.name}
+                ? 'New Warehouse'
+                : activeSection === 'locations'
+                ? 'New Location'
+                : activeSection === 'staff'
+                ? 'New Staff'
+                : 'New Warehouse'}
             </span>
+          </button>
+
+          <div className="breadcrumbs">
+            <Link to={ROUTES.DASHBOARD} className="crumb-parent">StockFlow</Link>
+            <span className="crumb-separator">/</span>
+            <span className="crumb-parent" onClick={() => setActiveSection('overview')}>Configuration</span>
+            <span className="crumb-separator">/</span>
+            <h1 className="crumb-current">
+              {activeSection === 'overview'
+                ? 'Warehouses Directory'
+                : activeSection === 'profile'
+                ? `Warehouse (${currentWarehouse.code})`
+                : activeSection === 'locations'
+                ? 'Sub-Locations & Racks'
+                : 'Staff & Deployments'}
+            </h1>
           </div>
-          <span className="status-badge-active">
-            <span className="sync-dot-green"></span>
-            {warehousesList.length} Active Facilities
-          </span>
+
+          <div className="action-tool-buttons">
+            <button
+              className="tool-icon-btn"
+              title="Export Warehouse Directory to CSV"
+              type="button"
+              onClick={() => {
+                const headers = ['ID', 'Name', 'Code', 'Category', 'City', 'Country', 'Manager', 'Status'];
+                const rows = warehousesList.map((w) => [
+                  w.id,
+                  `"${w.name}"`,
+                  w.code,
+                  `"${w.category}"`,
+                  `"${w.city}"`,
+                  `"${w.country}"`,
+                  `"${w.manager}"`,
+                  w.status,
+                ]);
+                const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                const link = document.createElement('a');
+                link.setAttribute('href', encodeURI(csv));
+                link.setAttribute('download', 'warehouses_directory.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('Warehouse directory exported to CSV');
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>file_download</span>
+            </button>
+            <button
+              className="tool-icon-btn"
+              title="Print Warehouse Catalog"
+              type="button"
+              onClick={() => { window.print(); showToast('Printing warehouse catalog'); }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>print</span>
+            </button>
+            <button
+              className="tool-icon-btn"
+              title="Global Location Rules"
+              type="button"
+              onClick={() => navigate(ROUTES.LOCATION_SETTINGS)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>alt_route</span>
+            </button>
+          </div>
         </div>
 
-        {/* Global Action Header Right */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="btn-create-warehouse-highlight"
-            onClick={() => setShowNewWarehouseModal(true)}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_business</span>
-            <span>+ Create Warehouse</span>
-          </button>
+        <div className="ribbon-right">
+          <div className="search-container">
+            <span className="material-symbols-outlined" style={{ color: '#80747a', fontSize: '19px' }}>search</span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder={
+                activeSection === 'overview'
+                  ? 'Search warehouse, code, manager, city...'
+                  : activeSection === 'locations'
+                  ? 'Search racks, sub-locations, zones...'
+                  : activeSection === 'staff'
+                  ? 'Search staff, role, email...'
+                  : 'Search...'
+              }
+              value={
+                activeSection === 'overview'
+                  ? warehouseSearchQuery
+                  : activeSection === 'locations'
+                  ? locationSearchQuery
+                  : activeSection === 'staff'
+                  ? staffSearchQuery
+                  : ''
+              }
+              onChange={(e) => {
+                if (activeSection === 'overview') setWarehouseSearchQuery(e.target.value);
+                else if (activeSection === 'locations') setLocationSearchQuery(e.target.value);
+                else if (activeSection === 'staff') setStaffSearchQuery(e.target.value);
+              }}
+            />
+            {(activeSection === 'overview' && warehouseSearchQuery) ||
+            (activeSection === 'locations' && locationSearchQuery) ||
+            (activeSection === 'staff' && staffSearchQuery) ? (
+              <button
+                type="button"
+                className="chip-close"
+                onClick={() => {
+                  setWarehouseSearchQuery('');
+                  setLocationSearchQuery('');
+                  setStaffSearchQuery('');
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
+              </button>
+            ) : null}
+          </div>
 
           {activeSection !== 'overview' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 700, color: '#4e444a' }}>
-                Active Facility:
-              </label>
               <select
                 className="form-input-select"
-                style={{ width: 'auto', minWidth: '220px', padding: '6px 12px', fontWeight: 600 }}
+                style={{ width: 'auto', minWidth: '180px', padding: '5px 10px', fontSize: '13px', fontWeight: 600 }}
                 value={selectedWarehouseId}
                 onChange={(e) => {
                   setSelectedWarehouseId(e.target.value);
@@ -649,162 +746,57 @@ export default function WarehouseSettingsPage() {
         </div>
       </div>
 
-      {/* Operational Actions Bar */}
-      <div className="settings-actions-bar">
-        <div className="settings-buttons-group">
-          {activeSection === 'profile' ? (
-            <>
-              <button
-                type="button"
-                className="btn-primary-action"
-                onClick={handleSave}
-                disabled={!isModified}
-                style={{ opacity: !isModified ? 0.7 : 1 }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>save</span>
-                <span>Save Profile</span>
-              </button>
+      {/* Slim Info & Subnav Bar */}
+      <div className="settings-subnav-ribbon">
+        <div className="settings-subnav-pills">
+          <button
+            type="button"
+            className={`settings-pill-tab ${activeSection === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveSection('overview')}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>domain</span>
+            <span>Warehouses Directory ({warehousesList.length})</span>
+          </button>
 
-              <button
-                type="button"
-                className="btn-secondary-action"
-                onClick={handleDiscard}
-                disabled={!isModified}
-                style={{ opacity: !isModified ? 0.6 : 1 }}
-              >
-                <span>Discard</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="btn-primary-action"
-                onClick={() => {
-                  if (activeSection === 'overview') setShowNewWarehouseModal(true);
-                  else if (activeSection === 'locations') setShowLocationModal(true);
-                  else if (activeSection === 'staff') setShowStaffModal(true);
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  {activeSection === 'overview'
-                    ? 'add_business'
-                    : activeSection === 'locations'
-                    ? 'add_location'
-                    : 'person_add'}
-                </span>
-                <span>
-                  {activeSection === 'overview'
-                    ? '+ New Warehouse'
-                    : activeSection === 'locations'
-                    ? '+ Add Sub-Location'
-                    : '+ Assign Staff'}
-                </span>
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            className={`settings-pill-tab ${activeSection === 'profile' ? 'active' : ''}`}
+            onClick={() => setActiveSection('profile')}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>warehouse</span>
+            <span>Facility Profile ({currentWarehouse.code})</span>
+          </button>
 
-          {/* Action Menu Trigger */}
-          <div style={{ position: 'relative' }}>
-            <button
-              type="button"
-              className="btn-secondary-action"
-              onClick={() => setShowActionMenu((prev) => !prev)}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>bolt</span>
-              <span>Actions</span>
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_drop_down</span>
-            </button>
+          <button
+            type="button"
+            className={`settings-pill-tab ${activeSection === 'locations' ? 'active' : ''}`}
+            onClick={() => setActiveSection('locations')}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>location_on</span>
+            <span>Sub-Locations & Racks ({subLocations.length})</span>
+          </button>
 
-            {showActionMenu && (
-              <div className="settings-dropdown-menu">
-                <button
-                  type="button"
-                  className="settings-dropdown-item"
-                  onClick={() => {
-                    setShowActionMenu(false);
-                    showToast(`Warehouse master barcodes exported for all ${warehousesList.length} facilities`);
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
-                    qr_code_2
-                  </span>
-                  Print Facility Barcode Catalog
-                </button>
-                <button
-                  type="button"
-                  className="settings-dropdown-item"
-                  onClick={() => {
-                    setShowActionMenu(false);
-                    navigate(ROUTES.LOCATION_SETTINGS);
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
-                    alt_route
-                  </span>
-                  Global Location Rules
-                </button>
-                <button
-                  type="button"
-                  className="settings-dropdown-item"
-                  onClick={() => {
-                    setShowActionMenu(false);
-                    setShowNewWarehouseModal(true);
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
-                    domain_add
-                  </span>
-                  Register Additional Warehouse
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            type="button"
+            className={`settings-pill-tab ${activeSection === 'staff' ? 'active' : ''}`}
+            onClick={() => setActiveSection('staff')}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>badge</span>
+            <span>Staff Deployments ({staffMembers.length})</span>
+          </button>
         </div>
 
-        <div className={`settings-sync-status ${isModified ? 'unsaved' : ''}`}>
-          <span className={isModified ? 'sync-dot-amber' : 'sync-dot-green'}></span>
-          <span>{isModified ? 'Unsaved modifications...' : 'All facilities in sync'}</span>
+        <div className="records-count-text">
+          <span>
+            {activeSection === 'overview'
+              ? `${filteredWarehouses.length} records | Tip: Click any row to expand sub-locations and staff`
+              : activeSection === 'locations'
+              ? `${filteredSubLocations.length} locations | Storage zones across facilities`
+              : activeSection === 'staff'
+              ? `${filteredStaff.length} personnel | Active warehouse deployments`
+              : `Managing ${currentWarehouse.name}`}
+          </span>
         </div>
-      </div>
-
-      {/* Subnav Navigation Switcher */}
-      <div className="settings-subnav">
-        <button
-          type="button"
-          className={`settings-subnav-btn ${activeSection === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveSection('overview')}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>domain</span>
-          <span>All Warehouses Directory ({warehousesList.length})</span>
-        </button>
-
-        <button
-          type="button"
-          className={`settings-subnav-btn ${activeSection === 'profile' ? 'active' : ''}`}
-          onClick={() => setActiveSection('profile')}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>warehouse</span>
-          <span>Warehouse Profile ({currentWarehouse.code})</span>
-        </button>
-
-        <button
-          type="button"
-          className={`settings-subnav-btn ${activeSection === 'locations' ? 'active' : ''}`}
-          onClick={() => setActiveSection('locations')}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>location_on</span>
-          <span>Sub-Locations & Racks ({subLocations.length})</span>
-        </button>
-
-        <button
-          type="button"
-          className={`settings-subnav-btn ${activeSection === 'staff' ? 'active' : ''}`}
-          onClick={() => setActiveSection('staff')}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>badge</span>
-          <span>Staff Roster & Deployments ({staffMembers.length})</span>
-        </button>
       </div>
 
       {/* Main Canvas Container */}
@@ -1366,6 +1358,35 @@ export default function WarehouseSettingsPage() {
                   />
                   <span>Resupply Subcontractors & Vendor Hubs</span>
                 </label>
+              </div>
+            </div>
+
+            {/* Profile Action Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1.5px solid #f0edf2', paddingTop: '18px', marginTop: '24px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#756f82' }}>
+                <span className={isModified ? 'sync-dot-amber' : 'sync-dot-green'}></span>
+                <span>{isModified ? 'Unsaved modifications in profile' : 'Configuration synchronized with database'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="btn-secondary-action"
+                  onClick={handleDiscard}
+                  disabled={!isModified}
+                  style={{ opacity: !isModified ? 0.5 : 1 }}
+                >
+                  Discard
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary-action"
+                  onClick={handleSave}
+                  disabled={!isModified}
+                  style={{ opacity: !isModified ? 0.7 : 1 }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>save</span>
+                  <span>Save Changes</span>
+                </button>
               </div>
             </div>
           </div>
