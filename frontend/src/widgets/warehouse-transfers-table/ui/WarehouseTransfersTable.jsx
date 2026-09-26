@@ -8,12 +8,16 @@ export function WarehouseTransfersTable({ transfers = [] }) {
   const navigate = useNavigate();
 
   const handleRowClick = (item) => {
-    if (item.type?.toLowerCase().includes('in') || item.reference?.startsWith('WH/IN')) {
+    const t = (item.type || '').toLowerCase();
+    const r = (item.reference || '').toUpperCase();
+    if (t.includes('receipt') || r.startsWith('WH/IN') || r.startsWith('RCPT')) {
       navigate(ROUTES.RECEIPTS);
-    } else if (item.type?.toLowerCase().includes('out') || item.reference?.startsWith('WH/OUT')) {
+    } else if (t.includes('delivery') || r.startsWith('WH/OUT') || r.startsWith('DELV')) {
       navigate(ROUTES.DELIVERY_ORDERS);
-    } else if (item.type?.toLowerCase().includes('int') || item.reference?.startsWith('WH/INT')) {
+    } else if (t.includes('transfer') || r.startsWith('WH/INT') || r.startsWith('TRF')) {
       navigate(ROUTES.TRANSFERS);
+    } else if (t.includes('adjustment') || r.startsWith('ADJ')) {
+      navigate(ROUTES.ADJUSTMENTS);
     } else {
       navigate(ROUTES.STOCK);
     }
@@ -88,7 +92,10 @@ export function WarehouseTransfersTable({ transfers = [] }) {
                   <td className={styles.td}>
                     <div className={styles.typeBadge}>
                       <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
-                        {item.type?.includes('Delivery') ? 'local_shipping' : item.type?.includes('Receipt') ? 'move_to_inbox' : 'swap_horiz'}
+                        {item.type?.includes('Delivery') ? 'local_shipping' :
+                         item.type?.includes('Receipt') ? 'move_to_inbox' :
+                         item.type?.includes('Adjustment') ? 'tune' :
+                         item.type?.includes('Transfer') ? 'swap_horiz' : 'warning_amber'}
                       </span>
                       <span>{item.type}</span>
                     </div>

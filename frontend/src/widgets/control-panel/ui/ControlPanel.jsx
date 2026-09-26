@@ -14,14 +14,24 @@ export function ControlPanel({
   onViewChange,
   availableViews = ['kanban', 'list'],
   pager = null, // e.g. { current: '1-2', total: '2' }
+  onFilterClick,
+  isFilterActive = false,
+  onGroupClick,
+  isGroupActive = false,
+  onFavoriteClick,
+  isFavoriteActive = false,
 }) {
   return (
     <div className={styles.controlPanel}>
       {/* Left: Breadcrumb & Main Actions */}
       <div className={styles.leftGroup}>
         <div className={styles.breadcrumbs}>
-          <span className={styles.breadcrumbParent}>{parentSection}</span>
-          <span className={styles.breadcrumbDivider}>/</span>
+          {parentSection && (
+            <>
+              <span className={styles.breadcrumbParent}>{parentSection}</span>
+              <span className={styles.breadcrumbDivider}>/</span>
+            </>
+          )}
           <span className={styles.breadcrumbCurrent}>{title}</span>
         </div>
 
@@ -66,10 +76,23 @@ export function ControlPanel({
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
           />
           <div className={styles.searchActions}>
+            {searchValue && (
+              <button
+                type="button"
+                className={styles.searchActionBtn}
+                title="Clear Search"
+                onClick={() => onSearchChange && onSearchChange('')}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  close
+                </span>
+              </button>
+            )}
             <button
               type="button"
-              className={styles.searchActionBtn}
-              title="Filters"
+              className={cn(styles.searchActionBtn, isFilterActive ? styles.searchActionBtnActive : '')}
+              title={isFilterActive ? "Active: Quick Filters Applied" : "Quick Filters"}
+              onClick={onFilterClick}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                 filter_alt
@@ -77,8 +100,9 @@ export function ControlPanel({
             </button>
             <button
               type="button"
-              className={styles.searchActionBtn}
-              title="Group By"
+              className={cn(styles.searchActionBtn, isGroupActive ? styles.searchActionBtnActive : '')}
+              title={isGroupActive ? "Active: Grouped by Type" : "Group by Type"}
+              onClick={onGroupClick}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                 layers
@@ -86,8 +110,9 @@ export function ControlPanel({
             </button>
             <button
               type="button"
-              className={styles.searchActionBtn}
-              title="Favorites"
+              className={cn(styles.searchActionBtn, isFavoriteActive ? styles.searchActionBtnActive : '')}
+              title={isFavoriteActive ? "Active: Priority / Attention Filter" : "Priority / Needs Attention"}
+              onClick={onFavoriteClick}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                 star
@@ -128,71 +153,73 @@ export function ControlPanel({
         )}
 
         {/* View Switchers */}
-        <div className={styles.viewSwitchers}>
-          {availableViews.includes('list') && (
-            <button
-              type="button"
-              className={cn(
-                styles.viewBtn,
-                activeView === 'list' ? styles.viewBtnActive : ''
-              )}
-              title="List View"
-              onClick={() => onViewChange && onViewChange('list')}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                format_list_bulleted
-              </span>
-            </button>
-          )}
+        {availableViews && availableViews.length > 0 && (
+          <div className={styles.viewSwitchers}>
+            {availableViews.includes('list') && (
+              <button
+                type="button"
+                className={cn(
+                  styles.viewBtn,
+                  activeView === 'list' ? styles.viewBtnActive : ''
+                )}
+                title="List View"
+                onClick={() => onViewChange && onViewChange('list')}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  format_list_bulleted
+                </span>
+              </button>
+            )}
 
-          {availableViews.includes('kanban') && (
-            <button
-              type="button"
-              className={cn(
-                styles.viewBtn,
-                activeView === 'kanban' ? styles.viewBtnActive : ''
-              )}
-              title="Kanban View"
-              onClick={() => onViewChange && onViewChange('kanban')}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                view_kanban
-              </span>
-            </button>
-          )}
+            {availableViews.includes('kanban') && (
+              <button
+                type="button"
+                className={cn(
+                  styles.viewBtn,
+                  activeView === 'kanban' ? styles.viewBtnActive : ''
+                )}
+                title="Kanban View"
+                onClick={() => onViewChange && onViewChange('kanban')}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  view_kanban
+                </span>
+              </button>
+            )}
 
-          {availableViews.includes('pivot') && (
-            <button
-              type="button"
-              className={cn(
-                styles.viewBtn,
-                activeView === 'pivot' ? styles.viewBtnActive : ''
-              )}
-              title="Pivot View"
-              onClick={() => onViewChange && onViewChange('pivot')}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                table_chart
-              </span>
-            </button>
-          )}
+            {availableViews.includes('pivot') && (
+              <button
+                type="button"
+                className={cn(
+                  styles.viewBtn,
+                  activeView === 'pivot' ? styles.viewBtnActive : ''
+                )}
+                title="Pivot View"
+                onClick={() => onViewChange && onViewChange('pivot')}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  table_chart
+                </span>
+              </button>
+            )}
 
-          {availableViews.includes('graph') && (
-            <button
-              type="button"
-              className={cn(
-                styles.viewBtn,
-                activeView === 'graph' ? styles.viewBtnActive : ''
-              )}
-              title="Graph View"
-              onClick={() => onViewChange && onViewChange('graph')}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                bar_chart
-              </span>
-            </button>
-          )}
-        </div>
+            {availableViews.includes('graph') && (
+              <button
+                type="button"
+                className={cn(
+                  styles.viewBtn,
+                  activeView === 'graph' ? styles.viewBtnActive : ''
+                )}
+                title="Graph View"
+                onClick={() => onViewChange && onViewChange('graph')}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  bar_chart
+                </span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
