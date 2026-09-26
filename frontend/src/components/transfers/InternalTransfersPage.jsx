@@ -29,12 +29,14 @@ function statusLabel(s) {
   return map[s] || s;
 }
 
-function mapTransfer(doc) {
+function mapTransfer(doc, locMap = {}) {
+  const fromName = locMap[doc.source_location_id] || doc.source_location_id;
+  const toName = locMap[doc.dest_location_id] || doc.dest_location_id;
   return {
     id: doc.id,
     reference: doc.document_number || `#${String(doc.id).slice(0, 8).toUpperCase()}`,
-    fromLocation: doc.source_location_id,
-    toLocation: doc.dest_location_id,
+    fromLocation: fromName,
+    toLocation: toName,
     status: doc.status,
     linesCount: doc.lines?.length || 0,
     notes: doc.notes || '',
@@ -53,9 +55,11 @@ export default function InternalTransfersPage() {
   const [toastMsg, setToastMsg] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [newForm, setNewForm] = useState({
+    warehouse_id: '',
     source_location_id: '',
     dest_location_id: '',
-    warehouse_id: '',
+    product_id: '',
+    quantity: '',
     notes: '',
   });
 
@@ -80,7 +84,46 @@ export default function InternalTransfersPage() {
     queryFn: () => warehousesApi.listWarehouses(),
   });
 
-  const transfers = useMemo(() => rawTransfers.map(mapTransfer), [rawTransfers]);
+  // Fetch available products directly from DB when source location is selected
+  const { data: locationStock = [], isLoading: isLoadingStock } = useQuery({
+    queryKey: ['location-stock', newForm.source_location_id],
+    queryFn: () => warehousesApi.getLocationStock(newForm.source_location_id),
+    enabled: Boolean(newForm.source_location_id),
+  });
+
+  // Filter locations to only those belonging to selected warehouse
+  const warehouseLocations = useMemo(() => {
+    if (!newForm.warehouse_id) return [];
+    return locations.filter(
+      l => l.warehouse_id === newForm.warehouse_id && (l.type === 'internal' || !l.type)
+    );
+  }, [locations, newForm.warehouse_id]);
+
+  // Selected product from location stock
+  const selectedProductStock = useMemo(() => {
+    if (!newForm.product_id || !Array.isArray(locationStock)) return null;
+    return locationStock.find(p => p.product_id === newForm.product_id) || null;
+  }, [locationStock, newForm.product_id]);
+
+  // Check if entered quantity exceeds available DB stock
+  const isQtyExceeded = useMemo(() => {
+    if (!selectedProductStock || !newForm.quantity) return false;
+    const qty = Number(newForm.quantity);
+    return !isNaN(qty) && qty > Number(selectedProductStock.available_qty);
+  }, [selectedProductStock, newForm.quantity]);
+
+  const locMap = useMemo(() => {
+    const map = {};
+    locations.forEach(l => {
+      map[l.id] = l.complete_name || l.name;
+    });
+    return map;
+  }, [locations]);
+
+  const transfers = useMemo(
+    () => rawTransfers.map(t => mapTransfer(t, locMap)),
+    [rawTransfers, locMap]
+  );
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const validateMutation = useMutation({
@@ -100,6 +143,70 @@ export default function InternalTransfersPage() {
     },
     onError: (e) => showToast(e.message || 'Cancel failed'),
   });
+
+  const createMutation = useMutation({
+    mutationFn: (payload) => transfersApi.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+      showToast('Internal transfer created successfully');
+      setShowNewModal(false);
+      setNewForm({
+        warehouse_id: '',
+        source_location_id: '',
+        dest_location_id: '',
+        product_id: '',
+        quantity: '',
+        notes: '',
+      });
+    },
+    onError: (e) => showToast(e.message || 'Transfer creation failed'),
+  });
+
+  const handleCreateTransfer = () => {
+    if (!newForm.warehouse_id) {
+      showToast('Please select a warehouse');
+      return;
+    }
+    if (!newForm.source_location_id) {
+      showToast('Please select From Location');
+      return;
+    }
+    if (!newForm.dest_location_id) {
+      showToast('Please select To Location');
+      return;
+    }
+    if (newForm.source_location_id === newForm.dest_location_id) {
+      showToast('From and To locations cannot be the same');
+      return;
+    }
+    if (!newForm.product_id) {
+      showToast('Please select a product');
+      return;
+    }
+    const qty = Number(newForm.quantity);
+    if (!newForm.quantity || isNaN(qty) || qty <= 0) {
+      showToast('Please enter a valid quantity');
+      return;
+    }
+    if (selectedProductStock && qty > Number(selectedProductStock.available_qty)) {
+      showToast(`The entered quantity (${qty}) is more than present quantity (${selectedProductStock.available_qty})`);
+      return;
+    }
+
+    createMutation.mutate({
+      warehouse_id: newForm.warehouse_id,
+      source_location_id: newForm.source_location_id,
+      dest_location_id: newForm.dest_location_id,
+      notes: newForm.notes ? newForm.notes.trim() : undefined,
+      lines: [
+        {
+          product_id: newForm.product_id,
+          uom_id: selectedProductStock.uom_id,
+          quantity_expected: qty,
+        },
+      ],
+    });
+  };
 
   // ── Filtering ─────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -144,8 +251,6 @@ export default function InternalTransfersPage() {
     { key: 'done', label: `Done (${statusCounts.done})` },
   ];
 
-  const internalLocations = locations.filter(l => l.type === 'internal' || !l.type);
-
   return (
     <div className={styles.page}>
       <AppHeader />
@@ -158,10 +263,6 @@ export default function InternalTransfersPage() {
             New Transfer
           </button>
           <div className={styles.breadcrumbs}>
-            <Link to={ROUTES.DASHBOARD} className={styles.crumbParent}>StockFlow</Link>
-            <span className={styles.crumbSep}>/</span>
-            <span className={styles.crumbParent}>Inventory</span>
-            <span className={styles.crumbSep}>/</span>
             <h1 className={styles.crumbCurrent}>Internal Transfers</h1>
           </div>
           <button className={styles.toolBtn} title="Export CSV" onClick={() => showToast('Exported transfers CSV')}>
@@ -352,7 +453,17 @@ export default function InternalTransfersPage() {
                 <select
                   className={styles.formSelect}
                   value={newForm.warehouse_id}
-                  onChange={e => setNewForm(p => ({ ...p, warehouse_id: e.target.value }))}
+                  onChange={e => {
+                    const whId = e.target.value;
+                    setNewForm(p => ({
+                      ...p,
+                      warehouse_id: whId,
+                      source_location_id: '',
+                      dest_location_id: '',
+                      product_id: '',
+                      quantity: '',
+                    }));
+                  }}
                 >
                   <option value="">— Select warehouse —</option>
                   {warehouses.map(w => (
@@ -360,16 +471,28 @@ export default function InternalTransfersPage() {
                   ))}
                 </select>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 }}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>From Location <span style={{ color: '#ba1a1a' }}>*</span></label>
                   <select
                     className={styles.formSelect}
                     value={newForm.source_location_id}
-                    onChange={e => setNewForm(p => ({ ...p, source_location_id: e.target.value }))}
+                    disabled={!newForm.warehouse_id}
+                    onChange={e => {
+                      const locId = e.target.value;
+                      setNewForm(p => ({
+                        ...p,
+                        source_location_id: locId,
+                        product_id: '',
+                        quantity: '',
+                      }));
+                    }}
                   >
-                    <option value="">— Select source —</option>
-                    {internalLocations.map(l => (
+                    <option value="">
+                      {!newForm.warehouse_id ? '— Select warehouse first —' : '— Select source location —'}
+                    </option>
+                    {warehouseLocations.map(l => (
                       <option key={l.id} value={l.id}>{l.complete_name || l.name}</option>
                     ))}
                   </select>
@@ -379,15 +502,76 @@ export default function InternalTransfersPage() {
                   <select
                     className={styles.formSelect}
                     value={newForm.dest_location_id}
+                    disabled={!newForm.warehouse_id}
                     onChange={e => setNewForm(p => ({ ...p, dest_location_id: e.target.value }))}
                   >
-                    <option value="">— Select destination —</option>
-                    {internalLocations.map(l => (
-                      <option key={l.id} value={l.id}>{l.complete_name || l.name}</option>
-                    ))}
+                    <option value="">
+                      {!newForm.warehouse_id ? '— Select warehouse first —' : '— Select destination location —'}
+                    </option>
+                    {warehouseLocations
+                      .filter(l => l.id !== newForm.source_location_id)
+                      .map(l => (
+                        <option key={l.id} value={l.id}>{l.complete_name || l.name}</option>
+                      ))}
                   </select>
                 </div>
               </div>
+
+              {/* Product and Quantity row - shown when From Location is selected */}
+              {newForm.source_location_id && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 }}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Product <span style={{ color: '#ba1a1a' }}>*</span></label>
+                    <select
+                      className={styles.formSelect}
+                      value={newForm.product_id}
+                      onChange={e => setNewForm(p => ({ ...p, product_id: e.target.value, quantity: '' }))}
+                      disabled={isLoadingStock}
+                    >
+                      {isLoadingStock ? (
+                        <option value="">Loading products...</option>
+                      ) : locationStock.length === 0 ? (
+                        <option value="">No products available in this location</option>
+                      ) : (
+                        <>
+                          <option value="">— Select product —</option>
+                          {locationStock.map(p => (
+                            <option key={p.product_id} value={p.product_id}>
+                              {p.product_name} ({p.available_qty} available)
+                            </option>
+                          ))}
+                        </>
+                      )}
+                    </select>
+                    {selectedProductStock && (
+                      <span className={styles.qtyHint}>
+                        Available in DB: <strong>{selectedProductStock.available_qty}</strong>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Quantity <span style={{ color: '#ba1a1a' }}>*</span></label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={selectedProductStock ? selectedProductStock.available_qty : undefined}
+                      className={`${styles.formInput} ${isQtyExceeded ? styles.formInputError : ''}`}
+                      placeholder={selectedProductStock ? `Max: ${selectedProductStock.available_qty}` : "Enter quantity"}
+                      value={newForm.quantity}
+                      onChange={e => setNewForm(p => ({ ...p, quantity: e.target.value }))}
+                      disabled={!newForm.product_id}
+                    />
+                    {isQtyExceeded && (
+                      <div className={styles.qtyError}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>error</span>
+                        Entered quantity ({newForm.quantity}) exceeds available ({selectedProductStock.available_qty})
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Notes</label>
                 <input
@@ -397,24 +581,21 @@ export default function InternalTransfersPage() {
                   onChange={e => setNewForm(p => ({ ...p, notes: e.target.value }))}
                 />
               </div>
-              <p style={{ fontSize: '12px', color: '#80747a', margin: 0 }}>
-                ℹ️ After creating, open the transfer to add product lines then validate to move stock.
-              </p>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setShowNewModal(false)}>Cancel</button>
+              <button
+                className={styles.btnSecondary}
+                onClick={() => setShowNewModal(false)}
+                disabled={createMutation.isPending}
+              >
+                Cancel
+              </button>
               <button
                 className={styles.btnPrimary}
-                onClick={() => {
-                  if (!newForm.warehouse_id || !newForm.source_location_id || !newForm.dest_location_id) {
-                    showToast('Please fill all required fields');
-                    return;
-                  }
-                  showToast('Transfer creation requires product lines — use the API directly for now.');
-                  setShowNewModal(false);
-                }}
+                onClick={handleCreateTransfer}
+                disabled={createMutation.isPending}
               >
-                Create Transfer
+                {createMutation.isPending ? 'Creating...' : 'Create Transfer'}
               </button>
             </div>
           </div>
