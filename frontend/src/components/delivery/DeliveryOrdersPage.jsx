@@ -5,6 +5,8 @@ import DeliveryDetailModal from './DeliveryDetailModal';
 import NewDeliveryModal from './NewDeliveryModal';
 import DeliveryOrderDetailView from './DeliveryOrderDetailView';
 import { ROUTES } from '../../shared/config/routes';
+import { AppHeader } from '../../widgets/app-header';
+import { AppFooter } from '../../widgets/app-footer';
 
 const INITIAL_ORDERS = [
   {
@@ -235,93 +237,8 @@ export default function DeliveryOrdersPage() {
   }
 
   return (
-    <div className="odoo-shell">
-      {/* Top Header with StockFlow branding */}
-      <header className="top-header">
-        <div className="header-left">
-          <button className="icon-btn" title="StockFlow Apps" type="button">
-            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>apps</span>
-          </button>
-          
-          <div className="brand-badge" onClick={() => showToast('StockFlow Inventory Intelligence v2.0')}>
-            <span className="brand-flow-logo">
-              <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#f0bfe0' }}>inventory_2</span>
-              StockFlow
-            </span>
-            <span className="app-tag">operations</span>
-          </div>
-
-          <nav className="nav-links">
-            <button
-              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('dashboard'); showToast('Navigated to Dashboard'); }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>dashboard</span>
-              Dashboard
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'receipts' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('receipts'); navigate(ROUTES.RECEIPTS); }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>call_received</span>
-              Receipts
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'delivery-orders' ? 'active' : ''}`}
-              onClick={() => setActiveTab('delivery-orders')}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>local_shipping</span>
-              Delivery Orders
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'stock' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('stock'); showToast('Viewing Physical Stock Balance'); }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>inventory</span>
-              Stock
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'move-history' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('move-history'); showToast('Viewing Immutable Stock Ledger'); }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>receipt_long</span>
-              Move History
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('settings'); showToast('Warehouse Settings'); }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
-              Settings
-            </button>
-          </nav>
-        </div>
-
-        <div className="header-right">
-          <button className="icon-btn" title="AI Copilot & Chat" type="button" onClick={() => showToast('StockSense AI Assistant: Ready')}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>auto_awesome</span>
-          </button>
-          <button className="icon-btn" title="Activities" type="button" style={{ position: 'relative' }} onClick={() => showToast('2 pending activities')}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>schedule</span>
-            <span style={{
-              position: 'absolute',
-              top: '7px',
-              right: '7px',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#6ffbbe',
-              boxShadow: '0 0 6px #6ffbbe',
-            }} />
-          </button>
-          <div className="user-profile" onClick={() => showToast('Logged in as: Mitchell Admin')}>
-            <span className="user-name">Mitchell Admin</span>
-            <div className="user-avatar">
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>person</span>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="stockflow-shell odoo-shell">
+      <AppHeader />
 
       {/* Control Ribbon */}
       <div className="control-ribbon">
@@ -819,6 +736,8 @@ export default function DeliveryOrdersPage() {
           <span>{toastMessage}</span>
         </div>
       )}
+
+      <AppFooter />
     </div>
   );
 }

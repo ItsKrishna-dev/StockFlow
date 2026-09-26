@@ -11,7 +11,7 @@ export function AppRouterProvider() {
     <BrowserRouter>
       <Routes>
         {/* Default route */}
-        <Route path={ROUTES.HOME} element={<DeliveryOrdersPage />} />
+        <Route path={ROUTES.HOME} element={<DashboardPage />} />
         
         {/* Authentication Routes */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />

@@ -79,6 +79,9 @@
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: var(--stockflow-transition);
 }
 
