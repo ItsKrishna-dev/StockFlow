@@ -1,0 +1,22 @@
+.alert {
+  padding: 10px 12px;
+  border-radius: var(--odoo-radius);
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error {
+  background-color: var(--odoo-status-error-bg);
+  border: 1px solid var(--odoo-status-error-border);
+  color: #B91C1C;
+}
+
+.success {
+  background-color: var(--odoo-status-success-bg);
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+}

@@ -1,0 +1,62 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--odoo-text-primary);
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--odoo-text-primary);
+  background-color: #FFFFFF;
+  border: 1px solid var(--odoo-border);
+  border-radius: var(--odoo-radius);
+  outline: none;
+  transition: var(--odoo-transition);
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: var(--odoo-text-placeholder);
+}
+
+.input:focus {
+  border-color: var(--odoo-border-focus);
+  box-shadow: 0 0 0 1px var(--odoo-border-focus);
+}
+
+.input.hasError {
+  border-color: var(--odoo-status-error);
+}
+
+.input.hasError:focus {
+  box-shadow: 0 0 0 1px var(--odoo-status-error);
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--odoo-status-error);
+  line-height: 1.2;
+}
