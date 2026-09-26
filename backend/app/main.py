@@ -31,6 +31,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -58,12 +59,12 @@ app.include_router(copilot_router, prefix=API_PREFIX)
 
 
 
-@app.get("/health", tags=["system"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["system"])
 async def health_check() -> dict:
     return {"status": "ok", "environment": settings.ENVIRONMENT}
 
 
-@app.get("/health/db", tags=["system"])
+@app.api_route("/health/db", methods=["GET", "HEAD"], tags=["system"])
 async def database_health_check() -> dict:
     async with AsyncSessionLocal() as session:
         result = await session.execute(text("SELECT current_database(), now()"))
@@ -74,3 +75,4 @@ async def database_health_check() -> dict:
         "database": database_name,
         "server_time": server_time.isoformat(),
     }
+

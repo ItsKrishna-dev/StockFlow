@@ -17,6 +17,12 @@ async def test_health_check(client: httpx.AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_health_check_head(client: httpx.AsyncClient):
+    response = await client.head("/health")
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_database_health_check(client: httpx.AsyncClient):
     response = await client.get("/health/db")
     assert response.status_code == 200
@@ -24,3 +30,10 @@ async def test_database_health_check(client: httpx.AsyncClient):
     assert data["status"] == "ok"
     assert "database" in data
     assert "server_time" in data
+
+
+@pytest.mark.asyncio
+async def test_database_health_check_head(client: httpx.AsyncClient):
+    response = await client.head("/health/db")
+    assert response.status_code == 200
+
