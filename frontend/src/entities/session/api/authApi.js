@@ -11,8 +11,10 @@ export const authApi = {
    * Returns TokenResponse: { access_token, refresh_token, token_type }
    */
   async login({ loginId, password }) {
+    const cleanId = (loginId || '').trim();
     return apiClient.post('/auth/login', {
-      email: loginId,
+      login_id: cleanId,
+      email: cleanId,
       password,
     });
   },
@@ -21,12 +23,14 @@ export const authApi = {
    * POST /api/v1/auth/signup
    * Returns UserOut
    */
-  async signUp({ email, password, full_name, role }) {
+  async signUp({ login_id, email, password, full_name, role }) {
+    const cleanLoginId = (login_id || '').trim();
     return apiClient.post('/auth/signup', {
-      email,
+      login_id: cleanLoginId,
+      email: (email || '').trim(),
       password,
-      full_name,
-      role,
+      full_name: (full_name || cleanLoginId).trim(),
+      role: role || 'warehouse_staff',
     });
   },
 

@@ -50,6 +50,7 @@ class User(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    login_id: Mapped[str | None] = mapped_column(String(50), unique=True, nullable=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     role: Mapped[str] = mapped_column(UserRole, nullable=False, default="warehouse_staff")

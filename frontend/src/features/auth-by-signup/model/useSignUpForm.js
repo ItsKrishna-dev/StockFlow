@@ -4,11 +4,12 @@ import { authApi } from '../../../entities/session';
 
 export function useSignUpForm({ onSuccess } = {}) {
   const [values, setValues] = useState({
-    full_name: '',
+    login_id: '',
     email: '',
     password: '',
     confirmPassword: '',
     role: 'warehouse_staff',
+    full_name: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -16,9 +17,10 @@ export function useSignUpForm({ onSuccess } = {}) {
   const mutation = useMutation({
     mutationFn: (data) =>
       authApi.signUp({
+        login_id: data.login_id,
         email: data.email,
         password: data.password,
-        full_name: data.full_name,
+        full_name: data.full_name || data.login_id,
         role: data.role || 'warehouse_staff',
       }),
     onSuccess: (data) => {
@@ -36,20 +38,41 @@ export function useSignUpForm({ onSuccess } = {}) {
 
   const validate = () => {
     const newErrors = {};
-    if (!values.full_name.trim()) {
-      newErrors.full_name = 'Full name is required';
+
+    // 1. login ID should be unique and must be in between 6-12 characters
+    const cleanLoginId = values.login_id.trim();
+    if (!cleanLoginId) {
+      newErrors.login_id = 'Login ID is required';
+    } else if (cleanLoginId.length < 6 || cleanLoginId.length > 12) {
+      newErrors.login_id = 'Login ID must be between 6 and 12 characters';
     }
-    if (!values.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+
+    // 2. Email Id should not be a duplicate in database
+    const cleanEmail = values.email.trim();
+    if (!cleanEmail) {
+      newErrors.email = 'Email ID is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    if (!values.password) {
+
+    // 3. Password must contain small case, large case, special character and length more than 8
+    const pwd = values.password;
+    if (!pwd) {
       newErrors.password = 'Password is required';
-    } else if (values.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } else if (pwd.length <= 8) {
+      newErrors.password = 'Password length must be more than 8 characters';
+    } else if (!/[a-z]/.test(pwd)) {
+      newErrors.password = 'Password must contain at least one lowercase letter';
+    } else if (!/[A-Z]/.test(pwd)) {
+      newErrors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/[^A-Za-z0-9]/.test(pwd)) {
+      newErrors.password = 'Password must contain at least one special character';
     }
-    if (values.password !== values.confirmPassword) {
+
+    // Re-enter password match
+    if (!values.confirmPassword) {
+      newErrors.confirmPassword = 'Please re-enter your password';
+    } else if (values.password !== values.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 

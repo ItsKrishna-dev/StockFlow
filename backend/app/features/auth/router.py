@@ -42,7 +42,8 @@ async def login_oauth2(
 @router.post("/login", response_model=TokenResponse, summary="User Login (JSON)")
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
     """JSON login endpoint for React frontend, mobile, and API clients."""
-    return await service.authenticate_and_issue_tokens(str(payload.email), payload.password, db)
+    identifier = payload.login_id or payload.email or ""
+    return await service.authenticate_and_issue_tokens(identifier, payload.password, db)
 
 
 @router.post("/refresh", response_model=TokenResponse)

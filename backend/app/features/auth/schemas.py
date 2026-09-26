@@ -8,15 +8,17 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class SignupRequest(BaseModel):
+    login_id: str = Field(min_length=6, max_length=12, description="Unique login ID between 6 and 12 characters")
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    full_name: str = Field(min_length=2, max_length=150)
+    full_name: str | None = None
     role: str = Field(default="warehouse_staff")
     phone: str | None = None
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    login_id: str | None = None
+    email: str | None = None
     password: str
 
 
@@ -43,6 +45,7 @@ class ResetPasswordRequest(BaseModel):
 class UserOut(BaseModel):
     id: uuid.UUID
     email: EmailStr
+    login_id: str | None = None
     full_name: str
     role: str
     is_active: bool

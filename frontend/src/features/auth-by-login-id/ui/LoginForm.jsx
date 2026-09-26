@@ -31,12 +31,12 @@ export function LoginForm() {
         <Alert variant="success" message="Authentication successful. Redirecting..." />
       )}
 
-      {/* Login Id Input */}
+      {/* Enter Login Id Input */}
       <Input
-        label="Login Id"
+        label="Enter Login Id"
         id="login-id"
         name="loginId"
-        placeholder="e.g. admin@company.com"
+        placeholder="Enter your Login ID or Email"
         value={values.loginId}
         onChange={handleChange}
         error={errors.loginId}
@@ -44,9 +44,9 @@ export function LoginForm() {
         autoComplete="username"
       />
 
-      {/* Password Input */}
+      {/* Enter Password Input */}
       <Input
-        label="Password"
+        label="Enter Password"
         id="password"
         name="password"
         type="password"

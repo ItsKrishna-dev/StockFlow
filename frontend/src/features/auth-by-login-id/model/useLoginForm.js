@@ -24,6 +24,9 @@ export function useLoginForm({ onSuccess } = {}) {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
+    if (mutation.isError) {
+      mutation.reset();
+    }
   };
 
   const validate = () => {

@@ -37,10 +37,12 @@ async function request(method, path, body = undefined, options = {}) {
 
   const response = await fetch(`${BASE_URL}${path}`, config);
 
-  if (response.status === 401) {
+  if (response.status === 401 && !path.startsWith('/auth')) {
     // Clear stale session and redirect to login
     localStorage.removeItem(SESSION_KEY);
-    window.location.href = '/login';
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
     throw new Error('Session expired. Please login again.');
   }
 

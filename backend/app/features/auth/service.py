@@ -8,12 +8,13 @@ Business logic for the auth feature slice:
 - OTP generation & password reset
 """
 import hashlib
+import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -42,17 +43,25 @@ def hash_token(token: str) -> str:
 
 
 async def authenticate_and_issue_tokens(
-    email: str,
+    identifier: str,
     password: str,
     db: AsyncSession,
 ) -> TokenResponse:
-    result = await db.execute(select(User).where(User.email == email.strip().lower()))
+    clean_id = (identifier or "").strip().lower()
+    result = await db.execute(
+        select(User).where(
+            or_(
+                func.lower(User.email) == clean_id,
+                func.lower(User.login_id) == clean_id,
+            )
+        )
+    )
     user = result.scalar_one_or_none()
 
     if user is None or not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password.",
+            detail="Invalid Login Id or Password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -85,20 +94,66 @@ async def authenticate_and_issue_tokens(
 
 
 async def register_new_user(payload: SignupRequest, db: AsyncSession) -> UserOut:
-    existing = await db.execute(select(User).where(User.email == payload.email.strip().lower()))
-    if existing.scalar_one_or_none() is not None:
+    # 1. Login ID should be unique and must be between 6-12 characters
+    login_id = (payload.login_id or "").strip()
+    if len(login_id) < 6 or len(login_id) > 12:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A user with this email address already exists.",
+            detail="Login ID must be between 6 and 12 characters.",
+        )
+
+    existing_login = await db.execute(
+        select(User).where(func.lower(User.login_id) == login_id.lower())
+    )
+    if existing_login.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Login ID is already taken. Please choose another.",
+        )
+
+    # 2. Email ID should not be a duplicate in database
+    clean_email = str(payload.email).strip().lower()
+    existing_email = await db.execute(
+        select(User).where(func.lower(User.email) == clean_email)
+    )
+    if existing_email.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email ID is already registered.",
+        )
+
+    # 3. Password must contain small case, large case, special character and length more than 8
+    password = payload.password
+    if len(password) <= 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password length must be more than 8 characters.",
+        )
+    if not re.search(r"[a-z]", password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one lowercase letter.",
+        )
+    if not re.search(r"[A-Z]", password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one uppercase letter.",
+        )
+    if not re.search(r"[^A-Za-z0-9]", password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one special character.",
         )
 
     allowed_roles = {"admin", "inventory_manager", "warehouse_staff"}
     role = payload.role if payload.role in allowed_roles else "warehouse_staff"
+    full_name = payload.full_name.strip() if payload.full_name else login_id
 
     new_user = User(
-        email=str(payload.email).strip().lower(),
+        login_id=login_id,
+        email=clean_email,
         password_hash=hash_password(payload.password),
-        full_name=payload.full_name.strip(),
+        full_name=full_name,
         role=role,
         phone=payload.phone,
         is_active=True,

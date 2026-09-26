@@ -33,22 +33,22 @@ export function SignUpForm() {
         />
       )}
 
-      {/* Full Name */}
+      {/* 1. Enter Login Id */}
       <Input
-        label="Full Name"
-        id="signup-full-name"
-        name="full_name"
-        placeholder="e.g. John Smith"
-        value={values.full_name}
+        label="Enter Login Id"
+        id="signup-login-id"
+        name="login_id"
+        placeholder="6-12 characters, e.g. admin123"
+        value={values.login_id}
         onChange={handleChange}
-        error={errors.full_name}
+        error={errors.login_id}
         required
-        autoComplete="name"
+        autoComplete="username"
       />
 
-      {/* Enter Email */}
+      {/* 2. Enter Email Id */}
       <Input
-        label="Email Address"
+        label="Enter Email Id"
         id="signup-email"
         name="email"
         type="email"
@@ -58,6 +58,18 @@ export function SignUpForm() {
         error={errors.email}
         required
         autoComplete="email"
+      />
+
+      {/* Full Name */}
+      <Input
+        label="Full Name"
+        id="signup-full-name"
+        name="full_name"
+        placeholder="e.g. Mitchell Admin"
+        value={values.full_name}
+        onChange={handleChange}
+        error={errors.full_name}
+        autoComplete="name"
       />
 
       {/* Role Selection */}
@@ -86,13 +98,13 @@ export function SignUpForm() {
         </select>
       </div>
 
-      {/* Enter Password */}
+      {/* 3. Enter Password */}
       <Input
-        label="Password"
+        label="Enter Password"
         id="signup-password"
         name="password"
         type="password"
-        placeholder="Min 8 characters"
+        placeholder="More than 8 chars (1 uppercase, 1 lowercase, 1 symbol)"
         value={values.password}
         onChange={handleChange}
         error={errors.password}
@@ -102,11 +114,11 @@ export function SignUpForm() {
 
       {/* Re-enter Password */}
       <Input
-        label="Confirm Password"
+        label="Re-Enter Password"
         id="signup-confirm-password"
         name="confirmPassword"
         type="password"
-        placeholder="••••••••"
+        placeholder="Re-enter your password"
         value={values.confirmPassword}
         onChange={handleChange}
         error={errors.confirmPassword}
@@ -117,7 +129,7 @@ export function SignUpForm() {
       {/* Sign up Button */}
       <div className={styles.submitWrapper}>
         <Button type="submit" loading={isPending}>
-          Create Account
+          Sign Up
         </Button>
       </div>
 
