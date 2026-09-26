@@ -33,12 +33,13 @@ export function StockPage() {
     },
   });
 
-  // Filter products by search term
+  // Filter products by search term and filter state
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.code.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
+    const matchesStock = filterState.inStock ? p.onHand > 0 : true;
+    return matchesSearch && matchesStock;
   });
 
   return (

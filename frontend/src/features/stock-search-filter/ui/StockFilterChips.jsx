@@ -3,7 +3,7 @@ import styles from './StockFilterChips.module.css';
 
 export function StockFilterChips({ onFilterChange }) {
   const [inStockActive, setInStockActive] = useState(true);
-  const [selectedLocation, setSelectedLocation] = useState('WH/Stock');
+  const [selectedLocation] = useState('WH/Stock');
 
   const toggleInStock = () => {
     const next = !inStockActive;
