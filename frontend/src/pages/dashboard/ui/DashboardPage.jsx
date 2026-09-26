@@ -57,7 +57,7 @@ export function DashboardPage() {
                 icon={kpis.receipt.icon}
                 stripeColor={kpis.receipt.stripeColor}
                 actionText={kpis.receipt.actionText}
-                onActionClick={() => navigate(ROUTES.STOCK)}
+                onActionClick={() => navigate(ROUTES.RECEIPTS)}
                 lateCount={kpis.receipt.lateCount}
                 operationsCount={kpis.receipt.operationsCount}
                 progressDone={kpis.receipt.progressDone}
@@ -73,7 +73,7 @@ export function DashboardPage() {
                 icon={kpis.delivery.icon}
                 stripeColor={kpis.delivery.stripeColor}
                 actionText={kpis.delivery.actionText}
-                onActionClick={() => navigate(ROUTES.STOCK)}
+                onActionClick={() => navigate(ROUTES.DELIVERY_ORDERS)}
                 lateCount={kpis.delivery.lateCount}
                 waitingCount={kpis.delivery.waitingCount}
                 operationsCount={kpis.delivery.operationsCount}

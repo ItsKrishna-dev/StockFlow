@@ -8,11 +8,12 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
   const location = useLocation();
 
   const navItems = [
-    { label: 'Dashboard', path: ROUTES.DASHBOARD },
-    { label: 'Operations', path: ROUTES.OPERATIONS },
-    { label: 'Stock', path: ROUTES.STOCK },
-    { label: 'Move History', path: ROUTES.MOVE_HISTORY },
-    { label: 'Settings', path: ROUTES.SETTINGS },
+    { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: 'dashboard' },
+    { label: 'Receipts', path: ROUTES.RECEIPTS, icon: 'call_received' },
+    { label: 'Delivery Orders', path: ROUTES.DELIVERY_ORDERS, icon: 'local_shipping' },
+    { label: 'Stock', path: ROUTES.STOCK, icon: 'inventory' },
+    { label: 'Move History', path: ROUTES.MOVE_HISTORY, icon: 'receipt_long' },
+    { label: 'Settings', path: ROUTES.SETTINGS, icon: 'settings' },
   ];
 
   return (
@@ -25,28 +26,36 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
             className={styles.iconBtn}
             title="App Switcher"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
               apps
             </span>
           </button>
 
           {/* Brand & module name */}
-          <Link to={ROUTES.DASHBOARD} className={styles.brand}>
+          <Link to={ROUTES.HOME} className={styles.brand}>
+            <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#f0bfe0' }}>
+              inventory_2
+            </span>
             <span>StockFlow</span>
-            <span className={styles.appBadge}>inventory</span>
+            <span className={styles.appBadge}>operations</span>
           </Link>
 
           {/* Navigation */}
           <nav className={styles.nav}>
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive =
+                location.pathname === item.path ||
+                (item.path === ROUTES.DELIVERY_ORDERS && location.pathname === ROUTES.HOME);
               return (
                 <Link
                   key={item.label}
                   to={item.path}
                   className={cn(styles.navLink, isActive ? styles.navLinkActive : '')}
                 >
-                  {item.label}
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -58,10 +67,10 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
           <button
             type="button"
             className={styles.iconBtn}
-            title="Conversations"
+            title="AI Copilot & Chat"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-              chat
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+              auto_awesome
             </span>
           </button>
 
@@ -71,7 +80,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
               className={styles.iconBtn}
               title="Activities"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
                 schedule
               </span>
             </button>
@@ -81,7 +90,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
           <div className={styles.userProfile}>
             <span className={styles.userName}>{user.name}</span>
             <div className={styles.avatar}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
                 person
               </span>
             </div>

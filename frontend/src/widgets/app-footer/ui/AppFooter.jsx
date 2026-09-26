@@ -7,11 +7,16 @@ export function AppFooter() {
       <div className={styles.left}>
         <span className={styles.statusPill}>
           <span className={styles.greenDot} />
-          StockFlow 17.0+e (Enterprise Edition)
+          StockFlow 2.0 (Enterprise Edition)
         </span>
+        <span className={styles.dbInfo}>Database: production-live</span>
       </div>
       <div className={styles.right}>
         <span>UTC</span>
+        <a href="#docs" className={styles.link}>
+          Documentation & API
+        </a>
+        <span>•</span>
         <a href="#support" className={styles.link}>
           Support
         </a>
