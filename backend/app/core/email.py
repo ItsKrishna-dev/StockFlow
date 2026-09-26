@@ -89,26 +89,26 @@ def _send_smtp_sync(to_email: str, subject: str, html_body: str, plain_body: str
     """Synchronous SMTP worker function executed inside asyncio.to_thread."""
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+    msg["From"] = f"{settings.MAIL_FROM_NAME} <{settings.email_from}>"
     msg["To"] = to_email
     msg.set_content(plain_body)
     msg.add_alternative(html_body, subtype="html")
 
-    if not settings.SMTP_HOST:
-        raise ValueError("SMTP_HOST is not configured in settings")
+    if not settings.MAIL_SERVER:
+        raise ValueError("MAIL_SERVER is not configured in settings")
 
-    # Connect via SSL or TLS
-    if settings.SMTP_PORT == 465:
-        with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as server:
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+    # Connect via SSL (port 465) or STARTTLS (port 587)
+    if settings.MAIL_PORT == 465:
+        with smtplib.SMTP_SSL(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=20) as server:
+            if settings.MAIL_USERNAME and settings.MAIL_PASSWORD:
+                server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.send_message(msg)
     else:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as server:
-            if settings.SMTP_TLS:
+        with smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT, timeout=20) as server:
+            if settings.MAIL_TLS:
                 server.starttls()
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            if settings.MAIL_USERNAME and settings.MAIL_PASSWORD:
+                server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.send_message(msg)
 
 
@@ -119,8 +119,8 @@ async def send_otp_email(
 ) -> bool:
     """
     Sends the 6-digit OTP code to the recipient's email in real-time.
-    If SMTP credentials are configured in .env, sends via SMTP.
-    If SMTP credentials are not configured, prints clear terminal dev instructions.
+    If mail credentials are configured in .env, sends via SMTP.
+    If mail credentials are not configured, prints clear terminal dev instructions.
     """
     subject = f"Your StockSense Password Reset Code: {otp_code}"
     plain_body = (
@@ -131,13 +131,13 @@ async def send_otp_email(
     )
     html_body = _build_otp_html(otp_code, user_name)
 
-    if settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD:
+    if settings.MAIL_SERVER and settings.MAIL_USERNAME and settings.MAIL_PASSWORD:
         try:
             await asyncio.to_thread(_send_smtp_sync, to_email, subject, html_body, plain_body)
-            print(f"\n[REAL-TIME EMAIL] Successfully sent OTP email to: {to_email} via {settings.SMTP_HOST}\n")
+            print(f"\n[REAL-TIME EMAIL] Successfully sent OTP email to: {to_email} via {settings.MAIL_SERVER}\n")
             return True
         except Exception as exc:
-            print(f"\n[EMAIL ERROR] Failed to send email via SMTP ({settings.SMTP_HOST}): {exc}\n")
+            print(f"\n[EMAIL ERROR] Failed to send email via SMTP ({settings.MAIL_SERVER}): {exc}\n")
             # Fallback to dev console so the user is never locked out
             print(f"[FALLBACK DEV OTP] OTP for {to_email}: {otp_code} (Valid for 15 mins)\n")
             return False
@@ -146,11 +146,12 @@ async def send_otp_email(
         print(f"\n==================== [REAL-TIME OTP DISPATCH] ====================")
         print(f" Recipient: {to_email}")
         print(f" OTP Code : {otp_code}  (Valid for 15 mins)")
-        print(f" Status   : SMTP not configured in .env.")
-        print(f"            To send real emails to your Gmail inbox, add:")
-        print(f"            SMTP_HOST=smtp.gmail.com")
-        print(f"            SMTP_PORT=587")
-        print(f"            SMTP_USER=your_email@gmail.com")
-        print(f"            SMTP_PASSWORD=your_16_digit_app_password")
+        print(f" Status   : Mail credentials not configured in .env.")
+        print(f"            To send real emails to your Gmail inbox, set:")
+        print(f"            MAIL_SERVER=smtp.gmail.com")
+        print(f"            MAIL_PORT=587")
+        print(f"            MAIL_USERNAME=your_email@gmail.com")
+        print(f"            MAIL_PASSWORD=your_16_digit_app_password")
+        print(f"            MAIL_FROM=your_email@gmail.com")
         print(f"===================================================================\n")
         return True
