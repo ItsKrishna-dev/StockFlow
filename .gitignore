@@ -56,3 +56,6 @@ env/
 # Caches
 .cache/
 .eslintcache
+
+# Local Context Files
+stocksense_antigravity_project_context.md
