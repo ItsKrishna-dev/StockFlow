@@ -274,7 +274,12 @@ export default function WarehouseSettingsPage() {
     queryFn: () => warehousesApi.listLocations(),
   });
 
-  // Local state for warehouses, locations, and staff
+  const { data: apiStaff = [] } = useQuery({
+    queryKey: ['staff'],
+    queryFn: () => warehousesApi.listStaff(),
+  });
+
+  // Local states
   const [localWarehouses, setLocalWarehouses] = useState(INITIAL_WAREHOUSES);
   const [localSubLocations, setLocalSubLocations] = useState(INITIAL_SUB_LOCATIONS);
   const [staffMembers, setStaffMembers] = useState(INITIAL_STAFF_MEMBERS);
@@ -320,7 +325,38 @@ export default function WarehouseSettingsPage() {
     return localSubLocations;
   }, [apiLocations, localSubLocations]);
 
-  // Active section tab: 'overview' | 'profile' | 'locations' | 'staff'
+  // Mutations
+  const updateWarehouseMutation = useMutation({
+    mutationFn: ({ id, payload }) => warehousesApi.updateWarehouse(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
+      showToast('Warehouse updated successfully');
+      setIsModified(false);
+    },
+    onError: (err) => showToast(err.message || 'Failed to update warehouse'),
+  });
+
+  const createWarehouseMutation = useMutation({
+    mutationFn: (payload) => warehousesApi.createWarehouse(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
+      showToast('Warehouse created successfully');
+      setShowNewWarehouseModal(false);
+    },
+    onError: (err) => showToast(err.message || 'Failed to create warehouse'),
+  });
+
+  const createLocationMutation = useMutation({
+    mutationFn: (payload) => warehousesApi.createLocation(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['locations'] });
+      showToast('Location created successfully');
+      setShowLocationModal(false);
+    },
+    onError: (err) => showToast(err.message || 'Failed to create location'),
+  });
+
+  // Active navigation tab
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(INITIAL_WAREHOUSES[0].id);
   const [isModified, setIsModified] = useState(false);
@@ -385,8 +421,19 @@ export default function WarehouseSettingsPage() {
   };
 
   const handleSave = () => {
-    setIsModified(false);
-    showToast(`Configuration for "${currentWarehouse.name}" saved successfully`);
+    if (currentWarehouse.id && typeof currentWarehouse.id === 'number') {
+      updateWarehouseMutation.mutate({
+        id: currentWarehouse.id,
+        payload: {
+          name: currentWarehouse.name,
+          code: currentWarehouse.code,
+          address: currentWarehouse.address,
+        },
+      });
+    } else {
+      setIsModified(false);
+      showToast(`Configuration for "${currentWarehouse.name}" saved successfully`);
+    }
   };
 
   const handleDiscard = () => {
@@ -394,7 +441,7 @@ export default function WarehouseSettingsPage() {
     showToast('Changes discarded');
   };
 
-  // Filtered lists based on search and facility dropdown
+  // Filtered lists
   const filteredWarehouses = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return warehousesList.filter(wh =>
@@ -441,14 +488,22 @@ export default function WarehouseSettingsPage() {
       return;
     }
     const cleanCode = newWarehouseForm.code.trim().toUpperCase();
+    const cleanName = newWarehouseForm.name.trim();
+
+    createWarehouseMutation.mutate({
+      name: cleanName,
+      code: cleanCode,
+      address: newWarehouseForm.address || `${cleanName}\n${newWarehouseForm.city || ''}`,
+    });
+
     const newWh = {
       id: `WH-${Date.now().toString().slice(-4)}`,
-      name: newWarehouseForm.name.trim(),
+      name: cleanName,
       code: cleanCode,
       category: newWarehouseForm.category,
       city: newWarehouseForm.city || 'San Francisco, CA',
       country: newWarehouseForm.country || 'United States',
-      address: newWarehouseForm.address || `${newWarehouseForm.name.trim()}\n${newWarehouseForm.city || ''}`,
+      address: newWarehouseForm.address || `${cleanName}\n${newWarehouseForm.city || ''}`,
       incomingShipments: newWarehouseForm.incomingShipments,
       outgoingShipments: newWarehouseForm.outgoingShipments,
       resupplySubcontractors: newWarehouseForm.resupplySubcontractors,
@@ -459,8 +514,6 @@ export default function WarehouseSettingsPage() {
     };
     setLocalWarehouses(prev => [newWh, ...prev]);
     setSelectedWarehouseId(newWh.id);
-    setShowNewWarehouseModal(false);
-    showToast(`Warehouse "${newWh.name}" created`);
   };
 
   const handleCreateLocationSubmit = (e) => {
@@ -469,6 +522,12 @@ export default function WarehouseSettingsPage() {
       showToast('Please enter a location name');
       return;
     }
+
+    createLocationMutation.mutate({
+      name: newLocationForm.name.trim(),
+      type: 'internal',
+    });
+
     const newLoc = {
       id: `LOC-${Date.now().toString().slice(-4)}`,
       warehouseCode: newLocationForm.warehouseCode,
@@ -483,8 +542,6 @@ export default function WarehouseSettingsPage() {
       status: 'In Service',
     };
     setLocalSubLocations(prev => [newLoc, ...prev]);
-    setShowLocationModal(false);
-    showToast(`Sub-location "${newLoc.name}" added to ${newLoc.warehouseCode}`);
   };
 
   const handleAddStaffSubmit = (e) => {

@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -21,6 +21,7 @@ from app.models.models import (
     StockDocumentLine,
     StockLedger,
     StockQuant,
+    Warehouse,
 )
 
 # --- Location-type contracts per document type ---
@@ -95,7 +96,22 @@ async def create_document(
 
     await validate_location_types(db, doc_type, source_location_id, dest_location_id)
 
+    # Auto-generate document_number per wireframe: <Warehouse>/<Operation>/<ID>
+    wh_code = "WH"
+    if warehouse_id:
+        wh_row = await db.get(Warehouse, warehouse_id)
+        if wh_row and wh_row.code:
+            wh_code = wh_row.code.split("-")[0] if "-" in wh_row.code else wh_row.code
+
+    op_map = {"receipt": "IN", "delivery": "OUT", "internal_transfer": "INT", "adjustment": "ADJ"}
+    op_code = op_map.get(doc_type, "DOC")
+
+    count_res = await db.execute(select(func.count(StockDocument.id)).where(StockDocument.type == doc_type))
+    next_seq = (count_res.scalar() or 0) + 1
+    doc_number = f"{wh_code}/{op_code}/{str(next_seq).zfill(4)}"
+
     document = StockDocument(
+        document_number=doc_number,
         type=doc_type,
         status="draft",
         partner_id=partner_id,
@@ -140,12 +156,27 @@ async def list_documents(
     db: AsyncSession,
     doc_type: str,
     status_filter: str | None = None,
+    warehouse_id: uuid.UUID | None = None,
 ) -> list[StockDocument]:
     query = select(StockDocument).options(selectinload(StockDocument.lines)).where(StockDocument.type == doc_type)
     if status_filter:
         query = query.where(StockDocument.status == status_filter)
+    if warehouse_id:
+        query = query.where(StockDocument.warehouse_id == warehouse_id)
     result = await db.execute(query.order_by(StockDocument.created_at.desc()))
     return list(result.scalars().all())
+
+
+async def mark_document_ready(db: AsyncSession, document_id: uuid.UUID) -> StockDocument:
+    document = await get_document(db, document_id)
+    if document.status != "draft":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot mark document in '{document.status}' status as ready",
+        )
+    document.status = "ready"
+    await db.commit()
+    return await get_document(db, document_id)
 
 
 async def update_line_quantity(

@@ -16,6 +16,27 @@ export const warehousesApi = {
     return apiClient.post('/warehouses', payload);
   },
 
+  async updateWarehouse(id, payload) {
+    return apiClient.put(`/warehouses/${id}`, payload);
+  },
+
+  // ─── Staff ───────────────────────────────────────────────────────────────
+
+  async listStaff({ warehouse_id } = {}) {
+    const params = new URLSearchParams();
+    if (warehouse_id) params.set('warehouse_id', warehouse_id);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiClient.get(`/staff${query}`);
+  },
+
+  async listWarehouseStaff(warehouseId) {
+    return apiClient.get(`/warehouses/${warehouseId}/staff`);
+  },
+
+  async addWarehouseStaff(warehouseId, payload) {
+    return apiClient.post(`/warehouses/${warehouseId}/staff`, payload);
+  },
+
   // ─── Locations ───────────────────────────────────────────────────────────
 
   /**
