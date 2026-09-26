@@ -22,10 +22,23 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class UserOut(BaseModel):
+    id: uuid.UUID
+    email: EmailStr
+    login_id: str | None = None
+    full_name: str
+    role: str
+    is_active: bool
+    warehouse_id: uuid.UUID | None = None
+
+    model_config = {"from_attributes": True}
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    user: UserOut | None = None
 
 
 class RefreshRequest(BaseModel):
@@ -40,14 +53,3 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     otp_code: str
     new_password: str = Field(min_length=8, max_length=128)
-
-
-class UserOut(BaseModel):
-    id: uuid.UUID
-    email: EmailStr
-    login_id: str | None = None
-    full_name: str
-    role: str
-    is_active: bool
-
-    model_config = {"from_attributes": True}

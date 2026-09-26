@@ -5,6 +5,7 @@ import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
 import { adjustmentsApi } from '../../shared/api/operationsApi';
 import { warehousesApi } from '../../shared/api/warehousesApi';
+import { usePermissions } from '../../shared/lib/usePermissions';
 import { ROUTES } from '../../shared/config/routes';
 // Re-use Transfers CSS – same design system
 import styles from './Transfers.module.css';
@@ -42,6 +43,7 @@ export default function StockAdjustmentsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const selectAllRef = useRef(null);
+  const { canValidate, canCancel } = usePermissions();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -194,18 +196,22 @@ export default function StockAdjustmentsPage() {
         {selectedIds.length > 0 && (
           <div className={styles.bulkBar}>
             <span>{selectedIds.length} selected</span>
-            <button
-              className={styles.bulkBtn}
-              onClick={() => { selectedIds.forEach(id => validateMutation.mutate(id)); setSelectedIds([]); }}
-            >
-              Validate All
-            </button>
-            <button
-              className={`${styles.bulkBtn} ${styles.bulkBtnDanger}`}
-              onClick={() => { selectedIds.forEach(id => cancelMutation.mutate(id)); setSelectedIds([]); }}
-            >
-              Cancel All
-            </button>
+            {canValidate && (
+              <button
+                className={styles.bulkBtn}
+                onClick={() => { selectedIds.forEach(id => validateMutation.mutate(id)); setSelectedIds([]); }}
+              >
+                Validate All
+              </button>
+            )}
+            {canCancel && (
+              <button
+                className={`${styles.bulkBtn} ${styles.bulkBtnDanger}`}
+                onClick={() => { selectedIds.forEach(id => cancelMutation.mutate(id)); setSelectedIds([]); }}
+              >
+                Cancel All
+              </button>
+            )}
           </div>
         )}
 
@@ -277,7 +283,7 @@ export default function StockAdjustmentsPage() {
                     </td>
                     <td className={styles.td} onClick={e => e.stopPropagation()}>
                       <div className={styles.rowActions}>
-                        {a.status !== 'done' && a.status !== 'cancelled' && (
+                        {canValidate && a.status !== 'done' && a.status !== 'cancelled' && (
                           <button
                             className={styles.rowActionBtn}
                             title="Validate Adjustment"
@@ -286,7 +292,7 @@ export default function StockAdjustmentsPage() {
                             <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#006443' }}>check_circle</span>
                           </button>
                         )}
-                        {a.status !== 'done' && a.status !== 'cancelled' && (
+                        {canCancel && a.status !== 'done' && a.status !== 'cancelled' && (
                           <button
                             className={`${styles.rowActionBtn} ${styles.rowActionBtnDanger}`}
                             title="Cancel"

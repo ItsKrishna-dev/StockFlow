@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../shared/config/routes';
 import { authApi, sessionStore } from '../../../entities/session';
+import { usePermissions } from '../../../shared/lib/usePermissions';
 import { cn } from '../../../shared/lib/classNames';
 import styles from './AppHeader.module.css';
 
@@ -10,6 +11,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
   const navigate = useNavigate();
   const sessionUser = sessionStore.getUser();
   const session = sessionStore.getSession();
+  const { role, canManageSettings, isStaff } = usePermissions();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -31,9 +33,14 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const displayName = sessionUser?.fullName || sessionUser?.name || session?.email || user?.name || 'Admin User';
-  const displayRole = sessionUser?.role || 'Administrator';
-  const displayEmail = sessionUser?.email || session?.email || 'admin@stockflow.com';
+  const displayName = sessionUser?.fullName || sessionUser?.full_name || sessionUser?.name || session?.email || user?.name || 'User';
+  const roleLabels = {
+    admin: 'Enterprise Admin',
+    inventory_manager: 'Inventory Manager',
+    warehouse_staff: 'Warehouse Staff',
+  };
+  const displayRole = roleLabels[role] || roleLabels[sessionUser?.role] || 'Warehouse Staff';
+  const displayEmail = sessionUser?.email || session?.email || 'user@stockflow.com';
 
   const handleLogout = async () => {
     try {
@@ -58,13 +65,13 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
     ROUTES.ADJUSTMENTS,
   ].some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
 
-  // Main top navbar items (Receipts and Deliveries are moved inside Operations)
+  // Main top navbar items (Settings hidden if not permitted)
   const navItems = [
     { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: 'dashboard' },
     { label: 'Operations', path: ROUTES.RECEIPTS, icon: 'swap_horiz' },
     { label: 'Stock', path: ROUTES.STOCK, icon: 'inventory_2' },
     { label: 'Move History', path: ROUTES.MOVE_HISTORY, icon: 'receipt_long' },
-    { label: 'Settings', path: ROUTES.SETTINGS, icon: 'settings' },
+    ...(canManageSettings ? [{ label: 'Settings', path: ROUTES.SETTINGS, icon: 'settings' }] : []),
   ];
 
   // Secondary subnavbar tabs for the Operations section
@@ -237,17 +244,18 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
                     <span className={styles.userMenuRoleBadge}>{displayRole}</span>
                   </div>
                 </div>
-                <div className={styles.menuDivider} />
-                <Link
-                  to={ROUTES.SETTINGS}
-                  className={styles.userMenuItem}
-                  onClick={() => setShowUserMenu(false)}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
-                    settings
-                  </span>
-                  <span>Warehouse Settings</span>
-                </Link>
+                {canManageSettings && (
+                  <Link
+                    to={ROUTES.SETTINGS}
+                    className={styles.userMenuItem}
+                    onClick={() => setShowUserMenu(false)}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
+                      settings
+                    </span>
+                    <span>Warehouse Settings</span>
+                  </Link>
+                )}
                 <Link
                   to={ROUTES.STOCK}
                   className={styles.userMenuItem}

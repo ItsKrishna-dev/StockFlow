@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../shared/config/routes';
 import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
+import { usePermissions } from '../../shared/lib/usePermissions';
 import './DeliveryOrderDetail.css';
 
 const MOCK_RECORDS = [
@@ -86,6 +87,8 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
       navigate(ROUTES.DELIVERY_ORDERS);
     }
   };
+
+  const { canValidate, canCancel } = usePermissions();
 
   const [recordIndex, setRecordIndex] = useState(
     initialOrder?.reference === 'WH/OUT/0002' ? 1 : 0
@@ -231,16 +234,37 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
       <div className="doc-actions-bar">
         <div className="doc-buttons-group">
           {currentStage !== 'done' && (
-            <button className="btn-doc-validate" type="button" onClick={handleValidate}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
-              <span>Validate</span>
-            </button>
+            canValidate ? (
+              <button className="btn-doc-validate" type="button" onClick={handleValidate}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+                <span>Validate</span>
+              </button>
+            ) : (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  border: '1px solid #fde68a',
+                }}
+                title="Warehouse staff cannot validate transfers. An inventory manager or admin must review and validate."
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>hourglass_empty</span>
+                <span>Awaiting Manager Validation</span>
+              </div>
+            )
           )}
           <button className="btn-doc-action" type="button" onClick={() => { window.print(); showToast('Printing picking & delivery slip'); }}>
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>print</span>
             <span>Print</span>
           </button>
-          {currentStage !== 'done' && (
+          {canCancel && currentStage !== 'done' && (
             <button className="btn-doc-action" type="button" onClick={handleCancel}>
               <span>Cancel</span>
             </button>

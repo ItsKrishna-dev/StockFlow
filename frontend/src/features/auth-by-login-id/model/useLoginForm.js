@@ -13,7 +13,14 @@ export function useLoginForm({ onSuccess } = {}) {
   const mutation = useMutation({
     mutationFn: (data) => authApi.login(data),
     onSuccess: (data, variables) => {
-      sessionStore.setUser({ ...data, email: variables.loginId });
+      sessionStore.setUser({
+        ...data,
+        user: data.user,
+        role: data.user?.role || data.role || 'warehouse_staff',
+        warehouse_id: data.user?.warehouse_id || data.warehouse_id || null,
+        fullName: data.user?.full_name || data.fullName,
+        email: data.user?.email || variables.loginId,
+      });
       if (onSuccess) onSuccess(data);
     },
   });

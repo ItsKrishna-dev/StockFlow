@@ -109,10 +109,14 @@ async def update_product(
 @router.get("/products/{product_id}/stock", response_model=ProductStockSummary)
 async def get_product_stock(
     product_id: uuid.UUID,
+    warehouse_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> ProductStockSummary:
-    return await service.get_product_stock_summary(product_id, db)
+    effective_warehouse_id = warehouse_id
+    if current_user.role == "warehouse_staff" and current_user.warehouse_id:
+        effective_warehouse_id = current_user.warehouse_id
+    return await service.get_product_stock_summary(product_id, db, warehouse_id=effective_warehouse_id)
 
 
 # --- Reorder Rules ---------------------------------------------------------

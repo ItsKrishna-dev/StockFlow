@@ -5,6 +5,7 @@ import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
 import { transfersApi } from '../../shared/api/operationsApi';
 import { warehousesApi } from '../../shared/api/warehousesApi';
+import { usePermissions } from '../../shared/lib/usePermissions';
 import { ROUTES } from '../../shared/config/routes';
 import styles from './Transfers.module.css';
 
@@ -44,6 +45,7 @@ function mapTransfer(doc) {
 export default function InternalTransfersPage() {
   const queryClient = useQueryClient();
   const selectAllRef = useRef(null);
+  const { canValidate, canCancel } = usePermissions();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -206,18 +208,22 @@ export default function InternalTransfersPage() {
         {selectedIds.length > 0 && (
           <div className={styles.bulkBar}>
             <span>{selectedIds.length} selected</span>
-            <button
-              className={styles.bulkBtn}
-              onClick={() => { selectedIds.forEach(id => validateMutation.mutate(id)); setSelectedIds([]); }}
-            >
-              Validate All
-            </button>
-            <button
-              className={`${styles.bulkBtn} ${styles.bulkBtnDanger}`}
-              onClick={() => { selectedIds.forEach(id => cancelMutation.mutate(id)); setSelectedIds([]); }}
-            >
-              Cancel All
-            </button>
+            {canValidate && (
+              <button
+                className={styles.bulkBtn}
+                onClick={() => { selectedIds.forEach(id => validateMutation.mutate(id)); setSelectedIds([]); }}
+              >
+                Validate All
+              </button>
+            )}
+            {canCancel && (
+              <button
+                className={`${styles.bulkBtn} ${styles.bulkBtnDanger}`}
+                onClick={() => { selectedIds.forEach(id => cancelMutation.mutate(id)); setSelectedIds([]); }}
+              >
+                Cancel All
+              </button>
+            )}
           </div>
         )}
 
@@ -297,7 +303,7 @@ export default function InternalTransfersPage() {
                     </td>
                     <td className={styles.td} onClick={e => e.stopPropagation()}>
                       <div className={styles.rowActions}>
-                        {t.status !== 'done' && t.status !== 'cancelled' && (
+                        {canValidate && t.status !== 'done' && t.status !== 'cancelled' && (
                           <button
                             className={styles.rowActionBtn}
                             title="Validate Transfer"
@@ -306,7 +312,7 @@ export default function InternalTransfersPage() {
                             <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#006443' }}>check_circle</span>
                           </button>
                         )}
-                        {t.status !== 'done' && t.status !== 'cancelled' && (
+                        {canCancel && t.status !== 'done' && t.status !== 'cancelled' && (
                           <button
                             className={`${styles.rowActionBtn} ${styles.rowActionBtnDanger}`}
                             title="Cancel Transfer"

@@ -123,16 +123,21 @@ async def update_product(
 async def get_product_stock_summary(
     product_id: uuid.UUID,
     db: AsyncSession,
+    warehouse_id: uuid.UUID | None = None,
 ) -> ProductStockSummary:
     product = await db.get(Product, product_id)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
-    result = await db.execute(
+    query = (
         select(StockQuant, Location)
         .join(Location, StockQuant.location_id == Location.id)
         .where(StockQuant.product_id == product_id, Location.type == "internal")
     )
+    if warehouse_id:
+        query = query.where(Location.warehouse_id == warehouse_id)
+
+    result = await db.execute(query)
     rows = result.all()
 
     by_location = [
