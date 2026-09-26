@@ -1,0 +1,41 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.submitWrapper {
+  padding-top: 8px;
+}
+
+.footerLinks {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--odoo-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.forgotLink {
+  color: var(--odoo-text-secondary);
+  text-decoration: none;
+  transition: var(--odoo-transition);
+}
+
+.forgotLink:hover {
+  color: var(--odoo-primary);
+  text-decoration: underline;
+}
+
+.signupLink {
+  color: var(--odoo-primary);
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--odoo-transition);
+}
+
+.signupLink:hover {
+  text-decoration: underline;
+}

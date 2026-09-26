@@ -1,0 +1,30 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.submitWrapper {
+  padding-top: 8px;
+}
+
+.footerRow {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--odoo-border);
+  text-align: center;
+  font-size: 13px;
+  color: var(--odoo-text-secondary);
+}
+
+.loginLink {
+  color: var(--odoo-primary);
+  font-weight: 500;
+  text-decoration: none;
+  margin-left: 4px;
+  transition: var(--odoo-transition);
+}
+
+.loginLink:hover {
+  text-decoration: underline;
+}

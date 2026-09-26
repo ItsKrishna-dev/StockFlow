@@ -1,0 +1,59 @@
+:root {
+  /* StockFlow Enterprise Brand Colors */
+  --stockflow-primary: #714B67;
+  --stockflow-primary-hover: #5e3e56;
+  --stockflow-primary-active: #4d3246;
+  --stockflow-primary-focus: rgba(113, 75, 103, 0.25);
+  --stockflow-primary-light: #f9f5f8;
+
+  /* Surfaces & Borders */
+  --stockflow-bg: #FFFFFF;
+  --stockflow-surface: #FFFFFF;
+  --stockflow-surface-subtle: #F8F9FA;
+  --stockflow-border: #E0E0E0;
+  --stockflow-border-focus: #714B67;
+
+  /* Typography Colors */
+  --stockflow-text-primary: #4C4C4C;
+  --stockflow-text-secondary: #8F8F8F;
+  --stockflow-text-placeholder: rgba(143, 143, 143, 0.7);
+
+  /* Status Colors */
+  --stockflow-status-active: #10B981;
+  --stockflow-status-error: #EF4444;
+  --stockflow-status-error-bg: #FEE2E2;
+  --stockflow-status-error-border: #FCA5A5;
+  --stockflow-status-success: #10B981;
+  --stockflow-status-success-bg: #D1FAE5;
+
+  /* Geometry & Elevation */
+  --stockflow-radius: 4px;
+  --stockflow-radius-pill: 9999px;
+  --stockflow-transition: all 0.15s ease-in-out;
+  --stockflow-font: 'Roboto', 'Roboto Flex', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Aliases */
+  --odoo-primary: var(--stockflow-primary);
+  --odoo-primary-hover: var(--stockflow-primary-hover);
+  --odoo-primary-active: var(--stockflow-primary-active);
+  --odoo-primary-focus: var(--stockflow-primary-focus);
+  --odoo-primary-light: var(--stockflow-primary-light);
+  --odoo-bg: var(--stockflow-bg);
+  --odoo-surface: var(--stockflow-surface);
+  --odoo-surface-subtle: var(--stockflow-surface-subtle);
+  --odoo-border: var(--stockflow-border);
+  --odoo-border-focus: var(--stockflow-border-focus);
+  --odoo-text-primary: var(--stockflow-text-primary);
+  --odoo-text-secondary: var(--stockflow-text-secondary);
+  --odoo-text-placeholder: var(--stockflow-text-placeholder);
+  --odoo-status-active: var(--stockflow-status-active);
+  --odoo-status-error: var(--stockflow-status-error);
+  --odoo-status-error-bg: var(--stockflow-status-error-bg);
+  --odoo-status-error-border: var(--stockflow-status-error-border);
+  --odoo-status-success: var(--stockflow-status-success);
+  --odoo-status-success-bg: var(--stockflow-status-success-bg);
+  --odoo-radius: var(--stockflow-radius);
+  --odoo-radius-pill: var(--stockflow-radius-pill);
+  --odoo-transition: var(--stockflow-transition);
+  --odoo-font: var(--stockflow-font);
+}
