@@ -2,12 +2,29 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../shared/config/routes';
 import { cn } from '../../../shared/lib/classNames';
+import { authApi, sessionStore } from '../../../entities/session';
 import styles from './AppHeader.module.css';
 
 export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showOperationsMenu, setShowOperationsMenu] = useState(false);
+  const session = sessionStore.getSession();
+  const displayName = session?.email || user?.name || 'Vivek Maurya';
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = sessionStore.getRefreshToken();
+      if (refreshToken) {
+        await authApi.logout(refreshToken);
+      }
+    } catch {
+      // Ignore network errors
+    } finally {
+      sessionStore.clearUser();
+      navigate(ROUTES.LOGIN);
+    }
+  };
 
   const navItems = [
     { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: 'dashboard' },
@@ -185,14 +202,49 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
             <span className={styles.notifDot} />
           </div>
 
-          <div className={styles.userProfile}>
-            <span className={styles.userName}>{user.name}</span>
+          <div className={styles.userProfile} title={`Logged in as ${displayName}`}>
+            <span className={styles.userName} style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {displayName}
+            </span>
             <div className={styles.avatar}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
                 person
               </span>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Log Out"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              color: '#fca5a5',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 600,
+              transition: 'all 0.15s ease-in-out',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.25)';
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.12)';
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>
+              logout
+            </span>
+            <span>Logout</span>
+          </button>
         </div>
       </div>
     </header>
