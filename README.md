@@ -1,10 +1,9 @@
 <div align="center">
 
+<img src="https://readme-typing-svg.herokuapp.com?font=Poppins&weight=900&size=65&duration=2000&pause=500&color=00D9FF&center=true&vCenter=true&multiline=true&repeat=false&width=950&height=110&lines=StockFlow" alt="StockFlow" />
 
-# 📦 StockFlow
+<img src="https://readme-typing-svg.herokuapp.com?font=Poppins&size=22&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&width=800&lines=Auditable+Inventory+Management+%26+Operational+Intelligence" alt="Typing SVG" />
 
-
-### Auditable Inventory Management & Operational Intelligence
 
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
