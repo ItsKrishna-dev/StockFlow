@@ -1,86 +1,44 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { ROUTES } from '../../../shared/config/routes';
 import { AppHeader } from '../../../widgets/app-header';
 import { AppFooter } from '../../../widgets/app-footer';
+import { ledgerApi } from '../../../shared/api/ledgerApi';
 import './MoveHistory.css';
 
-const INITIAL_MOVES = [
-  {
-    id: '1',
-    reference: 'WH/IN/0001',
-    type: 'incoming',
-    date: '2023-12-01',
-    contact: 'Acme Interior',
-    fromLocation: 'vendor',
-    toLocation: 'WH/Stock1',
-    product: 'Steel Rods (STL-001)',
-    quantity: '15.00 kg',
-    status: 'ready',
-    link: '/receipts/WH-IN-0001',
-  },
-  {
-    id: '2',
-    reference: 'WH/OUT/0002',
-    type: 'outgoing',
-    date: '2023-12-02',
-    contact: 'Acme Interior',
-    fromLocation: 'WH/Stock1',
-    toLocation: 'vendor',
-    product: 'Wooden Panels (WPN-002)',
-    quantity: '8.00 pcs',
-    status: 'ready',
-    link: '/delivery-orders/2',
-  },
-  {
-    id: '3',
-    reference: 'WH/INT/0001',
-    type: 'internal',
-    date: '2023-12-03',
-    contact: 'Automated Rebalance',
-    fromLocation: 'WH/Stock1',
-    toLocation: 'WH/Rack-A',
-    product: 'Industrial Paint (PNT-006)',
-    quantity: '25.00 L',
-    status: 'done',
-    link: null,
-  },
-  {
-    id: '4',
-    reference: 'WH/OUT/0004',
-    type: 'outgoing',
-    date: '2023-11-25',
-    contact: 'Delta Heavy Industries',
-    fromLocation: 'WH/Rack-A',
-    toLocation: 'Customer Beta',
-    product: 'Safety Gloves (GLV-004)',
-    quantity: '50.00 pairs',
-    status: 'done',
-    link: '/delivery-orders/4',
-  },
-  {
-    id: '5',
-    reference: 'WH/IN/0002',
-    type: 'incoming',
-    date: '2023-12-02',
-    contact: 'Deco Addict',
-    fromLocation: 'vendor',
-    toLocation: 'WH/Stock2',
-    product: 'Office Chair (CHAIR-002)',
-    quantity: '12.00 Units',
-    status: 'draft',
-    link: '/receipts/WH-IN-0002',
-  },
-];
+/** Map backend DocumentOut to display shape */
+function mapMove(doc) {
+  const typeMap = { receipt: 'incoming', delivery: 'outgoing', transfer: 'internal', adjustment: 'adjustment' };
+  return {
+    id: doc.id,
+    reference: doc.document_number || `#${String(doc.id).slice(0, 8).toUpperCase()}`,
+    type: typeMap[doc.type] || doc.type,
+    date: doc.created_at ? new Date(doc.created_at).toLocaleDateString() : '—',
+    contact: doc.partner_id || '—',
+    fromLocation: doc.source_location_id,
+    toLocation: doc.dest_location_id,
+    product: doc.lines?.[0]?.product_id || '—',
+    quantity: doc.lines?.[0] ? `${Number(doc.lines[0].quantity_done).toFixed(2)}` : '0',
+    status: doc.status,
+    link: doc.type === 'receipt' ? `/receipts/${doc.id}` : doc.type === 'delivery' ? `/delivery-orders/${doc.id}` : null,
+  };
+}
 
 export default function MoveHistoryPage() {
   const navigate = useNavigate();
-  const [moves] = useState(INITIAL_MOVES);
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [activeView, setActiveView] = useState('list'); // list | kanban
   const [toastMessage, setToastMessage] = useState('');
+
+  const { data: rawMoves = [], isLoading, error } = useQuery({
+    queryKey: ['move-history'],
+    queryFn: () => ledgerApi.getMoveHistory(),
+  });
+
+  const moves = useMemo(() => rawMoves.map(mapMove), [rawMoves]);
 
   const showToast = (msg) => {
     setToastMessage(msg);

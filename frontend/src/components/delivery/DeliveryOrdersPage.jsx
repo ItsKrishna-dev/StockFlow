@@ -1,92 +1,36 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import './DeliveryOrders.css';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DeliveryDetailModal from './DeliveryDetailModal';
 import NewDeliveryModal from './NewDeliveryModal';
 import DeliveryOrderDetailView from './DeliveryOrderDetailView';
 import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
+import { deliveriesApi } from '../../shared/api/operationsApi';
 
-const INITIAL_ORDERS = [
-  {
-    id: '1',
-    reference: 'WH/OUT/0001',
-    fromLocation: 'WH/Stock1',
-    toLocation: 'vendor',
-    contact: 'Acme Interior',
-    scheduledDate: '2026-09-26',
-    status: 'ready',
-    lines: [
-      {
-        productName: 'Steel Rods (STL-001)',
-        demand: 15,
-        reserved: 15,
-        done: 15,
-        uom: 'kg',
-      }
-    ],
-    note: 'Priority outbound shipment for Acme Interior batch 1',
-  },
-  {
-    id: '2',
-    reference: 'WH/OUT/0002',
-    fromLocation: 'WH/Stock1',
-    toLocation: 'vendor',
-    contact: 'Acme Interior',
-    scheduledDate: '2026-09-26',
-    status: 'ready',
-    lines: [
-      {
-        productName: 'Wooden Panels (WPN-002)',
-        demand: 8,
-        reserved: 8,
-        done: 8,
-        uom: 'pcs',
-      }
-    ],
-    note: 'Standard return/vendor transfer packaging',
-  },
-  {
-    id: '3',
-    reference: 'WH/OUT/0003',
-    fromLocation: 'WH/Stock1',
-    toLocation: 'Customer Alpha',
-    contact: 'Customer Alpha',
-    scheduledDate: '2026-09-27',
-    status: 'waiting',
-    lines: [
-      {
-        productName: 'Industrial Paint (PNT-006)',
-        demand: 30,
-        reserved: 10,
-        done: 0,
-        uom: 'L',
-      }
-    ],
-    note: 'Awaiting raw batch quality inspection before dispatch',
-  },
-  {
-    id: '4',
-    reference: 'WH/OUT/0004',
-    fromLocation: 'WH/Rack-A',
-    toLocation: 'Customer Beta',
-    contact: 'Delta Heavy Industries',
-    scheduledDate: '2026-09-25',
-    status: 'done',
-    lines: [
-      {
-        productName: 'Safety Gloves (GLV-004)',
-        demand: 50,
-        reserved: 50,
-        done: 50,
-        uom: 'pairs',
-      }
-    ],
-    note: 'Completed delivery dispatched via Carrier Express',
-  }
-];
+/** Map backend DocumentOut to display shape */
+function mapDelivery(doc) {
+  return {
+    id: doc.id,
+    reference: doc.document_number || `#${String(doc.id).slice(0, 8).toUpperCase()}`,
+    fromLocation: doc.source_location_id,
+    toLocation: doc.dest_location_id,
+    contact: doc.partner_id || '—',
+    scheduledDate: doc.created_at ? new Date(doc.created_at).toLocaleDateString() : '—',
+    status: doc.status,
+    lines: (doc.lines || []).map(l => ({
+      productName: l.product_id,
+      demand: Number(l.quantity_expected),
+      reserved: Number(l.quantity_expected),
+      done: Number(l.quantity_done),
+      uom: l.uom_id,
+    })),
+    note: doc.notes || '',
+  };
+}
 
 export default function DeliveryOrdersPage() {
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ready');
@@ -96,6 +40,31 @@ export default function DeliveryOrdersPage() {
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [inspectOrder, setInspectOrder] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
+
+  const { data: rawOrders = [], isLoading, error } = useQuery({
+    queryKey: ['deliveries'],
+    queryFn: () => deliveriesApi.list(),
+  });
+
+  const orders = useMemo(() => rawOrders.map(mapDelivery), [rawOrders]);
+
+  const validateMutation = useMutation({
+    mutationFn: (id) => deliveriesApi.validate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      showToast('Order validated as DONE');
+    },
+    onError: (err) => showToast(err.message || 'Validation failed'),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: (id) => deliveriesApi.cancel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      showToast('Order cancelled');
+    },
+    onError: (err) => showToast(err.message || 'Cancel failed'),
+  });
 
   // Trigger brief toast
   const showToast = (msg) => {
@@ -157,38 +126,20 @@ export default function DeliveryOrdersPage() {
     setSelectedIds([]);
   };
 
-  // Validate an order
+  // Validate an order via real API
   const handleValidateOrder = (orderId) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: 'done' } : o))
-    );
-    if (inspectOrder && inspectOrder.id === orderId) {
-      setInspectOrder((prev) => ({ ...prev, status: 'done' }));
-    }
-    showToast(`Order ${inspectOrder?.reference || ''} marked as DONE`);
+    validateMutation.mutate(orderId);
   };
 
-  // Cancel an order
+  // Cancel an order via real API
   const handleCancelOrder = (orderId) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: 'canceled' } : o))
-    );
-    if (inspectOrder && inspectOrder.id === orderId) {
-      setInspectOrder((prev) => ({ ...prev, status: 'canceled' }));
-    }
-    showToast(`Order canceled`);
+    cancelMutation.mutate(orderId);
   };
 
-  // Create new order
+  // Create new order — refreshes list after creation
   const handleCreateOrder = (newOrderData) => {
-    const nextNum = (orders.length + 1).toString().padStart(4, '0');
-    const newRecord = {
-      id: Date.now().toString(),
-      reference: `WH/OUT/${nextNum}`,
-      ...newOrderData,
-    };
-    setOrders((prev) => [newRecord, ...prev]);
-    showToast(`Delivery Order ${newRecord.reference} successfully created`);
+    showToast('Delivery Order created successfully');
+    queryClient.invalidateQueries({ queryKey: ['deliveries'] });
   };
 
   // Download CSV

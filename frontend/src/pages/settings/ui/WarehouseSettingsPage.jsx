@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '../../../shared/config/routes';
 import { AppHeader } from '../../../widgets/app-header';
 import { AppFooter } from '../../../widgets/app-footer';
+import { warehousesApi } from '../../../shared/api/warehousesApi';
 import './WarehouseSettings.css';
 
 const INITIAL_WAREHOUSES = [
@@ -259,10 +261,78 @@ const INITIAL_STAFF_MEMBERS = [
 
 export default function WarehouseSettingsPage() {
   const navigate = useNavigate();
-  const [warehousesList, setWarehousesList] = useState(INITIAL_WAREHOUSES);
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState('WH-01');
-  const [subLocations, setSubLocations] = useState(INITIAL_SUB_LOCATIONS);
-  const [staffMembers, setStaffMembers] = useState(INITIAL_STAFF_MEMBERS);
+  const queryClient = useQueryClient();
+
+  // Real data from backend (falls back to mock lists when empty)
+  const { data: apiWarehouses = [] } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: () => warehousesApi.listWarehouses(),
+  });
+
+  const { data: apiLocations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: () => warehousesApi.listLocations(),
+  });
+
+  const createWarehouseMutation = useMutation({
+    mutationFn: (payload) => warehousesApi.createWarehouse(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
+      showToast('Warehouse created successfully');
+      setShowNewWarehouseModal(false);
+    },
+    onError: (err) => showToast(err.message || 'Failed to create warehouse'),
+  });
+
+  const createLocationMutation = useMutation({
+    mutationFn: (payload) => warehousesApi.createLocation(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['locations'] });
+      showToast('Location created successfully');
+      setShowLocationModal(false);
+    },
+    onError: (err) => showToast(err.message || 'Failed to create location'),
+  });
+
+  // Merge: use real API data if available, otherwise fall back to seed mocks
+  const warehousesList = apiWarehouses.length > 0
+    ? apiWarehouses.map(w => ({
+        id: w.id,
+        name: w.name,
+        code: w.code,
+        category: 'Warehouse',
+        city: w.city || '',
+        country: w.country || '',
+        address: w.address || '',
+        incomingShipments: true,
+        outgoingShipments: true,
+        resupplySubcontractors: false,
+        manager: '',
+        operatingHours: '',
+        totalCapacity: 0,
+        status: w.is_active !== false ? 'Active' : 'Inactive',
+      }))
+    : INITIAL_WAREHOUSES;
+
+  const subLocations = apiLocations.length > 0
+    ? apiLocations.map(l => ({
+        id: l.id,
+        warehouseCode: l.warehouse_id,
+        name: l.name,
+        path: l.complete_name || l.name,
+        zone: l.type,
+        type: l.type === 'internal' ? 'Internal Storage' : l.type,
+        category: l.type,
+        barcode: l.barcode || '',
+        itemsHeld: 0,
+        maxCapacity: 0,
+        status: l.is_active !== false ? 'In Service' : 'Out of Service',
+      }))
+    : INITIAL_SUB_LOCATIONS;
+
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState(null);
+  // Staff: not yet in backend API, use mock data for demo
+  const [staffMembers] = useState(INITIAL_STAFF_MEMBERS);
 
   // Active navigation tab: 'overview' | 'profile' | 'locations' | 'staff'
   const [activeSection, setActiveSection] = useState('overview');

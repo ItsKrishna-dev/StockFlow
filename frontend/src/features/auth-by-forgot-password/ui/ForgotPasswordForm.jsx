@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, Alert } from '../../../shared/ui';
 import { ROUTES } from '../../../shared/config/routes';
+import { authApi } from '../../../entities/session';
 import styles from './ForgotPasswordForm.module.css';
 
 export function ForgotPasswordForm() {
@@ -67,40 +68,46 @@ export function ForgotPasswordForm() {
   };
 
   // Step 1: Request OTP
-  const handleRequestOtp = (e) => {
+  const handleRequestOtp = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!email.trim()) {
-      setError('Please enter your registered email address or Login ID');
+      setError('Please enter your registered email address');
       return;
     }
 
     setIsPending(true);
-
-    setTimeout(() => {
-      setIsPending(false);
+    try {
+      await authApi.forgotPassword(email.trim());
       setStep('VERIFY_OTP');
       setResendTimer(60);
       setInfoMsg(`A 6-digit verification code has been sent to ${email}`);
-    }, 700);
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setIsPending(false);
+    }
   };
 
   // Resend OTP
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (!canResend) return;
     setIsPending(true);
     setError('');
-
-    setTimeout(() => {
-      setIsPending(false);
+    try {
+      await authApi.forgotPassword(email.trim());
       setResendTimer(60);
       setOtp(['', '', '', '', '', '']);
       setInfoMsg(`New verification code sent to ${email}`);
-    }, 600);
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP.');
+    } finally {
+      setIsPending(false);
+    }
   };
 
-  // Step 2: Verify OTP -> Navigate to separate New Password Page
+  // Step 2: Verify OTP -> Navigate to separate New Password Page with otp
   const handleVerifyOtp = (e) => {
     e.preventDefault();
     setError('');
@@ -111,13 +118,8 @@ export function ForgotPasswordForm() {
       return;
     }
 
-    setIsPending(true);
-
-    setTimeout(() => {
-      setIsPending(false);
-      // Navigate to dedicated new password page
-      navigate(ROUTES.RESET_PASSWORD, { state: { email } });
-    }, 700);
+    // Pass email + OTP to reset-password page via route state
+    navigate(ROUTES.RESET_PASSWORD, { state: { email, otp: fullOtp } });
   };
 
   return (
