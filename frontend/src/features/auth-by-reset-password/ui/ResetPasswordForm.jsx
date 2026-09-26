@@ -9,8 +9,8 @@ export function ResetPasswordForm() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const email = location.state?.email || '';
-  const otp = location.state?.otp || '';
+  const [email, setEmail] = useState(location.state?.email || '');
+  const [otp, setOtp] = useState(location.state?.otp || '');
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,8 +24,8 @@ export function ResetPasswordForm() {
   const passwordStrength = useMemo(() => {
     if (!newPassword) return { score: 0, label: '', color: '' };
     let score = 0;
-    if (newPassword.length >= 6) score += 1;
-    if (newPassword.length >= 10) score += 1;
+    if (newPassword.length >= 8) score += 1;
+    if (newPassword.length >= 12) score += 1;
     if (/[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword)) score += 1;
     if (/[^A-Za-z0-9]/.test(newPassword)) score += 1;
 
@@ -47,6 +47,19 @@ export function ResetPasswordForm() {
     e.preventDefault();
     setError('');
 
+    const cleanEmail = email.trim();
+    const cleanOtp = otp.trim();
+
+    if (!cleanEmail) {
+      setError('Please provide your registered email address.');
+      return;
+    }
+
+    if (!cleanOtp || cleanOtp.length < 6) {
+      setError('Please enter the 6-digit OTP code sent to your email.');
+      return;
+    }
+
     if (!newPassword) {
       setError('Please enter a new password');
       return;
@@ -62,16 +75,11 @@ export function ResetPasswordForm() {
       return;
     }
 
-    if (!email || !otp) {
-      setError('Invalid reset session. Please start the forgot-password process again.');
-      return;
-    }
-
     setIsPending(true);
     try {
       await authApi.resetPassword({
-        email,
-        otp_code: otp,
+        email: cleanEmail,
+        otp_code: cleanOtp,
         new_password: newPassword,
       });
       setIsSuccess(true);
@@ -115,19 +123,49 @@ export function ResetPasswordForm() {
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
       {error && <Alert variant="error" message={error} />}
 
-      <div className={styles.infoBanner}>
-        <div className={styles.infoIconBox}>
-          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-            vpn_key
-          </span>
-        </div>
-        <div style={{ flex: 1 }}>
-          <div className={styles.infoHeading}>Set New Password</div>
-          <div className={styles.infoDesc}>
-            Creating new credentials for <strong style={{ color: '#714b67' }}>{email}</strong>
+      {location.state?.email ? (
+        <div className={styles.infoBanner}>
+          <div className={styles.infoIconBox}>
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+              vpn_key
+            </span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div className={styles.infoHeading}>Set New Password</div>
+            <div className={styles.infoDesc}>
+              Creating new credentials for <strong style={{ color: '#714b67' }}>{email}</strong>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <Input
+            label="Email Address"
+            id="reset-email"
+            type="email"
+            placeholder="your.email@company.com"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setError('');
+            }}
+            required
+          />
+          <Input
+            label="6-Digit OTP Code"
+            id="reset-otp"
+            type="text"
+            maxLength={6}
+            placeholder="Enter the 6-digit code"
+            value={otp}
+            onChange={(e) => {
+              setOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
+              setError('');
+            }}
+            required
+          />
+        </>
+      )}
 
       {/* New Password Input */}
       <div style={{ position: 'relative' }}>
@@ -136,14 +174,14 @@ export function ResetPasswordForm() {
           id="new-password"
           name="newPassword"
           type={showPassword ? 'text' : 'password'}
-          placeholder="Enter new password (min. 6 chars)"
+          placeholder="Enter new password (min. 8 chars)"
           value={newPassword}
           onChange={(e) => {
             setNewPassword(e.target.value);
             setError('');
           }}
           required
-          autoFocus
+          autoFocus={Boolean(location.state?.email)}
           autoComplete="new-password"
         />
         <button

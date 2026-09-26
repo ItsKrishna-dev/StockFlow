@@ -48,7 +48,11 @@ async function request(method, path, body = undefined, options = {}) {
     let errorMessage = `Request failed: ${response.status} ${response.statusText}`;
     try {
       const errorData = await response.json();
-      errorMessage = errorData?.detail || errorData?.message || errorMessage;
+      if (Array.isArray(errorData?.detail)) {
+        errorMessage = errorData.detail.map(d => `${d.loc?.slice(-1)[0] || 'field'}: ${d.msg}`).join('; ');
+      } else {
+        errorMessage = errorData?.detail || errorData?.message || errorMessage;
+      }
     } catch {
       // Keep default error message
     }
