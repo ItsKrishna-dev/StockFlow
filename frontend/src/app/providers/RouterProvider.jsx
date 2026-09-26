@@ -15,6 +15,8 @@ import DeliveryOrdersPage from '../../components/delivery/DeliveryOrdersPage';
 import DeliveryOrderDetailView from '../../components/delivery/DeliveryOrderDetailView';
 import ReceiptsListPage from '../../components/receipts/ReceiptsListPage';
 import ReceiptDetailPage from '../../components/receipts/ReceiptDetailPage';
+import InternalTransfersPage from '../../components/transfers/InternalTransfersPage';
+import StockAdjustmentsPage from '../../components/transfers/StockAdjustmentsPage';
 import { ROUTES } from '../../shared/config/routes';
 
 export function AppRouterProvider() {
@@ -23,7 +25,7 @@ export function AppRouterProvider() {
       <Routes>
         {/* Default route */}
         <Route path={ROUTES.HOME} element={<DashboardPage />} />
-        
+
         {/* Authentication Routes */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.SIGNUP} element={<SignUpPage />} />
@@ -42,7 +44,13 @@ export function AppRouterProvider() {
         {/* Receipt Routes: List page first, then Detail page on receipt click */}
         <Route path={ROUTES.RECEIPTS} element={<ReceiptsListPage />} />
         <Route path={ROUTES.RECEIPT_DETAIL} element={<ReceiptDetailPage />} />
-        
+
+        {/* Internal Transfers */}
+        <Route path={ROUTES.TRANSFERS} element={<InternalTransfersPage />} />
+
+        {/* Stock Adjustments */}
+        <Route path={ROUTES.ADJUSTMENTS} element={<StockAdjustmentsPage />} />
+
         {/* Move History Audit Route */}
         <Route path={ROUTES.MOVE_HISTORY} element={<MoveHistoryPage />} />
 
