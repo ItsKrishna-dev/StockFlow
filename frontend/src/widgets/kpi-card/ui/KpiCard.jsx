@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '../../../shared/lib/classNames';
 import styles from './KpiCard.module.css';
 
 export function KpiCard({
   title,
   icon,
-  stripeColor = 'var(--stockflow-primary)',
   actionText,
   onActionClick,
   lateCount = 0,
@@ -14,29 +13,40 @@ export function KpiCard({
   progressDone = 0,
   progressTotal = 0,
   subReference,
-  segments = [],
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const progressPct = progressTotal > 0 ? Math.round((progressDone / progressTotal) * 100) : 0;
 
   return (
     <div className={styles.card}>
-      {/* Left colored stripe */}
-      <div className={styles.leftStripe} style={{ backgroundColor: stripeColor }} />
-
-      <div>
+      <div className={styles.cardContent}>
         {/* Header */}
         <div className={styles.cardHeader}>
           <div className={styles.titleGroup}>
-            <span
-              className={cn('material-symbols-outlined', styles.titleIcon)}
-              style={{ color: stripeColor }}
-            >
-              {icon}
-            </span>
-            <h2 className={styles.title}>{title}</h2>
+            <div className={styles.titleIconBox}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                {icon}
+              </span>
+            </div>
+            <div>
+              <h2 className={styles.title}>{title}</h2>
+              {subReference && <span className={styles.subReference}>{subReference}</span>}
+            </div>
           </div>
 
-          <div className={styles.menuWrapper}>
+          <div ref={menuRef} className={styles.menuWrapper}>
             <button
               type="button"
               className={styles.kebabBtn}
@@ -53,106 +63,87 @@ export function KpiCard({
                 <button
                   type="button"
                   className={styles.dropdownItem}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (onActionClick) onActionClick();
+                  }}
                 >
-                  View Operations
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>open_in_new</span>
+                  <span>View Operations</span>
                 </button>
                 <button
                   type="button"
                   className={styles.dropdownItem}
                   onClick={() => setMenuOpen(false)}
                 >
-                  Configuration
-                </button>
-                <button
-                  type="button"
-                  className={styles.dropdownItem}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Reporting
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>tune</span>
+                  <span>Configuration</span>
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className={styles.actionWrapper}>
+        {/* Main Action & Metrics */}
+        <div className={styles.mainSection}>
           <button
             type="button"
-            className={styles.actionButton}
+            className={styles.actionBtn}
             onClick={onActionClick}
           >
             <span>{actionText}</span>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>
               arrow_forward
             </span>
           </button>
-        </div>
 
-        {/* Metrics List */}
-        <div className={styles.metricsList}>
-          {lateCount > 0 && (
-            <div className={styles.metricRow}>
-              <div className={styles.metricLeft}>
-                <span className={styles.statusDot} style={{ backgroundColor: '#ba1a1a' }} />
-                <span style={{ color: '#ba1a1a', fontWeight: 500 }}>
+          {/* Quick Metrics Tags */}
+          <div className={styles.metricsList}>
+            {lateCount > 0 && (
+              <div className={styles.metricRow}>
+                <span className={cn(styles.badge, styles.badgeError)}>
                   {lateCount} Late
                 </span>
               </div>
-              <span className={cn(styles.badge, styles.badgeError)}>
-                {waitingCount !== null ? 'Delayed' : 'Attention'}
-              </span>
-            </div>
-          )}
+            )}
 
-          {waitingCount !== null && waitingCount > 0 && (
-            <div className={styles.metricRow}>
-              <div className={styles.metricLeft}>
-                <span className={styles.statusDot} style={{ backgroundColor: '#5bb8fe' }} />
-                <span style={{ color: '#006398', fontWeight: 500 }}>
-                  {waitingCount} waiting
+            {waitingCount !== null && waitingCount > 0 && (
+              <div className={styles.metricRow}>
+                <span className={cn(styles.badge, styles.badgeWarning)}>
+                  {waitingCount} Waiting
                 </span>
               </div>
-              <span className={cn(styles.badge, styles.badgeSecondary)}>
-                Availability
-              </span>
-            </div>
-          )}
+            )}
 
-          <div className={styles.metricRow}>
-            <div className={styles.metricLeft}>
-              <span
-                className={styles.statusDot}
-                style={{ backgroundColor: 'rgba(78, 68, 74, 0.4)' }}
-              />
-              <span style={{ color: 'var(--stockflow-text-primary)' }}>
-                {operationsCount} operations
+            <div className={styles.metricRow}>
+              <span className={cn(styles.badge, styles.badgeNeutral)}>
+                {operationsCount} Total
               </span>
             </div>
-            <span className={styles.badgeCaption}>Total scheduled</span>
           </div>
         </div>
-      </div>
 
-      {/* Progress Section */}
-      <div className={styles.progressSection}>
-        <div className={styles.progressBar}>
-          {segments.map((seg, i) => (
+        {/* Progress Section */}
+        <div className={styles.progressSection}>
+          <div className={styles.progressBar}>
             <div
-              key={i}
               className={styles.progressSegment}
-              style={{ backgroundColor: seg.color, width: seg.width }}
+              style={{ width: `${progressPct}%` }}
             />
-          ))}
-        </div>
-        <div className={styles.progressMeta}>
-          <span>
-            Progress ({progressDone} Done / {progressTotal})
-          </span>
-          <span className={styles.progressSubRef}>{subReference}</span>
+          </div>
+          <div className={styles.progressMeta}>
+            <span>
+              Progress: <strong>{progressDone} Done</strong> / {progressTotal} Total
+            </span>
+            <span className={styles.progressPctText}>
+              {progressPct}%
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+export default KpiCard;
+
+

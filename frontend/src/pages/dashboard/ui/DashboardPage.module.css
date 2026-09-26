@@ -2,10 +2,10 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f7f5f2;
-  color: #2f2937;
+  background-color: #fbf9f8;
+  color: #1b1c1c;
   font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -18,15 +18,16 @@
 
 .contentWrapper {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1540px;
   margin: 0 auto;
-  padding: 24px 28px;
+  padding: 22px 28px 48px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
+  animation: fadeIn 0.2s ease;
 }
 
-/* ── Stats Strip ─────────────────────────────────────────────────────────── */
+/* ── Stats Strip (Simple, Clean, Minimal) ────────────────────────────────── */
 .statsStrip {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -42,68 +43,175 @@
 
 .statCard {
   background: #ffffff;
-  border: 1px solid #d1c3ca;
-  border-left: 4px solid #57344f;
-  border-radius: 8px;
+  border: 1.5px solid #e8e4ec;
+  border-radius: 10px;
   padding: 16px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
-  transition: box-shadow 0.15s, transform 0.15s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .statCard:hover {
-  box-shadow: 0 4px 16px rgba(87, 52, 79, 0.1);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(113, 75, 103, 0.08);
+  border-color: #714b67;
+}
+
+.statIconBox {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: #f7e8f5;
+  color: #714b67;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.statCard:hover .statIconBox {
+  transform: scale(1.05);
+}
+
+.statMeta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .statValue {
   font-size: 22px;
-  font-weight: 700;
-  color: #57344f;
+  font-weight: 800;
+  color: #212529;
   line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .statLabel {
+  font-size: 12.5px;
+  color: #756f82;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.statTagWarning {
   font-size: 11px;
-  color: #80747a;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  margin-top: 2px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
 /* ── KPI Grid ────────────────────────────────────────────────────────────── */
 .kpiGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 18px;
 }
 
 @media (min-width: 768px) {
   .kpiGrid { grid-template-columns: repeat(2, 1fr); }
 }
+@media (min-width: 1280px) {
+  .kpiGrid { grid-template-columns: repeat(4, 1fr); }
+}
 
-/* ── Quick Links ─────────────────────────────────────────────────────────── */
+/* ── Filter Pills Section ────────────────────────────────────────────────── */
+.filterSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid #e8e4ec;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.filterPills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: #fbf9f8;
+  border: 1.5px solid #e8e4ec;
+  color: #4e444a;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filterPill:hover {
+  background: #fdfafd;
+  border-color: #714b67;
+  color: #714b67;
+}
+
+.filterPillActive {
+  background: #714b67;
+  color: #ffffff;
+  border-color: #714b67;
+  box-shadow: 0 2px 8px rgba(113, 75, 103, 0.25);
+}
+
+.filterPillActive:hover {
+  background: #57344f;
+  color: #ffffff;
+}
+
+.filterCountBadge {
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.12);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+/* ── Quick Links (Simple & Clean) ────────────────────────────────────────── */
 .quickLinks {
   background: #ffffff;
-  border: 1px solid #d1c3ca;
+  border: 1.5px solid #e8e4ec;
   border-radius: 10px;
-  padding: 18px 20px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.quickLinksHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .quickLinksTitle {
-  font-size: 11px;
-  font-weight: 600;
-  color: #80747a;
+  font-size: 13px;
+  font-weight: 800;
+  color: #756f82;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 14px 0;
+  letter-spacing: 0.05em;
+  margin: 0;
 }
 
 .quickLinksGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 @media (min-width: 640px) {
@@ -118,25 +226,44 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 14px 8px;
+  gap: 10px;
+  padding: 14px 10px;
   border-radius: 8px;
   text-decoration: none;
-  color: #1b1c1c;
-  border: 1px solid #efeded;
-  background: #fbf9f8;
-  transition: all 0.15s;
+  color: #212529;
+  border: 1.5px solid #e8e4ec;
+  background: #ffffff;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
 }
+
 .quickLink:hover {
-  background: #efeded;
-  border-color: #d1c3ca;
+  background: #fdfafd;
+  border-color: #714b67;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(113, 75, 103, 0.08);
+}
+
+.quickLinkIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #f7e8f5;
+  color: #714b67;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.quickLink:hover .quickLinkIconBox {
+  transform: scale(1.06);
 }
 
 .quickLinkLabel {
-  font-size: 11px;
-  font-weight: 500;
-  color: #4e444a;
+  font-size: 13px;
+  font-weight: 600;
+  color: #212529;
 }
+
+

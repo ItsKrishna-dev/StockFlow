@@ -1,5 +1,6 @@
 /* ==========================================================================
    StockFlow Enterprise - Unified Stock Table Styles
+   Enhanced Typography, Comfortable Sizing, and Smooth Transitions
    ========================================================================== */
 
 .sheetContainer {
@@ -12,6 +13,7 @@
   display: flex;
   flex-direction: column;
   font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: all 0.2s ease;
 }
 
 .tableWrapper {
@@ -23,13 +25,13 @@
   width: 100%;
   text-align: left;
   border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .theadRow {
   background-color: #fbf9f8;
   border-bottom: 1.5px solid #e8e4ec;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 800;
   color: #756f82;
   text-transform: uppercase;
@@ -38,11 +40,11 @@
 }
 
 .th {
-  padding: 10px 14px;
+  padding: 12px 16px;
 }
 
 .thCheckbox {
-  width: 40px;
+  width: 44px;
   text-align: center;
 }
 
@@ -55,16 +57,16 @@
 }
 
 .actionsCell {
-  width: 60px;
+  width: 64px;
   text-align: center;
 }
 
 .tbody {
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .tr {
-  transition: background-color 0.15s ease;
+  transition: background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s ease;
   border-bottom: 1.5px solid #f0edf2;
   cursor: pointer;
 }
@@ -74,13 +76,14 @@
 }
 
 .tr:hover {
-  background-color: #f7f5f8;
+  background-color: #f9f6f9;
 }
 
 .td {
-  padding: 10px 14px;
+  padding: 13px 16px;
   color: #212529;
   vertical-align: middle;
+  font-size: 14.5px;
 }
 
 .tdCheckbox {
@@ -90,41 +93,47 @@
 .checkbox {
   accent-color: #714b67;
   cursor: pointer;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 .productCell {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .productIconBox {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   background-color: #f7e8f5;
   color: #714b67;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.tr:hover .productIconBox {
+  transform: scale(1.05);
 }
 
 .productInfo {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .productTitle {
   font-weight: 700;
   color: #212529;
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .productCode {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #756f82;
   font-family: monospace;
 }
@@ -138,18 +147,20 @@
 }
 
 .costCell {
-  font-weight: 600;
+  font-weight: 700;
   color: #4e444a;
+  font-size: 14.5px;
 }
 
 .quantityBadge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
-  border-radius: 4px;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 13.5px;
+  transition: all 0.15s ease;
 }
 
 .freeToUseBadge {
@@ -159,8 +170,8 @@
 }
 
 .greenDot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: #15803d;
 }
@@ -168,10 +179,10 @@
 .statusPill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 14px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   background-color: #d1fae5;
   color: #006443;
@@ -181,18 +192,19 @@
   background: transparent;
   border: none;
   color: #756f82;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 6px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .actionIconBtn:hover {
   color: #ba1a1a;
   background-color: #fee2e2;
+  transform: scale(1.08);
 }
 
 .editingRow {
@@ -201,13 +213,14 @@
 
 .editInput {
   width: 100%;
-  padding: 5px 8px;
+  padding: 6px 10px;
   border: 1.5px solid #714b67;
-  border-radius: 4px;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 14px;
   outline: none;
   font-family: inherit;
   background-color: #ffffff;
+  transition: all 0.15s ease;
 }
 
 .addLineRow {
@@ -217,20 +230,21 @@
 .btnAddLine {
   color: #714b67;
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 13.5px;
   background: transparent;
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btnAddLine:hover {
   background-color: rgba(113, 75, 103, 0.1);
+  transform: translateX(2px);
 }
 
 /* Aggregation Footer */
@@ -238,26 +252,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 12px 20px;
   background-color: #fbf9f8;
   border-top: 1.5px solid #e8e4ec;
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: #756f82;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .aggLeft {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
   flex-wrap: wrap;
 }
 
 .aggItem {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .aggValue {
@@ -278,17 +292,17 @@
 .totalValueBox {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .totalLabel {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #756f82;
 }
 
 .totalAmount {
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 800;
   color: #714b67;
 }
@@ -298,22 +312,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 4px 0 4px;
-  font-size: 12px;
+  padding: 12px 6px 0 6px;
+  font-size: 13px;
   color: #756f82;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .helperTip {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .helperMeta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-weight: 500;
 }
+

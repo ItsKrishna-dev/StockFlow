@@ -7,86 +7,24 @@ import { AppFooter } from '../../widgets/app-footer';
 import { receiptsApi } from '../../shared/api/operationsApi';
 import './ReceiptDetail.css';
 
-const MOCK_RECEIPTS = [
-  {
-    id: 'WH/IN/0001',
-    stage: 'ready', // draft | ready | done
-    scheduleDate: '12/01/2023 10:30:00',
-    receiveFrom: 'Acme Interior',
-    responsible: 'Mitchell Admin',
-    purchaseOrder: 'P000042',
-    destinationLocation: 'WH/Stock',
-    transfersCount: 1,
-    products: [
-      {
-        id: 1,
-        code: '[DESK001]',
-        name: 'Desk',
-        quantity: 6.0,
-        unit: 'Units',
-      },
-    ],
-    logs: [
-      {
-        id: 1,
-        author: 'Mitchell Admin',
-        isSystem: false,
-        time: '12/01/2023 10:30:12',
-        body: 'Receipt created from Purchase Order P000042. Expected shipment received at WH/Stock.',
-      },
-      {
-        id: 2,
-        author: 'Automated Stock Control',
-        isSystem: true,
-        time: '12/01/2023 10:31:00',
-        stageTransition: { from: 'Draft', to: 'Ready' },
-        body: 'Stage changed from Draft to Ready . Stock reservations completed.',
-      },
-    ],
-  },
-  {
-    id: 'WH/IN/0002',
-    stage: 'draft',
-    scheduleDate: '12/02/2023 14:15:00',
-    receiveFrom: 'Deco Addict',
-    responsible: 'Mitchell Admin',
-    purchaseOrder: 'P000043',
-    destinationLocation: 'WH/Stock2',
-    transfersCount: 2,
-    products: [
-      {
-        id: 1,
-        code: '[CHAIR002]',
-        name: 'Office Chair',
-        quantity: 12.0,
-        unit: 'Units',
-      },
-      {
-        id: 2,
-        code: '[LAMP005]',
-        name: 'Desk Lamp',
-        quantity: 4.0,
-        unit: 'Units',
-      },
-    ],
-    logs: [
-      {
-        id: 1,
-        author: 'Mitchell Admin',
-        isSystem: false,
-        time: '12/02/2023 14:15:22',
-        body: 'Receipt draft initiated for Vendor Deco Addict.',
-      },
-    ],
-  },
-];
-
 export default function ReceiptDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
 
-  const { data: receiptDoc, isLoading, error } = useQuery({
+  const [activeTab, setActiveTab] = useState('operations'); // operations | additional | note
+  const [showComposer, setShowComposer] = useState(false);
+  const [composerMode, setComposerMode] = useState('note'); // note | message
+  const [composerText, setComposerText] = useState('');
+  const [localLogs, setLocalLogs] = useState([]);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3500);
+  };
+
+  const { data: receiptDoc } = useQuery({
     queryKey: ['receipt', id],
     queryFn: () => receiptsApi.get(id),
     enabled: !!id,
@@ -97,7 +35,7 @@ export default function ReceiptDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['receipt', id] });
       queryClient.invalidateQueries({ queryKey: ['receipts'] });
-      showToast('Receipt validated successfully!');
+      showToast('Receipt validated successfully as DONE!');
     },
     onError: (err) => showToast(err.message || 'Validation failed'),
   });
@@ -114,41 +52,45 @@ export default function ReceiptDetailPage() {
 
   // Map backend DocumentOut to the view shape
   const currentReceipt = useMemo(() => {
-    if (!receiptDoc) return null;
+    if (!receiptDoc) {
+      return {
+        id: id || 'WH/IN/0001',
+        stage: 'ready',
+        scheduleDate: new Date().toLocaleDateString(),
+        receiveFrom: 'Vendor Partner',
+        responsible: 'Mitchell Admin',
+        purchaseOrder: 'PO-0001',
+        destinationLocation: 'WH/Stock',
+        transfersCount: 1,
+        products: [
+          { id: 1, code: '[PROD001]', name: 'Standard Item', quantity: 10, unit: 'Units' },
+        ],
+        logs: localLogs,
+      };
+    }
     return {
       id: receiptDoc.document_number || receiptDoc.id,
-      stage: receiptDoc.status,
+      stage: receiptDoc.status || 'draft',
       scheduleDate: receiptDoc.created_at ? new Date(receiptDoc.created_at).toLocaleString() : '—',
-      receiveFrom: receiptDoc.partner_id || '—',
-      responsible: '—',
-      purchaseOrder: receiptDoc.notes || '—',
-      destinationLocation: receiptDoc.dest_location_id,
-      transfersCount: receiptDoc.lines?.length || 0,
+      receiveFrom: receiptDoc.partner_id || 'Vendor Partner',
+      responsible: 'Mitchell Admin',
+      purchaseOrder: receiptDoc.notes || 'PO-Auto',
+      destinationLocation: receiptDoc.dest_location_id || 'WH/Stock',
+      transfersCount: receiptDoc.lines?.length || 1,
       products: (receiptDoc.lines || []).map((l, i) => ({
         id: l.id || i + 1,
         code: l.product_id,
         name: l.product_id,
-        quantity: Number(l.quantity_expected),
+        quantity: Number(l.quantity_expected || 1),
         unit: l.uom_id || 'Units',
       })),
-      logs: [],
+      logs: localLogs,
     };
-  }, [receiptDoc]);
-
-  const [activeTab, setActiveTab] = useState('operations'); // operations | additional | note
-  const [showComposer, setShowComposer] = useState(false);
-  const [composerMode, setComposerMode] = useState('note'); // note | message
-  const [composerText, setComposerText] = useState('');
-  const [toastMessage, setToastMessage] = useState('');
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3500);
-  };
+  }, [receiptDoc, id, localLogs]);
 
   // Validate handler — calls real API
   const handleValidate = () => {
-    if (!currentReceipt || currentReceipt.stage === 'done') {
+    if (currentReceipt.stage === 'done') {
       showToast('Receipt is already validated.');
       return;
     }
@@ -156,26 +98,8 @@ export default function ReceiptDetailPage() {
   };
 
   // Cancel handler — calls real API
-  const handleCancelOrder = () => {
+  const handleCancel = () => {
     cancelMutation.mutate();
-  };
-
-  // Add Product line
-  const handleAddProduct = () => {
-    const newProd = {
-      id: Date.now(),
-      code: `[ITEM00${currentReceipt.products.length + 1}]`,
-      name: 'Custom Inventory Item',
-      quantity: 1.0,
-      unit: 'Units',
-    };
-    const updated = [...receiptsData];
-    updated[receiptIndex] = {
-      ...currentReceipt,
-      products: [...currentReceipt.products, newProd],
-    };
-    setReceiptsData(updated);
-    showToast('New product line added.');
   };
 
   // Submit note/message
@@ -191,28 +115,26 @@ export default function ReceiptDetailPage() {
       body: composerText,
     };
 
-    const updated = [...receiptsData];
-    updated[receiptIndex] = {
-      ...currentReceipt,
-      logs: [newLog, ...currentReceipt.logs],
-    };
-    setReceiptsData(updated);
+    setLocalLogs(prev => [newLog, ...prev]);
     setComposerText('');
     setShowComposer(false);
-    showToast(composerMode === 'note' ? 'Log note recorded' : 'Message sent to followers');
+    showToast(composerMode === 'note' ? 'Log note recorded' : 'Message sent');
   };
 
   return (
     <div className="receipt-page-container">
       <AppHeader />
 
-      {/* ---------------- Subheader & Control Panel Ribbon ---------------- */}
+      {/* Subheader & Control Panel Ribbon */}
       <div className="receipt-control-ribbon">
         <div className="ribbon-left-section">
           <button
             className="btn-new-record"
             type="button"
-            onClick={() => showToast('New Receipt Draft initialized')}
+            onClick={() => {
+              navigate(ROUTES.RECEIPTS);
+              showToast('Creating new receipt');
+            }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
             <span>New</span>
@@ -249,86 +171,56 @@ export default function ReceiptDetailPage() {
           </div>
 
           <div className="receipt-action-buttons">
-            <button className="btn-action-primary" type="button" onClick={handleValidate}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
-              <span>Validate</span>
-            </button>
+            {currentReceipt.stage !== 'done' && (
+              <button className="btn-action-primary" type="button" onClick={handleValidate}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+                <span>Validate</span>
+              </button>
+            )}
             <button className="btn-action-secondary" type="button" onClick={() => window.print()}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>print</span>
               <span>Print</span>
             </button>
-            <button className="btn-action-secondary" type="button" onClick={() => navigate(ROUTES.DELIVERY_ORDERS)}>
-              <span>Cancel</span>
-            </button>
+            {currentReceipt.stage !== 'cancelled' && currentReceipt.stage !== 'done' && (
+              <button className="btn-action-secondary" type="button" onClick={handleCancel}>
+                <span>Cancel</span>
+              </button>
+            )}
           </div>
         </div>
 
         <div className="ribbon-right-section">
-          {/* Pager */}
-          <div className="receipt-pager">
-            <span>
-              {receiptIndex + 1} / {receiptsData.length}
-            </span>
-            <div className="pager-buttons">
-              <button
-                className="pager-btn"
-                disabled={receiptIndex === 0}
-                onClick={() => setReceiptIndex((prev) => prev - 1)}
-                title="Previous Receipt"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_left</span>
-              </button>
-              <button
-                className="pager-btn"
-                disabled={receiptIndex === receiptsData.length - 1}
-                onClick={() => setReceiptIndex((prev) => prev + 1)}
-                title="Next Receipt"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_right</span>
-              </button>
-            </div>
-          </div>
-
           {/* Pipeline Stage Status */}
           <div className="pipeline-status-bar">
-            <button
-              className={`stage-pill ${currentReceipt.stage === 'draft' ? 'active' : ''} ${currentReceipt.stage !== 'draft' ? 'done' : ''}`}
-              onClick={() => handleStageChange('draft')}
-            >
+            <span className={`stage-pill ${currentReceipt.stage === 'draft' ? 'active' : ''} ${currentReceipt.stage !== 'draft' ? 'done' : ''}`}>
               {currentReceipt.stage !== 'draft' && (
                 <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check</span>
               )}
               <span>Draft</span>
-            </button>
+            </span>
 
-            <button
-              className={`stage-pill ${currentReceipt.stage === 'ready' ? 'active' : ''} ${currentReceipt.stage === 'done' ? 'done' : ''}`}
-              onClick={() => handleStageChange('ready')}
-            >
+            <span className={`stage-pill ${currentReceipt.stage === 'ready' ? 'active' : ''} ${currentReceipt.stage === 'done' ? 'done' : ''}`}>
               <span>Ready</span>
               {currentReceipt.stage === 'ready' && <span className="stage-dot"></span>}
-            </button>
+            </span>
 
-            <button
-              className={`stage-pill ${currentReceipt.stage === 'done' ? 'active' : ''}`}
-              onClick={() => handleStageChange('done')}
-            >
+            <span className={`stage-pill ${currentReceipt.stage === 'done' ? 'active' : ''}`}>
               <span>Done</span>
-            </button>
+            </span>
           </div>
         </div>
       </div>
 
-      {/* ---------------- Main Body ---------------- */}
+      {/* Main Body */}
       <main className="receipt-main-content">
-        {/* ---------------- Primary Record Sheet Card ---------------- */}
+        {/* Primary Record Sheet Card */}
         <div className="record-sheet-card">
           <div className="sheet-header-top">
             <div className="sheet-title-area">
               <div className="status-badges-group">
                 <span className="badge-pill-incoming">
                   <span className="pulse-dot"></span>
-                  Incoming Receipt
+                  Incoming Shipment
                 </span>
                 {currentReceipt.stage === 'ready' && <span className="badge-pill-ready">Ready</span>}
                 {currentReceipt.stage === 'done' && <span className="badge-pill-done">Done</span>}
@@ -339,7 +231,7 @@ export default function ReceiptDetailPage() {
 
             {/* Smart Stats Buttons */}
             <div className="sheet-smart-buttons">
-              <button className="smart-stat-btn" onClick={() => showToast('Showing 1 connected transfer')}>
+              <button className="smart-stat-btn" onClick={() => showToast('1 connected transfer')}>
                 <div className="smart-btn-icon-wrap">
                   <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>sync_alt</span>
                 </div>
@@ -349,7 +241,7 @@ export default function ReceiptDetailPage() {
                 </div>
               </button>
 
-              <button className="smart-stat-btn" onClick={() => showToast('Upstream trace generated')}>
+              <button className="smart-stat-btn" onClick={() => showToast('Upstream trace active')}>
                 <div className="smart-btn-icon-wrap">
                   <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>route</span>
                 </div>
@@ -458,10 +350,6 @@ export default function ReceiptDetailPage() {
                 </table>
 
                 <div className="table-bottom-bar">
-                  <button className="btn-add-product-line" onClick={handleAddProduct}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>add_circle</span>
-                    <span>Add a product</span>
-                  </button>
                   <span className="lines-counter-txt">
                     {currentReceipt.products.length} line{currentReceipt.products.length !== 1 ? 's' : ''} recorded
                   </span>
@@ -475,7 +363,7 @@ export default function ReceiptDetailPage() {
                 <p><strong>Source Document:</strong> {currentReceipt.purchaseOrder}</p>
                 <p><strong>Destination Location:</strong> {currentReceipt.destinationLocation}</p>
                 <p><strong>Operation Type:</strong> Receipts (Incoming Shipment)</p>
-                <p><strong>Tracking Policy:</strong> Automatic serial allocation on warehouse entry</p>
+                <p><strong>Tracking Policy:</strong> Automated serial allocation on entry</p>
               </div>
             )}
 
@@ -493,7 +381,7 @@ export default function ReceiptDetailPage() {
           </div>
         </div>
 
-        {/* ---------------- Chatter / Communication Stream ---------------- */}
+        {/* Chatter / Communication Stream */}
         <div className="chatter-card">
           <div className="chatter-header-actions">
             <div className="chatter-btns-group">
@@ -518,24 +406,14 @@ export default function ReceiptDetailPage() {
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>
                 <span>Log note</span>
               </button>
-
-              <button className="btn-chatter-tool" onClick={() => showToast('Activities schedule modal opened')}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>schedule</span>
-                <span>Activities</span>
-              </button>
             </div>
 
             <div className="chatter-meta-info">
               <div className="meta-chip-item">
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>visibility</span>
-                <span>2 Followers</span>
-              </div>
-              <span>•</span>
-              <div className="meta-chip-item">
                 <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#006443' }}>
                   verified_user
                 </span>
-                <span>Audit enabled</span>
+                <span>Live Audit Enabled</span>
               </div>
             </div>
           </div>
@@ -574,7 +452,7 @@ export default function ReceiptDetailPage() {
 
           {/* Activity Log Stream */}
           <div className="chatter-log-list">
-            {currentReceipt.logs.map((log) => (
+            {currentReceipt.logs && currentReceipt.logs.map((log) => (
               <div key={log.id} className="chatter-entry-item">
                 <div className={`entry-user-avatar ${log.isSystem ? 'system-bot' : ''}`}>
                   <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
@@ -586,64 +464,13 @@ export default function ReceiptDetailPage() {
                     <span className="entry-author-title">{log.author}</span>
                     <span className="entry-time-text">{log.time}</span>
                   </div>
-                  <div className="entry-body-text">
-                    {log.stageTransition ? (
-                      <span>
-                        Stage changed from{' '}
-                        <span className={`log-tag ${log.stageTransition.from.toLowerCase()}`}>
-                          {log.stageTransition.from}
-                        </span>{' '}
-                        to{' '}
-                        <span className={`log-tag ${log.stageTransition.to.toLowerCase()}`}>
-                          {log.stageTransition.to}
-                        </span>{' '}
-                        . {log.body.replace(/Stage changed from .* to .* \. /, '')}
-                      </span>
-                    ) : (
-                      log.body
-                    )}
-                  </div>
+                  <div className="entry-body-text">{log.body}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </main>
-
-      {/* ---------------- System Footer ---------------- */}
-      <footer className="system-footer">
-        <div className="system-footer-left">
-          <span>
-            <span className="system-status-indicator"></span>
-            StockFlow 2.0 (Enterprise Edition)
-          </span>
-          <span>Database: production-live</span>
-        </div>
-        <div className="system-footer-right">
-          <span>UTC</span>
-          <a
-            href="#docs"
-            style={{ color: 'inherit', textDecoration: 'none' }}
-            onClick={(e) => {
-              e.preventDefault();
-              showToast('Opening documentation');
-            }}
-          >
-            Documentation & API
-          </a>
-          <span>•</span>
-          <a
-            href="#support"
-            style={{ color: 'inherit', textDecoration: 'none' }}
-            onClick={(e) => {
-              e.preventDefault();
-              showToast('StockFlow Support Active');
-            }}
-          >
-            Support
-          </a>
-        </div>
-      </footer>
 
       {/* Toast Notification */}
       {toastMessage && (
@@ -677,3 +504,4 @@ export default function ReceiptDetailPage() {
     </div>
   );
 }
+

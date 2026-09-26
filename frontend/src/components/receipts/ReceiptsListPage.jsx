@@ -23,14 +23,13 @@ function mapReceipt(doc) {
 
 export default function ReceiptsListPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [activeView, setActiveView] = useState('list'); // list | kanban
   const [toastMessage, setToastMessage] = useState('');
 
-  const { data: rawReceipts = [], isLoading, error } = useQuery({
+  const { data: rawReceipts = [] } = useQuery({
     queryKey: ['receipts'],
     queryFn: () => receiptsApi.list(),
   });

@@ -1,15 +1,16 @@
 /* ==========================================================================
    StockFlow Enterprise - Unified Stock Inventory Page Styles
+   Enhanced Typography, Comfortable Sizing, and Smooth Transitions
    ========================================================================== */
 
 .page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f7f5f2;
-  color: #2f2937;
+  background-color: #fbf9f8;
+  color: #1b1c1c;
   font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -18,7 +19,7 @@
 /* Control Ribbon */
 .controlRibbon {
   background-color: #ffffff;
-  padding: 10px 28px;
+  padding: 12px 28px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -26,6 +27,7 @@
   gap: 16px;
   border-bottom: 1.5px solid #e8e4ec;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
 }
 
 .ribbonLeft {
@@ -38,13 +40,13 @@
 .btnNewRecord {
   background-color: #714b67;
   color: #ffffff;
-  padding: 7px 16px;
+  padding: 8px 18px;
   border-radius: 6px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   cursor: pointer;
   border: none;
   box-shadow: 0 2px 6px rgba(113, 75, 103, 0.25);
@@ -54,18 +56,23 @@
 .btnNewRecord:hover {
   background-color: #57344f;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(113, 75, 103, 0.35);
+  box-shadow: 0 4px 12px rgba(113, 75, 103, 0.35);
+}
+
+.btnNewRecord:active {
+  transform: translateY(0);
 }
 
 .breadcrumbs {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 15px;
 }
 
 .crumbParent {
   color: #714b67;
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -74,15 +81,16 @@
 
 .crumbParent:hover {
   text-decoration: underline;
+  color: #57344f;
 }
 
 .crumbSeparator {
   color: #b0a8b4;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .crumbCurrent {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 800;
   color: #212529;
   letter-spacing: -0.02em;
@@ -98,8 +106,8 @@
 }
 
 .toolIconBtn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,13 +116,14 @@
   border: 1.5px solid #e8e4ec;
   background-color: #ffffff;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toolIconBtn:hover {
   background-color: #f7f5f8;
   color: #714b67;
   border-color: #714b67;
+  transform: translateY(-1px);
 }
 
 .ribbonRight {
@@ -130,10 +139,10 @@
   background-color: #ffffff;
   border: 1.5px solid #d8d4dc;
   border-radius: 6px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   gap: 8px;
   width: 340px;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .searchContainer:focus-within {
@@ -145,7 +154,7 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   color: #212529;
   width: 100%;
   font-weight: 500;
@@ -160,6 +169,7 @@
   color: #756f82;
   cursor: pointer;
   padding: 0;
+  transition: color 0.15s ease;
 }
 
 .chipClose:hover {
@@ -170,7 +180,7 @@
 .subnavRibbon {
   background-color: #ffffff;
   border-bottom: 1.5px solid #e8e4ec;
-  padding: 8px 28px;
+  padding: 10px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -181,7 +191,7 @@
 .subnavPills {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -189,33 +199,34 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: 20px;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 600;
   background-color: #ffffff;
   border: 1.5px solid #e8e4ec;
   color: #756f82;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pillTab:hover {
   border-color: #714b67;
   color: #714b67;
+  background-color: #fdfafd;
 }
 
 .pillTabActive {
   background-color: #714b67;
   color: #ffffff;
   border-color: #714b67;
-  box-shadow: 0 2px 6px rgba(113, 75, 103, 0.2);
+  box-shadow: 0 2px 6px rgba(113, 75, 103, 0.25);
 }
 
 .recordsCountText {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: #756f82;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Workspace Canvas */
@@ -227,9 +238,10 @@
 
 .canvasWrapper {
   width: 100%;
-  max-width: 1400px;
-  margin: 18px auto 48px auto;
+  max-width: 1440px;
+  margin: 20px auto 48px auto;
   padding: 0 28px;
+  transition: all 0.2s ease;
 }
 
 /* Modal Dialog */
@@ -240,25 +252,43 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modalCard {
   background-color: #ffffff;
   border-radius: 12px;
   border: 1.5px solid #e8e4ec;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  animation: modalSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modalHeader {
@@ -266,11 +296,11 @@
   align-items: center;
   justify-content: space-between;
   border-bottom: 1.5px solid #f0edf2;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
 }
 
 .modalTitle {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
   color: #212529;
   margin: 0;
@@ -283,37 +313,47 @@
   color: #756f82;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.modalCloseBtn:hover {
+  background-color: #f5f3f3;
+  color: #ba1a1a;
 }
 
 .modalForm {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .formLabel {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #4e444a;
 }
 
 .formInput {
   width: 100%;
-  padding: 7px 10px;
+  padding: 8px 12px;
   border: 1.5px solid #d8d4dc;
   border-radius: 6px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 500;
   color: #212529;
   outline: none;
   font-family: inherit;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
 .formInput:focus {
@@ -325,37 +365,38 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   border-top: 1.5px solid #f0edf2;
-  padding-top: 14px;
+  padding-top: 16px;
   margin-top: 6px;
 }
 
 .btnPrimary {
   background-color: #714b67;
   color: #ffffff;
-  padding: 7px 16px;
+  padding: 8px 18px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   border: none;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(113, 75, 103, 0.25);
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btnPrimary:hover {
   background-color: #57344f;
   transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(113, 75, 103, 0.35);
 }
 
 .btnSecondary {
   background-color: #ffffff;
   border: 1.5px solid #d8d4dc;
   color: #495057;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -369,17 +410,30 @@
 
 .toast {
   position: fixed;
-  bottom: 36px;
-  right: 24px;
+  bottom: 32px;
+  right: 28px;
   background-color: #2f2937;
   color: #ffffff;
-  padding: 10px 18px;
+  padding: 12px 20px;
   border-radius: 8px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 1100;
+  animation: toastSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

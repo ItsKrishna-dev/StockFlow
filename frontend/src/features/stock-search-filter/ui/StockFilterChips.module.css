@@ -1,12 +1,12 @@
 .bar {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 16px 28px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 600;
   overflow-x: auto;
   font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,10 +18,12 @@
   gap: 6px;
   background-color: #714b67;
   color: #ffffff;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 20px;
   user-select: none;
-  box-shadow: 0 2px 8px rgba(113, 75, 103, 0.2);
+  font-size: 13.5px;
+  box-shadow: 0 2px 8px rgba(113, 75, 103, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .chipCloseBtn {
@@ -46,11 +48,12 @@
   gap: 6px;
   background-color: #ffffff;
   color: #756f82;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 20px;
   border: 1.5px solid #e8e4ec;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 13.5px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 
@@ -58,6 +61,7 @@
   background-color: #fcfbfd;
   color: #714b67;
   border-color: #714b67;
+  transform: translateY(-1px);
 }
 
 .customFilter {
@@ -68,12 +72,13 @@
   color: #714b67;
   cursor: pointer;
   font-weight: 700;
-  font-size: 13px;
-  padding: 6px 12px;
+  font-size: 14px;
+  padding: 6px 14px;
   border-radius: 6px;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .customFilter:hover {
   background-color: rgba(113, 75, 103, 0.08);
 }
+

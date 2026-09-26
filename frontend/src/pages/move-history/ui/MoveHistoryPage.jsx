@@ -33,7 +33,7 @@ export default function MoveHistoryPage() {
   const [activeView, setActiveView] = useState('list'); // list | kanban
   const [toastMessage, setToastMessage] = useState('');
 
-  const { data: rawMoves = [], isLoading, error } = useQuery({
+  const { data: rawMoves = [] } = useQuery({
     queryKey: ['move-history'],
     queryFn: () => ledgerApi.getMoveHistory(),
   });
