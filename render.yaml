@@ -9,7 +9,7 @@ services:
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.12
+        value: 3.11.9
       - key: ENVIRONMENT
         value: production
       - key: DATABASE_URL
