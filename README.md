@@ -93,6 +93,7 @@ Every validated operation creates an append-only ledger entry. PostgreSQL trigge
 - **AI copilot:** answers fixed read-only inventory questions using verified backend data. It cannot execute SQL, create documents, validate operations, or modify stock.
 
 
+
 ## Architecture
 
 
