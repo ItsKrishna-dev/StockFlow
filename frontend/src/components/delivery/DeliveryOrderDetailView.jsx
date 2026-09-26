@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../shared/config/routes';
+import { AppHeader } from '../../widgets/app-header';
+import { AppFooter } from '../../widgets/app-footer';
 import './DeliveryOrderDetail.css';
 
 const MOCK_RECORDS = [
@@ -74,6 +78,15 @@ const MOCK_RECORDS = [
 ];
 
 export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) {
+  const navigate = useNavigate();
+  const handleBack = () => {
+    if (onBackToList) {
+      onBackToList();
+    } else {
+      navigate(ROUTES.DELIVERY_ORDERS);
+    }
+  };
+
   const [recordIndex, setRecordIndex] = useState(
     initialOrder?.reference === 'WH/OUT/0002' ? 1 : 0
   );
@@ -170,82 +183,15 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
 
   return (
     <div className="detail-view-container">
-      {/* ---------------- Top Global Navigation Bar ---------------- */}
-      <header className="top-header">
-        <div className="header-left">
-          <button className="icon-btn" title="StockFlow Apps" type="button" onClick={onBackToList}>
-            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>apps</span>
-          </button>
-          
-          <div className="brand-badge" onClick={onBackToList}>
-            <span className="brand-flow-logo">
-              <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#f0bfe0' }}>inventory_2</span>
-              StockFlow
-            </span>
-            <span className="app-tag">operations</span>
-          </div>
-
-          <nav className="nav-links">
-            <button className="nav-item" type="button" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>dashboard</span>
-              Dashboard
-            </button>
-            <button className="nav-item" type="button" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>call_received</span>
-              Receipts
-            </button>
-            <button className="nav-item active" type="button" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>local_shipping</span>
-              Delivery Orders
-            </button>
-            <button className="nav-item" type="button" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>inventory</span>
-              Stock
-            </button>
-            <button className="nav-item" type="button" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>receipt_long</span>
-              Move History
-            </button>
-            <button className="nav-item" type="button" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
-              Settings
-            </button>
-          </nav>
-        </div>
-
-        <div className="header-right">
-          <button className="icon-btn" title="AI Copilot" type="button" onClick={() => showToast('StockSense AI Assistant: Ready')}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>auto_awesome</span>
-          </button>
-          <button className="icon-btn" title="Activities" type="button" style={{ position: 'relative' }} onClick={() => showToast('2 pending activities')}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>schedule</span>
-            <span style={{
-              position: 'absolute',
-              top: '7px',
-              right: '7px',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#6ffbbe',
-              boxShadow: '0 0 6px #6ffbbe',
-            }} />
-          </button>
-          <div className="user-profile" onClick={() => showToast('Logged in as: Mitchell Admin')}>
-            <span className="user-name">Mitchell Admin</span>
-            <div className="user-avatar">
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>person</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       {/* ---------------- Subheader & Control Panel Ribbon ---------------- */}
       <div className="detail-ribbon">
         <div className="detail-ribbon-left">
           <div className="detail-breadcrumbs">
-            <span className="detail-crumb-parent" onClick={onBackToList}>Inventory</span>
+            <span className="detail-crumb-parent" onClick={handleBack}>Inventory</span>
             <span className="crumb-separator">/</span>
-            <button className="back-link-btn" type="button" onClick={onBackToList} title="Back to Delivery Orders list">
+            <button className="back-link-btn" type="button" onClick={handleBack} title="Back to Delivery Orders list">
               <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>arrow_back</span>
               <span>Delivery Orders</span>
             </button>
@@ -656,19 +602,7 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
       </div>
 
       {/* ---------------- System Footer ---------------- */}
-      <footer className="system-footer">
-        <div className="system-footer-left">
-          <span>
-            <span className="system-status-indicator"></span>
-            StockFlow 2.0 (Enterprise Edition)
-          </span>
-          <span>Database: production-live</span>
-        </div>
-        <div className="system-footer-right">
-          <span>UTC</span>
-          <span>StockFlow Support & Docs</span>
-        </div>
-      </footer>
+      <AppFooter />
 
       {/* Toast Notification */}
       {toast && (

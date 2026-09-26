@@ -16,6 +16,33 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
     { label: 'Settings', path: ROUTES.SETTINGS, icon: 'settings' },
   ];
 
+  const isItemActive = (itemPath) => {
+    if (itemPath === ROUTES.DASHBOARD) {
+      return location.pathname === ROUTES.DASHBOARD;
+    }
+    if (itemPath === ROUTES.RECEIPTS) {
+      return location.pathname === ROUTES.RECEIPTS || location.pathname.startsWith('/receipts');
+    }
+    if (itemPath === ROUTES.DELIVERY_ORDERS) {
+      return (
+        location.pathname === ROUTES.DELIVERY_ORDERS ||
+        location.pathname === ROUTES.OPERATIONS ||
+        location.pathname === ROUTES.HOME ||
+        location.pathname.startsWith('/delivery-orders')
+      );
+    }
+    if (itemPath === ROUTES.STOCK) {
+      return location.pathname === ROUTES.STOCK;
+    }
+    if (itemPath === ROUTES.MOVE_HISTORY) {
+      return location.pathname === ROUTES.MOVE_HISTORY;
+    }
+    if (itemPath === ROUTES.SETTINGS) {
+      return location.pathname.startsWith('/settings');
+    }
+    return location.pathname === itemPath;
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
@@ -24,7 +51,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
           <button
             type="button"
             className={styles.iconBtn}
-            title="App Switcher"
+            title="StockFlow Apps"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>
               apps
@@ -43,9 +70,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
           {/* Navigation */}
           <nav className={styles.nav}>
             {navItems.map((item) => {
-              const isActive =
-                location.pathname === item.path ||
-                (item.path === ROUTES.DELIVERY_ORDERS && location.pathname === ROUTES.HOME);
+              const isActive = isItemActive(item.path);
               return (
                 <Link
                   key={item.label}
@@ -67,7 +92,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
           <button
             type="button"
             className={styles.iconBtn}
-            title="AI Copilot & Chat"
+            title="AI Copilot & Assistant"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
               auto_awesome

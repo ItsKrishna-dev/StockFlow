@@ -1,8 +1,17 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage, SignUpPage, DashboardPage, StockPage } from '../../pages';
+import {
+  LoginPage,
+  SignUpPage,
+  DashboardPage,
+  StockPage,
+  WarehouseSettingsPage,
+  LocationSettingsPage,
+  MoveHistoryPage,
+} from '../../pages';
 import DeliveryOrdersPage from '../../components/delivery/DeliveryOrdersPage';
 import DeliveryOrderDetailView from '../../components/delivery/DeliveryOrderDetailView';
+import ReceiptsListPage from '../../components/receipts/ReceiptsListPage';
 import ReceiptDetailPage from '../../components/receipts/ReceiptDetailPage';
 import { ROUTES } from '../../shared/config/routes';
 
@@ -11,7 +20,7 @@ export function AppRouterProvider() {
     <BrowserRouter>
       <Routes>
         {/* Default route */}
-        <Route path={ROUTES.HOME} element={<DeliveryOrdersPage />} />
+        <Route path={ROUTES.HOME} element={<DashboardPage />} />
         
         {/* Authentication Routes */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -26,13 +35,17 @@ export function AppRouterProvider() {
         <Route path={ROUTES.DELIVERY_ORDERS} element={<DeliveryOrdersPage />} />
         <Route path={ROUTES.DELIVERY_DETAIL} element={<DeliveryOrderDetailView />} />
 
-        {/* Receipt Routes */}
-        <Route path={ROUTES.RECEIPTS} element={<ReceiptDetailPage />} />
+        {/* Receipt Routes: List page first, then Detail page on receipt click */}
+        <Route path={ROUTES.RECEIPTS} element={<ReceiptsListPage />} />
         <Route path={ROUTES.RECEIPT_DETAIL} element={<ReceiptDetailPage />} />
         
-        {/* Auxiliary Routes */}
-        <Route path={ROUTES.MOVE_HISTORY} element={<StockPage />} />
-        <Route path={ROUTES.SETTINGS} element={<DashboardPage />} />
+        {/* Move History Audit Route */}
+        <Route path={ROUTES.MOVE_HISTORY} element={<MoveHistoryPage />} />
+
+        {/* Settings & Warehouse/Location Configuration Routes */}
+        <Route path={ROUTES.SETTINGS} element={<WarehouseSettingsPage />} />
+        <Route path={ROUTES.WAREHOUSE_SETTINGS} element={<WarehouseSettingsPage />} />
+        <Route path={ROUTES.LOCATION_SETTINGS} element={<LocationSettingsPage />} />
 
         {/* Catch-all route */}
         <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
