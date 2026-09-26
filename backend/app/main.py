@@ -1,28 +1,26 @@
 """
 app/main.py
-Application entrypoint. Every module's router is mounted here under
-/api/v1 — this is the only file that needs to change when a new module
-is added.
+Application entrypoint. Every feature slice router is mounted here under /api/v1.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.api.v1.adjustments import router as adjustments_router
-from app.api.v1.auth import router as auth_router
-from app.api.v1.dashboard import router as dashboard_router
-from app.api.v1.deliveries import router as deliveries_router
-from app.api.v1.ledger import router as ledger_router
-from app.api.v1.products import router as products_router
-from app.api.v1.receipts import router as receipts_router
-from app.api.v1.transfers import router as transfers_router
-from app.api.v1.warehouses import router as warehouses_router
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
+from app.features.auth.router import router as auth_router
+from app.features.dashboard.router import router as dashboard_router
+from app.features.ledger.router import router as ledger_router
+from app.features.operations.adjustments_router import router as adjustments_router
+from app.features.operations.deliveries_router import router as deliveries_router
+from app.features.operations.receipts_router import router as receipts_router
+from app.features.operations.transfers_router import router as transfers_router
+from app.features.products.router import router as products_router
+from app.features.warehouses.router import router as warehouses_router
 
 app = FastAPI(
     title="StockSense API",
-    description="Modular Inventory Management System backend",
+    description="Modular Inventory Management System backend - Feature-Sliced Architecture",
     version="0.2.0",
 )
 
@@ -36,6 +34,7 @@ app.add_middleware(
 
 API_PREFIX = "/api/v1"
 
+# Feature Slice Routers
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(products_router, prefix=API_PREFIX)
 app.include_router(warehouses_router, prefix=API_PREFIX)
@@ -63,4 +62,3 @@ async def database_health_check() -> dict:
         "database": database_name,
         "server_time": server_time.isoformat(),
     }
-
