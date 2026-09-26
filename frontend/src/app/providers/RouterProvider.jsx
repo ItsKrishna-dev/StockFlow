@@ -4,6 +4,7 @@ import {
   LoginPage,
   SignUpPage,
   ForgotPasswordPage,
+  ResetPasswordPage,
   DashboardPage,
   StockPage,
   WarehouseSettingsPage,
@@ -27,6 +28,7 @@ export function AppRouterProvider() {
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.SIGNUP} element={<SignUpPage />} />
         <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+        <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
 
         {/* Core Inventory Routes */}
         <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />

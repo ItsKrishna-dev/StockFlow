@@ -7,13 +7,10 @@ import styles from './ForgotPasswordForm.module.css';
 export function ForgotPasswordForm() {
   const navigate = useNavigate();
 
-  // Multi-step state: 'REQUEST_OTP' | 'VERIFY_OTP' | 'SUCCESS'
+  // Multi-step state: 'REQUEST_OTP' | 'VERIFY_OTP'
   const [step, setStep] = useState('REQUEST_OTP');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState('');
   const [infoMsg, setInfoMsg] = useState('');
@@ -79,20 +76,14 @@ export function ForgotPasswordForm() {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isEmail = emailRegex.test(email.trim());
-    if (!isEmail && !email.trim().includes('@')) {
-      // allow username/loginId as well
-    }
-
     setIsPending(true);
 
     setTimeout(() => {
       setIsPending(false);
       setStep('VERIFY_OTP');
       setResendTimer(60);
-      setInfoMsg(`Verification OTP code sent to ${email}`);
-    }, 800);
+      setInfoMsg(`A 6-digit verification code has been sent to ${email}`);
+    }, 700);
   };
 
   // Resend OTP
@@ -105,33 +96,18 @@ export function ForgotPasswordForm() {
       setIsPending(false);
       setResendTimer(60);
       setOtp(['', '', '', '', '', '']);
-      setInfoMsg(`New OTP sent to ${email}`);
+      setInfoMsg(`New verification code sent to ${email}`);
     }, 600);
   };
 
-  // Step 2: Verify OTP & Reset Password
-  const handleVerifyAndReset = (e) => {
+  // Step 2: Verify OTP -> Navigate to separate New Password Page
+  const handleVerifyOtp = (e) => {
     e.preventDefault();
     setError('');
 
     const fullOtp = otp.join('');
     if (fullOtp.length < 6) {
-      setError('Please enter the complete 6-digit OTP code sent to your email');
-      return;
-    }
-
-    if (!newPassword) {
-      setError('Please enter a new password');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match. Please verify and re-type.');
+      setError('Please enter the complete 6-digit verification code');
       return;
     }
 
@@ -139,8 +115,9 @@ export function ForgotPasswordForm() {
 
     setTimeout(() => {
       setIsPending(false);
-      setStep('SUCCESS');
-    }, 900);
+      // Navigate to dedicated new password page
+      navigate(ROUTES.RESET_PASSWORD, { state: { email } });
+    }, 700);
   };
 
   return (
@@ -162,7 +139,7 @@ export function ForgotPasswordForm() {
               </span>
             </div>
             <p className={styles.instructionText}>
-              Enter your registered email address or login identifier. We'll send you a 6-digit verification code to reset your password.
+              Enter your registered email address or login identifier. We'll send you an OTP verification code.
             </p>
           </div>
 
@@ -203,10 +180,10 @@ export function ForgotPasswordForm() {
       )}
 
       {/* ============================================================== */}
-      {/* STEP 2: ENTER OTP & NEW PASSWORD                               */}
+      {/* STEP 2: VERIFY OTP CODE                                        */}
       {/* ============================================================== */}
       {step === 'VERIFY_OTP' && (
-        <form onSubmit={handleVerifyAndReset} className={styles.form} noValidate>
+        <form onSubmit={handleVerifyOtp} className={styles.form} noValidate>
           <div className={styles.emailBadgeRow}>
             <span className={styles.emailBadge}>
               <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#714b67' }}>
@@ -228,7 +205,7 @@ export function ForgotPasswordForm() {
 
           {/* 6-Digit OTP Boxes */}
           <div className={styles.otpSection}>
-            <label className={styles.otpLabel}>Enter 6-Digit OTP Code</label>
+            <label className={styles.otpLabel}>Enter 6-Digit Verification Code</label>
             <div className={styles.otpGrid} onPaste={handleOtpPaste}>
               {otp.map((digit, idx) => (
                 <input
@@ -267,57 +244,12 @@ export function ForgotPasswordForm() {
             </div>
           </div>
 
-          {/* New Password */}
-          <div className={styles.passwordGroup}>
-            <div style={{ position: 'relative' }}>
-              <Input
-                label="New Password"
-                id="new-password"
-                name="newPassword"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="At least 6 characters"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setError('');
-                }}
-                required
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                className={styles.passwordToggle}
-                onClick={() => setShowPassword((p) => !p)}
-                title={showPassword ? 'Hide password' : 'Show password'}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  {showPassword ? 'visibility_off' : 'visibility'}
-                </span>
-              </button>
-            </div>
-
-            <Input
-              label="Confirm New Password"
-              id="confirm-password"
-              name="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Re-enter new password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setError('');
-              }}
-              required
-              autoComplete="new-password"
-            />
-          </div>
-
           <div className={styles.submitWrapper}>
             <Button type="submit" loading={isPending}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                lock_reset
+                verified
               </span>
-              <span>Reset Password</span>
+              <span>Verify Code & Continue</span>
             </Button>
           </div>
 
@@ -338,36 +270,7 @@ export function ForgotPasswordForm() {
           </div>
         </form>
       )}
-
-      {/* ============================================================== */}
-      {/* STEP 3: SUCCESS CONFIRMATION                                   */}
-      {/* ============================================================== */}
-      {step === 'SUCCESS' && (
-        <div className={styles.successWrapper}>
-          <div className={styles.successIconBox}>
-            <span className="material-symbols-outlined" style={{ fontSize: '36px', color: '#006443' }}>
-              verified
-            </span>
-          </div>
-
-          <h3 className={styles.successTitle}>Password Reset Successfully!</h3>
-          <p className={styles.successSub}>
-            Your StockFlow account password has been updated. You can now securely sign in using your new credentials.
-          </p>
-
-          <div className={styles.submitWrapper} style={{ marginTop: '14px' }}>
-            <Button
-              type="button"
-              onClick={() => navigate(ROUTES.LOGIN)}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                login
-              </span>
-              <span>Proceed to Login</span>
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+export default ForgotPasswordForm;
