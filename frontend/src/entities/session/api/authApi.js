@@ -54,8 +54,12 @@ export const authApi = {
   /**
    * POST /api/v1/auth/reset-password
    */
-  async resetPassword({ email, otp, new_password }) {
-    return apiClient.post('/auth/reset-password', { email, otp, new_password });
+  async resetPassword({ email, otp, otp_code, new_password }) {
+    return apiClient.post('/auth/reset-password', {
+      email,
+      otp_code: (otp_code || otp || '').trim(),
+      new_password,
+    });
   },
 
   /**
