@@ -101,49 +101,20 @@ Every validated operation creates an append-only ledger entry. PostgreSQL trigge
 
 ## Architecture
 
-
 ```mermaid
 graph TB
-    subgraph Client ["Client Layer"]
-        UI["React 19 Frontend<br/>(Dashboard, Operations, Ledger, Risk, Copilot)"]
-    end
-
-
-    subgraph Backend ["FastAPI Backend Layer (/api/v1)"]
-        direction TB
-        subgraph Services ["Core & Intelligence Modules"]
-            Auth["Auth & RBAC<br/>(JWT & Sessions)"]
-            Master["Master Catalog<br/>(Products, Warehouses, Locations)"]
-            Intel["Inventory Intelligence<br/>(Integrity, Risk Center, Reorder Rules)"]
-            Copilot["AI Copilot<br/>(Read-Only Groq Llama 3.3)"]
-        end
-
-
-        subgraph OpsEngine ["Operations State Machine"]
-            Ops["Operations Processing<br/>(Receipts, Deliveries, Transfers, Adjustments)"]
-        end
-    end
-
-
-    subgraph Database ["PostgreSQL (Neon) Database Engine"]
-        direction TB
-        Docs["stock_documents & lines<br/>(State: Draft ➔ Waiting ➔ Ready ➔ Done)"]
-        Ledger[("stock_ledger<br/>(Append-Only Movement Log)")]
-        Trigger["Trigger: fn_apply_ledger_to_quants<br/>(Row Locks + Balance Math)"]
-        Quants[("stock_quants<br/>(Real-Time Balances)")]
-    end
-
-
-    UI -->|REST API Requests| Backend
-    Ops -->|Create / Update| Docs
-    Ops -->|Validate Movement| Ledger
-    Ledger -->|BEFORE INSERT Trigger| Trigger
-    Trigger -->|Atomic Increment / Decrement| Quants
-    Intel -.->|Read-Only Aggregations| Ledger
-    Intel -.->|Read-Only Balances| Quants
-    Copilot -.->|Grounding via Services| Intel
+    Frontend["React Frontend"] --> API["FastAPI REST API"]
+    API --> Auth["Auth & RBAC"]
+    API --> Master["Products, Warehouses, Locations"]
+    API --> Operations["Receipts, Deliveries, Transfers, Adjustments"]
+    API --> Intelligence["Integrity, Ledger, Risk, Replenishment"]
+    API --> Copilot["Read-only Groq Copilot"]
+    Operations --> Ledger["Append-only stock_ledger"]
+    Ledger --> Trigger["PostgreSQL stock trigger"]
+    Trigger --> Quants["Current stock_quants"]
+    Intelligence --> Ledger
+    Intelligence --> Quants
 ```
-
 
 ### Backend structure
 
