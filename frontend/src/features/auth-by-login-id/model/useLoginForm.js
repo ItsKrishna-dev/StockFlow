@@ -12,8 +12,8 @@ export function useLoginForm({ onSuccess } = {}) {
 
   const mutation = useMutation({
     mutationFn: (data) => authApi.login(data),
-    onSuccess: (data) => {
-      sessionStore.setUser(data);
+    onSuccess: (data, variables) => {
+      sessionStore.setUser({ ...data, email: variables.loginId });
       if (onSuccess) onSuccess(data);
     },
   });

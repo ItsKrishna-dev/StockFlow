@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../shared/config/routes';
-import { sessionStore } from '../../../entities/session';
+import { authApi, sessionStore } from '../../../entities/session';
 import { cn } from '../../../shared/lib/classNames';
 import styles from './AppHeader.module.css';
 
@@ -9,7 +9,8 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
   const location = useLocation();
   const navigate = useNavigate();
   const sessionUser = sessionStore.getUser();
-  
+  const session = sessionStore.getSession();
+
   const [showOperationsMenu, setShowOperationsMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -35,8 +36,22 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const displayName = sessionUser?.fullName || sessionUser?.name || user?.name || 'Mitchell Admin';
+  const displayName = sessionUser?.fullName || sessionUser?.name || session?.email || user?.name || 'Admin User';
   const displayRole = sessionUser?.role || 'Administrator';
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = sessionStore.getRefreshToken();
+      if (refreshToken) {
+        await authApi.logout(refreshToken);
+      }
+    } catch {
+      // Ignore network errors
+    } finally {
+      sessionStore.clearUser();
+      navigate(ROUTES.LOGIN);
+    }
+  };
 
   const navItems = [
     { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: 'dashboard' },
@@ -76,11 +91,6 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
   const isDropdownActive = (item) => {
     if (!item.children) return false;
     return item.children.some(c => isItemActive(c.path));
-  };
-
-  const handleLogout = () => {
-    sessionStore.clearUser();
-    navigate(ROUTES.LOGIN);
   };
 
   return (
@@ -284,7 +294,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#1b1c1c' }}>{displayName}</div>
-                    <div style={{ fontSize: '11.5px', color: '#80747a' }}>{sessionUser?.email || 'admin@gmail.com'}</div>
+                    <div style={{ fontSize: '11.5px', color: '#80747a' }}>{sessionUser?.email || session?.email || 'admin@gmail.com'}</div>
                   </div>
                 </div>
                 <div className={styles.menuDivider} />
@@ -293,7 +303,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
                   <span>Warehouse Settings</span>
                 </Link>
                 <Link to={ROUTES.STOCK} className={styles.userMenuItem} onClick={() => setShowUserMenu(false)}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#006398' }}>inventory_2</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>inventory_2</span>
                   <span>Manage Stock</span>
                 </Link>
                 <div className={styles.menuDivider} />
@@ -308,10 +318,42 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Log Out"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              color: '#fca5a5',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 600,
+              transition: 'all 0.15s ease-in-out',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.25)';
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.12)';
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>
+              logout
+            </span>
+            <span>Logout</span>
+          </button>
         </div>
       </div>
     </header>
   );
 }
 export default AppHeader;
-
