@@ -42,7 +42,6 @@ function mapTransfer(doc) {
 }
 
 export default function InternalTransfersPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const selectAllRef = useRef(null);
 

@@ -4,19 +4,22 @@
   left: 0;
   right: 0;
   width: 100%;
-  height: 52px;
+  height: 54px;
   background-color: #714b67;
   color: #ffffff;
-  z-index: 100;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(87, 52, 79, 0.18), 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
 }
 
 .inner {
   height: 100%;
   width: 100%;
-  padding: 0 24px;
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -25,99 +28,218 @@
 .leftSection {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   height: 100%;
 }
 
 .iconBtn {
   background-color: rgba(255, 255, 255, 0.08);
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .iconBtn:hover {
   background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  padding-right: 12px;
+  gap: 10px;
+  padding-right: 14px;
   color: #ffffff;
   text-decoration: none;
-  user-select: none;
+  cursor: pointer;
+}
+
+.brandIconContainer {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.brandName {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
 .appBadge {
-  font-size: 11px;
-  font-weight: 600;
-  background-color: #57344f;
-  color: #f0bfe0;
-  padding: 2px 7px;
-  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  background-color: rgba(0, 0, 0, 0.25);
+  color: #6ffbbe;
+  padding: 2px 8px;
+  border-radius: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(111, 251, 190, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.livePulseDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #6ffbbe;
+  animation: pulseGlow 2s infinite ease-in-out;
 }
 
 .nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   height: 100%;
 }
 
 .navLink {
   color: #f2eef2;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13.5px;
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
 .navLink:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.14);
   color: #ffffff;
 }
 
 .navLinkActive {
-  background-color: #57344f;
+  background-color: rgba(0, 0, 0, 0.24);
   color: #ffffff;
   font-weight: 600;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+.navBadge {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Dropdown styling */
+.dropdownContainer {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 260px;
+  background: #ffffff;
+  border: 1px solid #d1c3ca;
+  border-radius: 10px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
+  z-index: 1050;
+  padding: 6px;
+  animation: slideDownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdownHeader {
+  font-size: 11px;
+  font-weight: 700;
+  color: #80747a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 10px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  text-decoration: none;
+  color: #1b1c1c;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background: #f5f3f3;
+}
+
+.dropdownItemActive {
+  background: #f6eaf3;
+  color: #57344f;
+}
+
+.dropdownItemIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #f5f3f3;
+  color: #57344f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dropdownItemTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1b1c1c;
+}
+
+.dropdownItemDesc {
+  font-size: 11px;
+  color: #80747a;
+  margin-top: 1px;
+}
+
+/* Right Section */
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   height: 100%;
 }
 
-.notifWrapper {
+.menuContainer {
   position: relative;
 }
 
 .notifDot {
   position: absolute;
-  top: 7px;
-  right: 7px;
+  top: 6px;
+  right: 6px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -125,34 +247,170 @@
   box-shadow: 0 0 6px #6ffbbe;
 }
 
+.notifMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 300px;
+  background: #ffffff;
+  border: 1px solid #d1c3ca;
+  border-radius: 10px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  z-index: 1050;
+  padding: 8px;
+  animation: slideDownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notifStatusBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #d1fae5;
+  color: #006443;
+  font-weight: 700;
+}
+
+.notifList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.notifItem {
+  display: flex;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #fbf9f8;
+  border-radius: 6px;
+  border: 1px solid #efeded;
+}
+
 .userProfile {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   padding: 4px 10px;
-  border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .userProfile:hover {
   background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.userInfoCol {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
 }
 
 .userName {
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: #ffffff;
 }
 
+.userRole {
+  font-size: 10.5px;
+  color: #f0bfe0;
+  font-weight: 500;
+}
+
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background-color: #57344f;
+  background: linear-gradient(135deg, #f0bfe0, #ffffff);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #57344f;
+  font-weight: 700;
 }
+
+.userMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 230px;
+  background: #ffffff;
+  border: 1px solid #d1c3ca;
+  border-radius: 10px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  z-index: 1050;
+  padding: 8px;
+  animation: slideDownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.userMenuHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+}
+
+.avatarLarge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f6eaf3;
+  color: #57344f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuDivider {
+  height: 1px;
+  background-color: #efeded;
+  margin: 6px 0;
+}
+
+.userMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #1b1c1c;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.userMenuItem:hover {
+  background-color: #f5f3f3;
+}
+
+.logoutBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #ba1a1a;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.logoutBtn:hover {
+  background-color: #ffdad6;
+}
+
+@media (max-width: 900px) {
+  .nav {
+    display: none;
+  }
+}
+

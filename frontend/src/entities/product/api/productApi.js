@@ -20,8 +20,8 @@ function mapProduct(p) {
     unitCost: Number(p.unit_cost) || 0,
     // onHand & freeToUse will be fetched from stock endpoint separately
     // For list view, default to 0 until populated
-    onHand: Number(p.qty_on_hand) ?? 0,
-    freeToUse: Number(p.qty_available) ?? 0,
+    onHand: Number(p.qty_on_hand) || 0,
+    freeToUse: Number(p.qty_available) || 0,
     status: p.is_active ? 'Available' : 'Inactive',
     categoryId: p.category_id,
     uomId: p.uom_id,

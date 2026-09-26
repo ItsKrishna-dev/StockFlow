@@ -1,54 +1,69 @@
 .card {
   position: relative;
   background-color: #ffffff;
-  border-radius: 12px;
-  padding: 24px 28px;
+  border-radius: 10px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   border: 1.5px solid #e8e4ec;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .card:hover {
-  box-shadow: 0 6px 24px rgba(113, 75, 103, 0.08);
-  border-color: #d1c3ca;
+  box-shadow: 0 6px 20px rgba(113, 75, 103, 0.08);
+  border-color: #714b67;
   transform: translateY(-2px);
 }
 
-.leftStripe {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 6px;
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
 }
 
 .cardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
 }
 
 .titleGroup {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.titleIcon {
-  font-size: 24px;
+.titleIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #f7e8f5;
+  color: #714b67;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .title {
-  font-size: 18px;
+  font-size: 16.5px;
   font-weight: 800;
   color: #212529;
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.subReference {
+  font-size: 12px;
+  font-weight: 500;
+  color: #80747a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .menuWrapper {
@@ -58,8 +73,8 @@
 .kebabBtn {
   background: transparent;
   border: none;
-  color: #756f82;
-  padding: 4px;
+  color: #80747a;
+  padding: 6px;
   border-radius: 6px;
   cursor: pointer;
   display: flex;
@@ -69,31 +84,33 @@
 }
 
 .kebabBtn:hover {
-  background-color: #f7f5f8;
-  color: #714b67;
+  background-color: #f5f3f3;
+  color: #1b1c1c;
 }
 
-.dropdown {
+.dropdownMenu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   right: 0;
   background-color: #ffffff;
-  border: 1.5px solid #e8e4ec;
+  border: 1px solid #d1c3ca;
   border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  padding: 6px 0;
-  z-index: 10;
-  min-width: 140px;
-  animation: fadeIn 0.15s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  z-index: 20;
+  min-width: 160px;
 }
 
 .dropdownItem {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  padding: 8px 16px;
+  padding: 8px 10px;
   text-align: left;
   background: transparent;
   border: none;
+  border-radius: 6px;
   font-size: 13px;
   color: #2f2937;
   cursor: pointer;
@@ -101,7 +118,7 @@
 }
 
 .dropdownItem:hover {
-  background-color: #f7f5f8;
+  background-color: #f5f3f3;
   color: #714b67;
 }
 
@@ -109,8 +126,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 22px;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -119,71 +135,74 @@
   color: #ffffff;
   border: none;
   border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 14px;
+  padding: 8px 16px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(113, 75, 103, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(113, 75, 103, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .actionBtn:hover {
   background-color: #57344f;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(113, 75, 103, 0.35);
+  box-shadow: 0 4px 10px rgba(113, 75, 103, 0.3);
 }
 
-.subStats {
+.metricsList {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.statTag {
-  font-size: 13px;
-  font-weight: 600;
-  color: #756f82;
+.metricRow {
   display: flex;
   align-items: center;
-  gap: 4px;
 }
 
-.statTagAlert {
-  color: #ba1a1a;
-  background-color: #ffdad6;
-  padding: 2px 8px;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
   border-radius: 12px;
+  font-size: 12px;
   font-weight: 700;
 }
 
-.statTagWarning {
-  color: #9a3412;
-  background-color: #ffedd5;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 700;
+.badgeError {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid rgba(186, 26, 26, 0.2);
 }
 
-.cardFooter {
-  border-top: 1.5px solid #f0edf2;
-  padding-top: 16px;
+.badgeWarning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.badgeNeutral {
+  background-color: #f5f3f3;
+  color: #4e444a;
+}
+
+.progressSection {
+  border-top: 1px solid #f0edf2;
+  padding-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.progressLabel {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  color: #756f82;
-}
-
-.progressTrack {
+.progressBar {
   width: 100%;
-  height: 8px;
-  background-color: #e8e4ec;
+  height: 6px;
+  background-color: #efeded;
   border-radius: 4px;
   overflow: hidden;
   display: flex;
@@ -191,16 +210,22 @@
 
 .progressSegment {
   height: 100%;
-  transition: width 0.3s ease;
+  background-color: #714b67;
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.progressMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #80747a;
 }
+
+.progressPctText {
+  color: #714b67;
+  font-weight: 700;
+}
+
+

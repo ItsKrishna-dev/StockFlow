@@ -41,7 +41,7 @@ export default function DeliveryOrdersPage() {
   const [inspectOrder, setInspectOrder] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
 
-  const { data: rawOrders = [], isLoading, error } = useQuery({
+  const { data: rawOrders = [] } = useQuery({
     queryKey: ['deliveries'],
     queryFn: () => deliveriesApi.list(),
   });
@@ -137,7 +137,7 @@ export default function DeliveryOrdersPage() {
   };
 
   // Create new order — refreshes list after creation
-  const handleCreateOrder = (newOrderData) => {
+  const handleCreateOrder = () => {
     showToast('Delivery Order created successfully');
     queryClient.invalidateQueries({ queryKey: ['deliveries'] });
   };
@@ -642,21 +642,6 @@ export default function DeliveryOrdersPage() {
           </div>
         </div>
       </main>
-
-      {/* System Footer with StockFlow Branding */}
-      <footer className="system-footer">
-        <div className="system-footer-left">
-          <span>
-            <span className="system-status-indicator"></span>
-            StockFlow 2.0 (Enterprise Edition)
-          </span>
-          <span>Database: production-live</span>
-        </div>
-        <div className="system-footer-right">
-          <span>UTC</span>
-          <span>StockFlow Support & Docs</span>
-        </div>
-      </footer>
 
       {/* Inspection Modal */}
       {inspectOrder && (
