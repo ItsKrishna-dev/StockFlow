@@ -5,3 +5,4 @@ export * from './control-panel';
 export * from './kpi-card';
 export * from './warehouse-transfers-table';
 export * from './stock-table';
+export * from './copilot-chat';

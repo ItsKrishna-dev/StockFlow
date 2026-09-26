@@ -6,6 +6,7 @@ import { AppFooter } from '../../../widgets/app-footer';
 import { ControlPanel } from '../../../widgets/control-panel';
 import { KpiCard } from '../../../widgets/kpi-card';
 import { WarehouseTransfersTable } from '../../../widgets/warehouse-transfers-table';
+import { CopilotChat } from '../../../widgets/copilot-chat';
 import { kpiApi } from '../../../entities/inventory-kpi';
 import { transfersApi, adjustmentsApi, deliveriesApi, receiptsApi } from '../../../shared/api/operationsApi';
 import { ROUTES } from '../../../shared/config/routes';
@@ -439,6 +440,9 @@ export function DashboardPage() {
       </main>
 
       <AppFooter />
+
+      {/* Floating AI Inventory Copilot */}
+      <CopilotChat />
     </div>
   );
 }
