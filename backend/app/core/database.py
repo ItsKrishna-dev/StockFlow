@@ -18,9 +18,13 @@ def prepare_asyncpg_url(database_url: str) -> tuple[str, dict]:
     sslmode = query.pop("sslmode", None)
     query.pop("channel_binding", None)
 
+    scheme = parsed.scheme
+    if scheme in {"postgresql", "postgres"}:
+        scheme = "postgresql+asyncpg"
+
     clean_url = urlunsplit(
         (
-            parsed.scheme,
+            scheme,
             parsed.netloc,
             parsed.path,
             urlencode(query),
