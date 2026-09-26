@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './DeliveryOrders.css';
 import DeliveryDetailModal from './DeliveryDetailModal';
 import NewDeliveryModal from './NewDeliveryModal';
 import DeliveryOrderDetailView from './DeliveryOrderDetailView';
+import { ROUTES } from '../../shared/config/routes';
 
 const INITIAL_ORDERS = [
   {
@@ -84,6 +86,7 @@ const INITIAL_ORDERS = [
 ];
 
 export default function DeliveryOrdersPage() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -258,7 +261,7 @@ export default function DeliveryOrdersPage() {
             </button>
             <button
               className={`nav-item ${activeTab === 'receipts' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('receipts'); showToast('Navigated to Receipts'); }}
+              onClick={() => { setActiveTab('receipts'); navigate(ROUTES.RECEIPTS); }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>call_received</span>
               Receipts
@@ -599,17 +602,17 @@ export default function DeliveryOrdersPage() {
               {/* Table Footer Bar */}
               <div className="table-footer-bar">
                 <div className="footer-left">
-                  <span style={{ fontWeight: 800 }}>{filteredOrders.length} records</span>
-                  <span style={{ color: '#d1c3ca' }}>|</span>
-                  <span style={{ fontStyle: 'italic' }}>Tip: Click any delivery row to inspect lines, pick items, or print documents</span>
+                  <span className="footer-records-count">{filteredOrders.length} records</span>
+                  <span className="footer-divider">•</span>
+                  <span className="footer-tip">Tip: Click any delivery row to inspect lines, pick items, or print documents</span>
                 </div>
                 <div className="footer-right">
-                  <span>
-                    Total Ready: <strong style={{ color: '#2f2937', fontSize: '15px' }}>{readyCount} Orders</strong>
+                  <span className="footer-ready-badge">
+                    Total Ready: <strong>{readyCount} Orders</strong>
                   </span>
                   <button type="button" className="btn-download-csv" onClick={handleDownloadCSV}>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
-                    Download CSV
+                    <span>Download CSV</span>
                   </button>
                 </div>
               </div>

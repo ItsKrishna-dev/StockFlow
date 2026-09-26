@@ -140,10 +140,10 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
   const handleAddLine = () => {
     const newItem = {
       id: Date.now().toString(),
-      code: '[STL001] Steel Rods 20mm',
+      code: `[ITEM00${lines.length + 1}] Custom Product`,
       location: 'WH/Stock1',
-      demand: '12.00 Units',
-      quantity: '12.00 Units',
+      demand: '1.00 Units',
+      quantity: '1.00 Units',
       hasWarningFlag: false,
       status: 'Available',
     };
@@ -165,171 +165,179 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
     ]);
     setChatterInput('');
     setChatterType(null);
-    showToast(chatterType === 'note' ? 'Internal note logged' : 'Message sent to followers');
+    showToast('Note posted to chatter stream');
   };
 
   return (
     <div className="detail-view-container">
-      {/* Top Header */}
+      {/* ---------------- Top Global Navigation Bar ---------------- */}
       <header className="top-header">
         <div className="header-left">
           <button className="icon-btn" title="StockFlow Apps" type="button" onClick={onBackToList}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>apps</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>apps</span>
           </button>
           
           <div className="brand-badge" onClick={onBackToList}>
             <span className="brand-flow-logo">
-              <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>inventory_2</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#f0bfe0' }}>inventory_2</span>
               StockFlow
             </span>
             <span className="app-tag">operations</span>
           </div>
 
           <nav className="nav-links">
-            <button className="nav-item" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>dashboard</span>
+            <button className="nav-item" type="button" onClick={onBackToList}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>dashboard</span>
               Dashboard
             </button>
-            <button className="nav-item" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>call_received</span>
+            <button className="nav-item" type="button" onClick={onBackToList}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>call_received</span>
               Receipts
             </button>
-            <button className="nav-item active">
-              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>local_shipping</span>
+            <button className="nav-item active" type="button" onClick={onBackToList}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>local_shipping</span>
               Delivery Orders
             </button>
-            <button className="nav-item" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>inventory</span>
+            <button className="nav-item" type="button" onClick={onBackToList}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>inventory</span>
               Stock
             </button>
-            <button className="nav-item" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>receipt_long</span>
+            <button className="nav-item" type="button" onClick={onBackToList}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>receipt_long</span>
               Move History
             </button>
-            <button className="nav-item" onClick={onBackToList}>
-              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>settings</span>
+            <button className="nav-item" type="button" onClick={onBackToList}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
               Settings
             </button>
           </nav>
         </div>
 
         <div className="header-right">
-          <button className="icon-btn" title="Conversations" type="button" onClick={() => setChatterType('message')}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chat</span>
+          <button className="icon-btn" title="AI Copilot" type="button" onClick={() => showToast('StockSense AI Assistant: Ready')}>
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>auto_awesome</span>
           </button>
-          <button className="icon-btn" title="Activities" type="button" style={{ position: 'relative' }} onClick={() => setChatterType('activity')}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>schedule</span>
+          <button className="icon-btn" title="Activities" type="button" style={{ position: 'relative' }} onClick={() => showToast('2 pending activities')}>
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>schedule</span>
             <span style={{
               position: 'absolute',
-              top: '6px',
-              right: '6px',
-              width: '6px',
-              height: '6px',
+              top: '7px',
+              right: '7px',
+              width: '8px',
+              height: '8px',
               borderRadius: '50%',
               backgroundColor: '#6ffbbe',
+              boxShadow: '0 0 6px #6ffbbe',
             }} />
           </button>
-          <div className="user-profile">
+          <div className="user-profile" onClick={() => showToast('Logged in as: Mitchell Admin')}>
             <span className="user-name">Mitchell Admin</span>
             <div className="user-avatar">
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>person</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Control / Breadcrumbs & Stage Bar */}
+      {/* ---------------- Subheader & Control Panel Ribbon ---------------- */}
       <div className="detail-ribbon">
         <div className="detail-ribbon-left">
           <div className="detail-breadcrumbs">
             <span className="detail-crumb-parent" onClick={onBackToList}>Inventory</span>
-            <span style={{ color: '#d1c3ca' }}>/</span>
-            <button className="back-link-btn" onClick={onBackToList} title="Back to Delivery Orders list">
+            <span className="crumb-separator">/</span>
+            <button className="back-link-btn" type="button" onClick={onBackToList} title="Back to Delivery Orders list">
               <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>arrow_back</span>
-              Delivery Orders
+              <span>Delivery Orders</span>
             </button>
-            <span style={{ color: '#d1c3ca' }}>/</span>
+            <span className="crumb-separator">/</span>
             <span className="detail-crumb-active">{currentRecord.reference}</span>
           </div>
         </div>
 
         <div className="detail-ribbon-right">
-          {/* Pager */}
           <div className="pager-box">
-            <span>{recordIndex + 1}/{MOCK_RECORDS.length}</span>
-            <button
-              className={`pager-btn ${recordIndex > 0 ? 'enabled' : ''}`}
-              type="button"
-              disabled={recordIndex === 0}
-              onClick={() => switchRecord(recordIndex - 1)}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_left</span>
-            </button>
-            <button
-              className={`pager-btn ${recordIndex < MOCK_RECORDS.length - 1 ? 'enabled' : ''}`}
-              type="button"
-              disabled={recordIndex === MOCK_RECORDS.length - 1}
-              onClick={() => switchRecord(recordIndex + 1)}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_right</span>
-            </button>
+            <span>{recordIndex + 1} / {MOCK_RECORDS.length}</span>
+            <div className="pager-buttons">
+              <button
+                className="pager-btn"
+                type="button"
+                disabled={recordIndex === 0}
+                onClick={() => switchRecord(recordIndex - 1)}
+                title="Previous Order"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_left</span>
+              </button>
+              <button
+                className="pager-btn"
+                type="button"
+                disabled={recordIndex === MOCK_RECORDS.length - 1}
+                onClick={() => switchRecord(recordIndex + 1)}
+                title="Next Order"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_right</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Document Action & Stage Chevron Ribbon */}
+      {/* ---------------- Document Action & Stage Chevron Ribbon ---------------- */}
       <div className="doc-actions-bar">
         <div className="doc-buttons-group">
           {currentStage !== 'done' && (
-            <button className="btn-doc-validate" onClick={handleValidate}>
-              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>check</span>
-              Validate
+            <button className="btn-doc-validate" type="button" onClick={handleValidate}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+              <span>Validate</span>
             </button>
           )}
-          <button className="btn-doc-action" onClick={() => { window.print(); showToast('Printing picking & delivery slip'); }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>print</span>
-            Print
+          <button className="btn-doc-action" type="button" onClick={() => { window.print(); showToast('Printing picking & delivery slip'); }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>print</span>
+            <span>Print</span>
           </button>
           {currentStage !== 'done' && (
-            <button className="btn-doc-action" onClick={handleCancel}>
-              Cancel
+            <button className="btn-doc-action" type="button" onClick={handleCancel}>
+              <span>Cancel</span>
             </button>
           )}
         </div>
 
         {/* Chevron Stage Workflow Bar */}
         <div className="chevron-stage-bar">
-          <div
+          <button
             className={`chevron-stage ${currentStage === 'draft' ? 'active' : 'completed'}`}
+            type="button"
             onClick={() => setCurrentStage('draft')}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check</span>
-            Draft
-          </div>
-          <div
+            <span>Draft</span>
+          </button>
+          <button
             className={`chevron-stage ${currentStage === 'waiting' ? 'active' : (currentStage === 'ready' || currentStage === 'done' ? 'completed' : '')}`}
+            type="button"
             onClick={() => setCurrentStage('waiting')}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check</span>
-            Waiting
-          </div>
-          <div
+            <span>Waiting</span>
+          </button>
+          <button
             className={`chevron-stage ${currentStage === 'ready' ? 'active' : (currentStage === 'done' ? 'completed' : '')}`}
+            type="button"
             onClick={() => setCurrentStage('ready')}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>fiber_manual_record</span>
-            Ready
-          </div>
-          <div
+            <span>Ready</span>
+          </button>
+          <button
             className={`chevron-stage ${currentStage === 'done' ? 'active' : ''}`}
+            type="button"
             onClick={() => setCurrentStage('done')}
           >
-            Done
-          </div>
+            <span>Done</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Document Card Sheet Container */}
+      {/* ---------------- Main Document Card Sheet Container ---------------- */}
       <div className="doc-sheet-container">
         <div className="doc-sheet-card">
           {/* Top Badges & Smart Stats */}
@@ -337,7 +345,7 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
             <div>
               <div className="doc-badge-pills">
                 <span className="doc-type-pill">
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#0284c7' }}></span>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#714b67' }}></span>
                   Outgoing Delivery
                 </span>
                 <span className="doc-state-pill">
@@ -349,72 +357,70 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
 
             {/* Smart Stat Action Buttons */}
             <div className="smart-stats-group">
-              <button className="smart-stat-btn" onClick={() => showToast('Viewing associated Operations transfers')}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#714b67' }}>swap_horiz</span>
-                <div className="smart-stat-text">
-                  <span className="smart-stat-value">{currentRecord.transfersCount} Transfers</span>
-                  <span className="smart-stat-label">Operations</span>
+              <button className="smart-stat-box" type="button" onClick={() => showToast('Viewing associated Operations transfers')}>
+                <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#714b67' }}>sync_alt</span>
+                <div className="smart-stat-info">
+                  <span className="smart-stat-val">{currentRecord.transfersCount} Transfers</span>
+                  <span className="smart-stat-lbl">Operations</span>
                 </div>
               </button>
 
-              <button className="smart-stat-btn" onClick={() => showToast('Traceability: Lot/Serial Upstream tracking active')}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#714b67' }}>alt_route</span>
-                <div className="smart-stat-text">
-                  <span className="smart-stat-value">Traceability</span>
-                  <span className="smart-stat-label">Upstream</span>
+              <button className="smart-stat-box" type="button" onClick={() => showToast('Traceability: Lot/Serial Upstream tracking active')}>
+                <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#714b67' }}>route</span>
+                <div className="smart-stat-info">
+                  <span className="smart-stat-val">Traceability</span>
+                  <span className="smart-stat-lbl">Upstream</span>
                 </div>
               </button>
             </div>
           </div>
 
           {/* Form Fields 2-Column Grid */}
-          <div className="doc-fields-grid">
-            {/* Delivery Address */}
-            <div className="doc-field-item">
-              <label className="doc-field-label">Delivery Address</label>
-              <div className="doc-input-box">
+          <div className="doc-form-grid">
+            <div className="form-group-row">
+              <label className="form-field-lbl">Delivery Address</label>
+              <div className="form-field-val">
                 <input
                   type="text"
+                  className="form-input-ctrl"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
                 />
-                <span className="material-symbols-outlined" style={{ color: '#80747a', fontSize: '18px' }}>domain</span>
+                <span className="material-symbols-outlined field-icon">domain</span>
               </div>
             </div>
 
-            {/* Schedule Date */}
-            <div className="doc-field-item">
-              <label className="doc-field-label">Schedule Date</label>
-              <div className="doc-input-box">
+            <div className="form-group-row">
+              <label className="form-field-lbl">Responsible</label>
+              <div className="form-field-val">
                 <input
                   type="text"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                />
-                <span className="material-symbols-outlined" style={{ color: '#80747a', fontSize: '18px' }}>calendar_today</span>
-              </div>
-            </div>
-
-            {/* Responsible */}
-            <div className="doc-field-item">
-              <label className="doc-field-label">Responsible</label>
-              <div className="doc-input-box">
-                <div className="responsible-avatar-badge">MA</div>
-                <input
-                  type="text"
+                  className="form-input-ctrl"
                   value={responsible}
                   onChange={(e) => setResponsible(e.target.value)}
                 />
-                <span className="material-symbols-outlined" style={{ color: '#80747a', fontSize: '17px' }}>lock</span>
+                <span className="material-symbols-outlined field-icon">lock</span>
               </div>
             </div>
 
-            {/* Operation Type */}
-            <div className="doc-field-item">
-              <label className="doc-field-label">Operation Type</label>
-              <div className="doc-input-box">
-                <span className="material-symbols-outlined" style={{ color: '#714b67', fontSize: '18px' }}>local_shipping</span>
+            <div className="form-group-row">
+              <label className="form-field-lbl">Schedule Date</label>
+              <div className="form-field-val">
+                <input
+                  type="text"
+                  className="form-input-ctrl"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                />
+                <span className="material-symbols-outlined field-icon">calendar_today</span>
+              </div>
+            </div>
+
+            <div className="form-group-row">
+              <label className="form-field-lbl">Operation Type</label>
+              <div className="form-field-val">
                 <select
+                  className="form-input-ctrl"
                   value={operationType}
                   onChange={(e) => setOperationType(e.target.value)}
                   style={{ cursor: 'pointer' }}
@@ -423,73 +429,81 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
                   <option value="Main Warehouse: Delivery Orders">Main Warehouse: Delivery Orders</option>
                   <option value="Internal Transfers">Internal Transfers</option>
                 </select>
+                <span className="material-symbols-outlined field-icon">local_shipping</span>
               </div>
             </div>
           </div>
 
           {/* Tab Navigation */}
-          <div className="doc-tabs-nav">
-            <button
-              className={`doc-tab-btn ${activeTab === 'products' ? 'active' : ''}`}
-              onClick={() => setActiveTab('products')}
-            >
-              Operations / Products
-              <span className="doc-tab-badge">{lines.length}</span>
-            </button>
-            <button
-              className={`doc-tab-btn ${activeTab === 'additional' ? 'active' : ''}`}
-              onClick={() => setActiveTab('additional')}
-            >
-              Additional Info
-            </button>
-            <button
-              className={`doc-tab-btn ${activeTab === 'note' ? 'active' : ''}`}
-              onClick={() => setActiveTab('note')}
-            >
-              Note
-            </button>
-          </div>
+          <div className="doc-tabs-container">
+            <div className="doc-tabs-nav">
+              <button
+                className={`doc-tab-btn ${activeTab === 'products' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('products')}
+              >
+                Operations / Products ({lines.length})
+              </button>
+              <button
+                className={`doc-tab-btn ${activeTab === 'additional' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('additional')}
+              >
+                Additional Info
+              </button>
+              <button
+                className={`doc-tab-btn ${activeTab === 'note' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('note')}
+              >
+                Note
+              </button>
+            </div>
 
-          {/* Tab 1: Operations / Products */}
-          {activeTab === 'products' && (
-            <div>
-              <div className="doc-lines-table-wrapper">
-                <table className="doc-lines-table">
+            {/* Tab 1: Operations / Products */}
+            {activeTab === 'products' && (
+              <div>
+                <table className="lines-data-table">
                   <thead>
                     <tr>
-                      <th>Product</th>
-                      <th>Demand</th>
-                      <th>Quantity</th>
-                      <th>Status</th>
+                      <th style={{ width: '45%' }}>Product</th>
+                      <th style={{ width: '20%' }}>Demand</th>
+                      <th style={{ width: '20%' }}>Quantity</th>
+                      <th style={{ width: '15%' }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lines.map((line) => (
                       <tr key={line.id}>
                         <td>
-                          <div className="product-cell-container">
-                            <div className="product-icon-box">
-                              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>inventory_2</span>
-                            </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span className="material-symbols-outlined" style={{ color: '#714b67', fontSize: '20px' }}>
+                              inventory_2
+                            </span>
                             <div>
-                              <div className="product-title-text">{line.code}</div>
-                              <div className="product-location-sub">Location: {line.location}</div>
+                              <div style={{ fontWeight: 700, color: '#212529' }}>{line.code}</div>
+                              <div style={{ fontSize: '12px', color: '#756f82' }}>Location: {line.location}</div>
                             </div>
                           </div>
                         </td>
-                        <td style={{ fontWeight: 600 }}>{line.demand}</td>
-                        <td style={{ fontWeight: 700 }}>
+                        <td style={{ fontWeight: 700, color: '#4e444a' }}>{line.demand}</td>
+                        <td style={{ fontWeight: 800, color: '#212529' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span>{line.quantity}</span>
                             {line.hasWarningFlag && (
-                              <span className="material-symbols-outlined" style={{ color: '#ba1a1a', fontSize: '16px' }} title="Low stock reservation flag">
-                                flag
+                              <span className="material-symbols-outlined" style={{ color: '#ba1a1a', fontSize: '18px' }} title="Low stock reservation flag">
+                                warning
                               </span>
                             )}
                           </div>
                         </td>
                         <td>
-                          <span className="partial-stock-badge">
+                          <span
+                            className={`badge-status ${
+                              line.status.toLowerCase().includes('available') ? 'ready' : 'waiting'
+                            }`}
+                          >
+                            <span className="status-dot"></span>
                             {line.status}
                           </span>
                         </td>
@@ -497,164 +511,142 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
                     ))}
                   </tbody>
                 </table>
-              </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  className="btn-add-product-line"
-                  onClick={handleAddLine}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>add_circle</span>
-                  Add New product
-                </button>
-                <span style={{ fontSize: '12px', color: '#756f82' }}>
-                  {lines.length} line recorded
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 4px' }}>
+                  <button
+                    type="button"
+                    className="btn-add-product-line"
+                    onClick={handleAddLine}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>add_circle</span>
+                    <span>Add New product</span>
+                  </button>
+                  <span style={{ fontSize: '13px', color: '#756f82', fontWeight: 600 }}>
+                    {lines.length} line recorded
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Tab 2: Additional Info */}
-          {activeTab === 'additional' && (
-            <div className="doc-fields-grid" style={{ padding: '16px 0' }}>
-              <div className="doc-field-item">
-                <label className="doc-field-label">Shipping Policy</label>
-                <div className="doc-input-box">
-                  <input type="text" defaultValue="As soon as possible" />
-                </div>
+            {/* Tab 2: Additional Info */}
+            {activeTab === 'additional' && (
+              <div style={{ padding: '16px 0', fontSize: '14px', color: '#4e444a', lineHeight: '1.8' }}>
+                <p><strong>Tracking Policy:</strong> Automatic Serial/Lot Tracking upon reservation</p>
+                <p><strong>Shipping Policy:</strong> As soon as all products are ready</p>
+                <p><strong>Source Document:</strong> SO00042</p>
+                <p><strong>Carrier Service:</strong> Standard Ground Delivery</p>
               </div>
-              <div className="doc-field-item">
-                <label className="doc-field-label">Source Document</label>
-                <div className="doc-input-box">
-                  <input type="text" defaultValue="SO00042" />
-                </div>
-              </div>
-              <div className="doc-field-item">
-                <label className="doc-field-label">Tracking Reference</label>
-                <div className="doc-input-box">
-                  <input type="text" defaultValue="TRK-984214-SF" />
-                </div>
-              </div>
-              <div className="doc-field-item">
-                <label className="doc-field-label">Procurement Group</label>
-                <div className="doc-input-box">
-                  <input type="text" defaultValue="PG/2026/092" />
-                </div>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Tab 3: Note */}
-          {activeTab === 'note' && (
-            <div style={{ padding: '10px 0' }}>
-              <textarea
-                className="form-textarea"
-                style={{ width: '100%', height: '100px', border: '1px solid #e8e4ec', borderRadius: '6px', padding: '10px', fontSize: '13.5px' }}
-                defaultValue="Customer requested delivery to receiving dock #2. Please verify signature on delivery slip upon drop-off."
-              />
-            </div>
-          )}
+            {/* Tab 3: Note */}
+            {activeTab === 'note' && (
+              <div style={{ padding: '14px 0' }}>
+                <textarea
+                  className="chatter-textarea-field"
+                  placeholder="Add delivery order notes..."
+                  rows={3}
+                  defaultValue="Priority dispatch for customer Acme Interior batch 1."
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Bottom Chatter & Audit Trail Box */}
-        <div className="chatter-card">
-          <div className="chatter-header">
-            <div className="chatter-actions">
+        {/* ---------------- Chatter / Communication Stream ---------------- */}
+        <div className="doc-chatter-card">
+          <div className="chatter-top-tools">
+            <div className="chatter-tools-left">
               <button
-                className="btn-chatter-action"
-                onClick={() => setChatterType(chatterType === 'message' ? null : 'message')}
+                className={`btn-chatter-tab ${chatterType === 'message' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setChatterType(prev => prev === 'message' ? null : 'message')}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '17px', color: '#714b67' }}>mail</span>
-                Send message
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>send</span>
+                <span>Send message</span>
               </button>
               <button
-                className="btn-chatter-action"
-                onClick={() => setChatterType(chatterType === 'note' ? null : 'note')}
+                className={`btn-chatter-tab ${chatterType === 'note' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setChatterType(prev => prev === 'note' ? null : 'note')}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '17px', color: '#714b67' }}>edit_note</span>
-                Log note
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>
+                <span>Log note</span>
               </button>
               <button
-                className="btn-chatter-action"
-                onClick={() => setChatterType(chatterType === 'activity' ? null : 'activity')}
+                className="btn-chatter-tab"
+                type="button"
+                onClick={() => showToast('Activities scheduler open')}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '17px', color: '#714b67' }}>schedule</span>
-                Activities
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>schedule</span>
+                <span>Activities</span>
               </button>
             </div>
 
-            <div className="chatter-meta">
-              <span>
-                <span className="material-symbols-outlined" style={{ fontSize: '15px', verticalAlign: 'middle', marginRight: '4px' }}>visibility</span>
-                2 Followers
-              </span>
-              <span>|</span>
-              <span className="audit-status-badge">
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#006443' }}></span>
-                Audit enabled
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '13px', color: '#756f82', fontWeight: 600 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>visibility</span>
+                <span>2 Followers</span>
+              </div>
+              <span>•</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#006443' }}>
+                  verified_user
+                </span>
+                <span>Audit enabled</span>
+              </div>
             </div>
           </div>
 
-          {/* Interactive Composer Box */}
+          {/* Composer Box */}
           {chatterType && (
-            <div className="chatter-composer">
+            <div className="chatter-input-area">
               <textarea
-                className="chatter-textarea"
-                placeholder={
-                  chatterType === 'message'
-                    ? 'Write a message to followers and customer...'
-                    : chatterType === 'note'
-                    ? 'Log an internal note (only visible to warehouse team)...'
-                    : 'Schedule an activity or reminder...'
-                }
+                className="chatter-textarea-field"
+                placeholder={chatterType === 'message' ? 'Send a message to followers...' : 'Log an internal note...'}
                 value={chatterInput}
                 onChange={(e) => setChatterInput(e.target.value)}
                 autoFocus
               />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button className="btn-secondary" style={{ padding: '5px 12px', fontSize: '13px' }} onClick={() => setChatterType(null)}>
+              <div className="composer-bottom-actions">
+                <button
+                  type="button"
+                  className="btn-action-secondary"
+                  onClick={() => { setChatterType(null); setChatterInput(''); }}
+                >
                   Cancel
                 </button>
-                <button className="btn-primary" style={{ padding: '5px 16px', fontSize: '13px' }} onClick={handlePostChatter}>
-                  {chatterType === 'note' ? 'Log Note' : 'Send'}
+                <button
+                  type="button"
+                  className="btn-action-primary"
+                  onClick={handlePostChatter}
+                >
+                  {chatterType === 'message' ? 'Send' : 'Log'}
                 </button>
               </div>
             </div>
           )}
 
-          {/* Chatter Feed */}
-          <div className="chatter-feed">
+          {/* Messages Stream */}
+          <div className="chatter-timeline-stream">
             {messages.map((msg) => (
-              <div key={msg.id} className="feed-item">
-                <div className={`feed-avatar ${msg.type}`}>
-                  {msg.type === 'bot' ? (
-                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>smart_toy</span>
-                  ) : (
-                    'MA'
-                  )}
+              <div key={msg.id} className="chatter-msg-box">
+                <div className={`chatter-avatar-circle ${msg.type === 'bot' ? 'system-bot' : ''}`}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                    {msg.type === 'bot' ? 'smart_toy' : 'person'}
+                  </span>
                 </div>
-                <div className="feed-content">
-                  <div className="feed-meta-row">
-                    <span className="feed-author">{msg.author}</span>
-                    <span className="feed-time">{msg.time}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '14px', color: '#212529' }}>{msg.author}</span>
+                    <span style={{ fontSize: '12px', color: '#756f82' }}>{msg.time}</span>
                   </div>
-
                   {msg.isAlert ? (
-                    <div className="bot-alert-banner">
-                      <div className="bot-alert-title">
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>warning</span>
-                        {msg.alertTitle}
-                      </div>
-                      <div className="bot-alert-desc">
-                        {msg.alertDesc}
-                      </div>
+                    <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7', padding: '10px 14px', borderRadius: '8px' }}>
+                      <div style={{ fontWeight: 700, color: '#92400e', fontSize: '13.5px' }}>{msg.alertTitle}</div>
+                      <div style={{ fontSize: '13px', color: '#78350f', marginTop: '2px' }}>{msg.alertDesc}</div>
                     </div>
                   ) : (
-                    <div className="feed-bubble">
-                      {msg.body}
-                    </div>
+                    <div style={{ fontSize: '13.5px', color: '#333333', lineHeight: 1.5 }}>{msg.body}</div>
                   )}
                 </div>
               </div>
@@ -663,26 +655,27 @@ export default function DeliveryOrderDetailView({ onBackToList, initialOrder }) 
         </div>
       </div>
 
-      {/* System Footer */}
+      {/* ---------------- System Footer ---------------- */}
       <footer className="system-footer">
         <div className="system-footer-left">
           <span>
             <span className="system-status-indicator"></span>
-            StockFlow 2.0+e (Enterprise Edition)
+            StockFlow 2.0 (Enterprise Edition)
           </span>
           <span>Database: production-live</span>
-          <span>UTC (+00:00)</span>
         </div>
         <div className="system-footer-right">
-          <span style={{ cursor: 'pointer' }} onClick={() => showToast('Opening documentation')}>Documentation</span>
-          <span style={{ cursor: 'pointer' }} onClick={() => showToast('Contacting support')}>Support</span>
+          <span>UTC</span>
+          <span>StockFlow Support & Docs</span>
         </div>
       </footer>
 
-      {/* Toast */}
+      {/* Toast Notification */}
       {toast && (
         <div className="toast-banner">
-          <span className="material-symbols-outlined" style={{ color: '#6ffbbe' }}>info</span>
+          <span className="material-symbols-outlined" style={{ color: '#6ffbbe', fontSize: '20px' }}>
+            check_circle
+          </span>
           <span>{toast}</span>
         </div>
       )}
