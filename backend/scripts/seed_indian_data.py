@@ -246,6 +246,7 @@ async def clean_and_seed_indian_data() -> None:
                 """
                 INSERT INTO users (email, password_hash, full_name, role, phone, is_active)
                 VALUES 
+                    ('vm0386376@gmail.com', $2, 'Vivek Maurya', 'inventory_manager', '+91 98765 43210', true),
                     ('admin@stocksense.io', $1, 'Vivek Sharma (System Admin)', 'admin', '+91 98200 11223', true),
                     ('aarav.patel@stocksense.io', $2, 'Aarav Patel (Operations Head)', 'inventory_manager', '+91 98110 33445', true),
                     ('rajesh.kumar@stocksense.io', $3, 'Rajesh Kumar (Inventory Executive)', 'warehouse_staff', '+91 98450 55667', true),
@@ -473,7 +474,8 @@ async def clean_and_seed_indian_data() -> None:
         print("  - Daawat Rozana Gold Basmati Rice (25kg)| 75 Bags (Low Stock Alert!)")
         print("  - Philips 18W Round LED Downlight Panel | 0 Units (Out of Stock Alert!)")
         print("\nStaff Logins (Ready for demo & login):")
-        print("  - Admin   : admin@stocksense.io / Admin@123456")
+        print("  - Vivek   : vm0386376@gmail.com / Manager@123456 (Role: inventory_manager)")
+        print("  - Admin   : admin@stocksense.io / Admin@123456 (Role: admin)")
         print("  - Manager : aarav.patel@stocksense.io / Manager@123456")
         print("  - Staff   : rajesh.kumar@stocksense.io / Staff@123456")
         print("=" * 65 + "\n")
