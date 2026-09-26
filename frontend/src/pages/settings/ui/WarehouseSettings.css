@@ -1041,3 +1041,136 @@
     transform: translateY(0);
   }
 }
+
+/* ─── Extra Styles for Warehouse Creation, Editing & Staff Management ─── */
+.warehouse-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1.5px solid #d8d4dc;
+  border-radius: 7px;
+  padding: 4px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.warehouse-filter-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #714b67;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.warehouse-filter-select {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #212529;
+  cursor: pointer;
+  outline: none;
+  padding: 2px 4px;
+  max-width: 220px;
+}
+
+.btn-edit-warehouse {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f7e8f5;
+  border: 1px solid #dfc3db;
+  color: #714b67;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-edit-warehouse:hover {
+  background-color: #714b67;
+  color: #ffffff;
+  border-color: #714b67;
+}
+
+.location-names-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 12px;
+  background-color: #fbf9fb;
+  border: 1.5px solid #ebd9e6;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.location-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.location-input-label {
+  min-width: 85px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #714b67;
+}
+
+.staff-manager-section {
+  border-top: 1.5px solid #ebd9e6;
+  padding-top: 16px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.staff-manager-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.staff-manager-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #212529;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.staff-add-card {
+  background-color: #faf7fa;
+  border: 1.5px dashed #714b67;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.15s ease;
+}
+
+.smtp-badge-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+

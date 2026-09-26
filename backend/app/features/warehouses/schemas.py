@@ -1,13 +1,10 @@
 """
 app/features/warehouses/schemas.py
 
-Pydantic request/response contracts for warehouses, locations, and partners.
-Location type rules (internal must have a warehouse; vendor/customer/virtual_adjustment
-must not) are validated here with clean 422 errors.
+Pydantic request/response contracts for warehouses, locations, partners, and warehouse staff.
 """
 import uuid
-
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 LOCATION_TYPES = {"internal", "vendor", "customer", "virtual_adjustment"}
 
@@ -16,11 +13,43 @@ class WarehouseCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     code: str = Field(min_length=1, max_length=20)
     address: str | None = None
+    location_names: list[str] | None = None
 
 
-class WarehouseOut(WarehouseCreate):
+class WarehouseUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    code: str | None = Field(default=None, min_length=1, max_length=20)
+    address: str | None = None
+    is_active: bool | None = None
+
+
+class WarehouseOut(BaseModel):
     id: uuid.UUID
+    name: str
+    code: str
+    address: str | None = None
     is_active: bool
+    created_at: object | None = None
+    model_config = {"from_attributes": True}
+
+
+class StaffCreate(BaseModel):
+    full_name: str = Field(min_length=1, max_length=150)
+    email: EmailStr
+    password: str = Field(min_length=6, max_length=100)
+    login_id: str | None = None
+
+
+class StaffOut(BaseModel):
+    id: uuid.UUID
+    email: str
+    login_id: str | None
+    full_name: str
+    role: str
+    warehouse_id: uuid.UUID | None
+    warehouse_name: str | None = None
+    is_active: bool
+    created_at: object | None = None
     model_config = {"from_attributes": True}
 
 

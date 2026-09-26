@@ -1,7 +1,7 @@
 """
 app/features/warehouses/router.py
 
-FastAPI router for warehouses, locations, and partners.
+FastAPI router for warehouses, locations, partners, and warehouse staff management.
 """
 import uuid
 
@@ -16,8 +16,11 @@ from app.features.warehouses.schemas import (
     LocationOut,
     PartnerCreate,
     PartnerOut,
+    StaffCreate,
+    StaffOut,
     WarehouseCreate,
     WarehouseOut,
+    WarehouseUpdate,
 )
 from app.models.models import User
 
@@ -42,6 +45,55 @@ async def list_warehouses(
     _: User = Depends(get_current_user),
 ) -> list[WarehouseOut]:
     return await service.list_warehouses(db)
+
+
+@router.put("/warehouses/{warehouse_id}", response_model=WarehouseOut)
+async def update_warehouse(
+    warehouse_id: uuid.UUID,
+    payload: WarehouseUpdate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(manager_or_admin),
+) -> WarehouseOut:
+    return await service.update_warehouse(warehouse_id, payload, db)
+
+
+# --- Warehouse Staff Management ---
+@router.post(
+    "/warehouses/{warehouse_id}/staff",
+    response_model=StaffOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_warehouse_staff(
+    warehouse_id: uuid.UUID,
+    payload: StaffCreate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(manager_or_admin),
+) -> StaffOut:
+    """
+    Registers a staff member for the warehouse and dispatches real-time credentials email.
+    """
+    return await service.add_warehouse_staff(warehouse_id, payload, db)
+
+
+@router.get("/warehouses/{warehouse_id}/staff", response_model=list[StaffOut])
+async def list_staff_by_warehouse(
+    warehouse_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[StaffOut]:
+    return await service.list_warehouse_staff(db, warehouse_id=warehouse_id)
+
+
+@router.get("/staff", response_model=list[StaffOut])
+async def list_all_staff(
+    warehouse_id: uuid.UUID | None = None,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[StaffOut]:
+    """
+    Lists staff across all warehouses or filtered by warehouse_id.
+    """
+    return await service.list_warehouse_staff(db, warehouse_id=warehouse_id)
 
 
 # --- Locations ---

@@ -155,3 +155,108 @@ async def send_otp_email(
         print(f"            MAIL_FROM=your_email@gmail.com")
         print(f"===================================================================\n")
         return True
+
+
+def _build_staff_credentials_html(
+    staff_name: str,
+    warehouse_name: str,
+    email: str,
+    login_id: str,
+    password: str,
+) -> str:
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StockFlow Staff Account Credentials</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f7f5f2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1b1c1c;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f7f5f2; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 560px; background-color: #ffffff; border: 1px solid #e0d8dd; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 30px rgba(87,52,79,0.12);">
+          <tr>
+            <td style="padding: 28px 32px; background: linear-gradient(135deg, #714b67 0%, #57344f 100%); text-align: center; color: #ffffff;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">StockFlow</h1>
+              <p style="margin: 6px 0 0; font-size: 13px; color: #f0bfe0; font-weight: 500;">Warehouse Management &amp; Operations</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 14px; font-size: 16px; font-weight: 600; color: #1b1c1c;">Hello {staff_name},</p>
+              <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #49454e;">
+                You have been registered as a staff member assigned to <strong>{warehouse_name}</strong>. Here are your system login credentials:
+              </p>
+              <div style="background-color: #fcf9fb; border: 1px solid #ebd9e6; border-left: 5px solid #714b67; border-radius: 8px; padding: 18px 20px; margin: 20px 0;">
+                <p style="margin: 0 0 8px; font-size: 13.5px; color: #49454e;"><strong>Assigned Warehouse:</strong> {warehouse_name}</p>
+                <p style="margin: 0 0 8px; font-size: 13.5px; color: #49454e;"><strong>Email:</strong> {email}</p>
+                <p style="margin: 0 0 8px; font-size: 13.5px; color: #49454e;"><strong>Login ID:</strong> {login_id}</p>
+                <p style="margin: 0; font-size: 13.5px; color: #49454e;"><strong>Temporary Password:</strong> <code style="background: #eedfee; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 14px; font-weight: 700; color: #57344f;">{password}</code></p>
+              </div>
+              <p style="margin: 20px 0 0; font-size: 13.5px; line-height: 1.6; color: #6d6671;">
+                Please sign in to the StockFlow Dashboard and change your password upon your first login.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 32px; background-color: #f7f5f2; border-top: 1px solid #ebd9e6; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #80747a;">
+                &copy; StockFlow IMS &bull; Automated Staff Deployment
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+
+async def send_staff_credentials_email(
+    to_email: str,
+    staff_name: str,
+    warehouse_name: str,
+    password: str,
+    login_id: str | None = None,
+) -> bool:
+    """
+    Dispatches login credentials to newly created staff member via real-time SMTP.
+    """
+    clean_login_id = login_id or to_email
+    subject = f"Welcome to StockFlow - Your Credentials for {warehouse_name}"
+    plain_body = (
+        f"Hello {staff_name},\n\n"
+        f"You have been assigned as staff for {warehouse_name}.\n\n"
+        f"Login Email: {to_email}\n"
+        f"Login ID: {clean_login_id}\n"
+        f"Temporary Password: {password}\n\n"
+        f"Please log in and update your password.\n"
+        f"- StockFlow Team"
+    )
+    html_body = _build_staff_credentials_html(
+        staff_name=staff_name,
+        warehouse_name=warehouse_name,
+        email=to_email,
+        login_id=clean_login_id,
+        password=password,
+    )
+    if settings.MAIL_SERVER and settings.MAIL_USERNAME and settings.MAIL_PASSWORD:
+        try:
+            await asyncio.to_thread(_send_smtp_sync, to_email, subject, html_body, plain_body)
+            print(f"\n[REAL-TIME EMAIL] Successfully sent staff credentials to: {to_email} via {settings.MAIL_SERVER}\n")
+            return True
+        except Exception as exc:
+            print(f"\n[EMAIL ERROR] Failed to send credentials email ({settings.MAIL_SERVER}): {exc}\n")
+            print(f"[FALLBACK CREDENTIALS] Staff {staff_name} ({to_email}) - Password: {password}\n")
+            return False
+    else:
+        print(f"\n==================== [STAFF CREDENTIALS DISPATCH] ====================")
+        print(f" Recipient : {to_email} ({staff_name})")
+        print(f" Warehouse : {warehouse_name}")
+        print(f" Login ID  : {clean_login_id}")
+        print(f" Password  : {password}")
+        print(f"======================================================================\n")
+        return True
+
