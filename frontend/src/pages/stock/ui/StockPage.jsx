@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { ROUTES } from '../../../shared/config/routes';
 import { AppHeader } from '../../../widgets/app-header';
 import { AppFooter } from '../../../widgets/app-footer';
 import { StockTable } from '../../../widgets/stock-table';
 import { productApi } from '../../../entities/product';
+import { warehousesApi } from '../../../shared/api/warehousesApi';
 import styles from './StockPage.module.css';
 
 export function StockPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState('ALL'); // 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
+  const [selectedWarehouse, setSelectedWarehouse] = useState('ALL');
+  const [selectedLocation, setSelectedLocation] = useState('ALL');
   const [toastMessage, setToastMessage] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
+
   const [newProductForm, setNewProductForm] = useState({
     name: '',
     code: '',
     unitCost: '150',
-    onHand: '25',
-    freeToUse: '25',
+    warehouseId: '',
+    locationId: '',
+    quantity: '10',
     status: 'Available',
   });
 
@@ -28,9 +31,25 @@ export function StockPage() {
     setTimeout(() => setToastMessage(''), 3200);
   };
 
+  // Fetch Warehouses & Locations for filtering and modal
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: () => warehousesApi.listWarehouses(),
+  });
+
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: () => warehousesApi.listLocations(),
+  });
+
+  // Fetch Products with optional warehouse & location parameters
   const { data: products = [] } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => productApi.getProducts(),
+    queryKey: ['products', selectedWarehouse, selectedLocation],
+    queryFn: () =>
+      productApi.getProducts({
+        warehouse_id: selectedWarehouse !== 'ALL' ? selectedWarehouse : undefined,
+        location_id: selectedLocation !== 'ALL' ? selectedLocation : undefined,
+      }),
   });
 
   const addMutation = useMutation({
@@ -43,10 +62,14 @@ export function StockPage() {
         name: '',
         code: '',
         unitCost: '150',
-        onHand: '25',
-        freeToUse: '25',
+        warehouseId: '',
+        locationId: '',
+        quantity: '10',
         status: 'Available',
       });
+    },
+    onError: (err) => {
+      showToast(err.message || 'Failed to add product');
     },
   });
 
@@ -56,6 +79,9 @@ export function StockPage() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       showToast('Product removed from stock inventory');
     },
+    onError: (err) => {
+      showToast(err.message || 'Failed to remove product');
+    },
   });
 
   const handleCreateProductSubmit = (e) => {
@@ -64,24 +90,36 @@ export function StockPage() {
       showToast('Please enter a product name');
       return;
     }
+    if (!newProductForm.warehouseId) {
+      showToast('Please select a warehouse');
+      return;
+    }
+    if (!newProductForm.locationId) {
+      showToast('Please select a location');
+      return;
+    }
     const cleanCode = newProductForm.code.trim() || `[SKU-${Date.now().toString().slice(-4)}]`;
+    const qty = Number(newProductForm.quantity) || 0;
     addMutation.mutate({
       name: newProductForm.name.trim(),
       code: cleanCode,
       icon: 'inventory_2',
       unitCost: Number(newProductForm.unitCost) || 0,
-      onHand: Number(newProductForm.onHand) || 0,
-      freeToUse: Number(newProductForm.freeToUse) || 0,
-      status: Number(newProductForm.onHand) > 0 ? 'Available' : 'Out of Stock',
+      warehouseId: newProductForm.warehouseId,
+      locationId: newProductForm.locationId,
+      quantity: qty,
+      status: qty > 0 ? 'Available' : 'Out of Stock',
     });
   };
 
   // Export Stock CSV
   const handleExportCSV = () => {
-    const headers = ['Product Name', 'SKU/Code', 'Unit Cost ($)', 'On Hand', 'Free to Use', 'Status'];
+    const headers = ['Product Name', 'SKU/Code', 'Warehouse', 'Location', 'Unit Cost ($)', 'On Hand', 'Free to Use', 'Status'];
     const rows = products.map((p) => [
       `"${p.name}"`,
       `"${p.code}"`,
+      `"${p.warehouseName || 'All Hubs'}"`,
+      `"${p.locationName || 'General'}"`,
       p.unitCost || 0,
       p.onHand || 0,
       p.freeToUse || 0,
@@ -97,12 +135,33 @@ export function StockPage() {
     showToast('Stock inventory exported to CSV');
   };
 
-  // Filter products by search term and filter state
+  // Dynamic locations for filter bar
+  const filterLocations = locations.filter(
+    (l) => selectedWarehouse === 'ALL' || l.warehouse_id === selectedWarehouse
+  );
+
+  // Dynamic locations for new product modal
+  const modalLocations = locations.filter(
+    (l) => l.warehouse_id === newProductForm.warehouseId
+  );
+
+  // Filter products by search term, warehouse, location, and stock status
   const filteredProducts = products.filter((p) => {
     const q = search.toLowerCase();
     const matchesSearch =
       p.name.toLowerCase().includes(q) ||
-      (p.code && p.code.toLowerCase().includes(q));
+      (p.code && p.code.toLowerCase().includes(q)) ||
+      (p.sku && p.sku.toLowerCase().includes(q));
+
+    let matchesWarehouse = true;
+    if (selectedWarehouse !== 'ALL') {
+      matchesWarehouse = p.warehouseId === selectedWarehouse;
+    }
+
+    let matchesLocation = true;
+    if (selectedLocation !== 'ALL') {
+      matchesLocation = p.locationId === selectedLocation;
+    }
 
     let matchesStock = true;
     if (stockFilter === 'IN_STOCK') {
@@ -114,21 +173,21 @@ export function StockPage() {
       matchesStock = (Number(p.onHand) || 0) === 0;
     }
 
-    return matchesSearch && matchesStock;
+    return matchesSearch && matchesWarehouse && matchesLocation && matchesStock;
   });
 
-  const totalOnHand = products.reduce((acc, p) => acc + (Number(p.onHand) || 0), 0);
-  const totalValuation = products.reduce(
+  const totalOnHand = filteredProducts.reduce((acc, p) => acc + (Number(p.onHand) || 0), 0);
+  const totalValuation = filteredProducts.reduce(
     (acc, p) => acc + (Number(p.onHand) || 0) * (Number(p.unitCost) || 0),
     0
   );
 
-  const inStockCount = products.filter((p) => (Number(p.onHand) || 0) > 0).length;
-  const lowStockCount = products.filter((p) => {
+  const inStockCount = filteredProducts.filter((p) => (Number(p.onHand) || 0) > 0).length;
+  const lowStockCount = filteredProducts.filter((p) => {
     const q = Number(p.onHand) || 0;
     return q > 0 && q <= 10;
   }).length;
-  const outOfStockCount = products.filter((p) => (Number(p.onHand) || 0) === 0).length;
+  const outOfStockCount = filteredProducts.filter((p) => (Number(p.onHand) || 0) === 0).length;
 
   return (
     <div className={styles.page}>
@@ -145,14 +204,6 @@ export function StockPage() {
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
             <span>New Product</span>
           </button>
-
-          <div className={styles.breadcrumbs}>
-            <Link to={ROUTES.DASHBOARD} className={styles.crumbParent}>StockFlow</Link>
-            <span className={styles.crumbSeparator}>/</span>
-            <span className={styles.crumbParent}>Inventory</span>
-            <span className={styles.crumbSeparator}>/</span>
-            <h1 className={styles.crumbCurrent}>Stock Inventory</h1>
-          </div>
 
           <div className={styles.actionToolButtons}>
             <button
@@ -183,6 +234,50 @@ export function StockPage() {
         </div>
 
         <div className={styles.ribbonRight}>
+          {/* Warehouse Filter */}
+          <div className={styles.filterDropdownWrapper} title="Filter by Warehouse">
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
+              warehouse
+            </span>
+            <select
+              className={styles.filterSelect}
+              value={selectedWarehouse}
+              onChange={(e) => {
+                setSelectedWarehouse(e.target.value);
+                setSelectedLocation('ALL');
+              }}
+            >
+              <option value="ALL">All Warehouses</option>
+              {warehouses.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name} {w.code ? `(${w.code})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Location Filter */}
+          <div className={styles.filterDropdownWrapper} title="Filter by Location">
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
+              pin_drop
+            </span>
+            <select
+              className={styles.filterSelect}
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+            >
+              <option value="ALL">
+                {selectedWarehouse === 'ALL' ? 'All Locations' : 'All Warehouse Locations'}
+              </option>
+              {filterLocations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name} {loc.code ? `(${loc.code})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search Box */}
           <div className={styles.searchContainer}>
             <span className="material-symbols-outlined" style={{ color: '#80747a', fontSize: '19px' }}>search</span>
             <input
@@ -318,29 +413,77 @@ export function StockPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Initial On Hand Units</label>
-                  <input
-                    type="number"
-                    className={styles.formInput}
-                    value={newProductForm.onHand}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setNewProductForm((p) => ({ ...p, onHand: val, freeToUse: val }));
-                    }}
-                  />
-                </div>
+              {/* Warehouse Selection */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Warehouse <span style={{ color: '#ba1a1a' }}>*</span>
+                </label>
+                <select
+                  className={styles.formInput}
+                  value={newProductForm.warehouseId}
+                  onChange={(e) => {
+                    const wid = e.target.value;
+                    setNewProductForm((p) => ({
+                      ...p,
+                      warehouseId: wid,
+                      locationId: '',
+                    }));
+                  }}
+                  required
+                >
+                  <option value="">Select Warehouse...</option>
+                  {warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} {w.code ? `(${w.code})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Free to Use Units</label>
-                  <input
-                    type="number"
-                    className={styles.formInput}
-                    value={newProductForm.freeToUse}
-                    onChange={(e) => setNewProductForm((p) => ({ ...p, freeToUse: e.target.value }))}
-                  />
-                </div>
+              {/* Dynamic Location Selection based on selected Warehouse */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Warehouse Location <span style={{ color: '#ba1a1a' }}>*</span>
+                </label>
+                <select
+                  className={styles.formInput}
+                  value={newProductForm.locationId}
+                  onChange={(e) => setNewProductForm((p) => ({ ...p, locationId: e.target.value }))}
+                  disabled={!newProductForm.warehouseId}
+                  required
+                >
+                  <option value="">
+                    {newProductForm.warehouseId
+                      ? 'Select Location in Warehouse...'
+                      : 'Choose Warehouse first...'}
+                  </option>
+                  {modalLocations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name} {loc.code ? `(${loc.code})` : ''}
+                    </option>
+                  ))}
+                </select>
+                {newProductForm.warehouseId && modalLocations.length === 0 && (
+                  <span style={{ fontSize: '12px', color: '#ba1a1a', marginTop: '4px', display: 'block' }}>
+                    No locations found for this warehouse. Please add a location in Warehouse Settings.
+                  </span>
+                )}
+              </div>
+
+              {/* Number of Units */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Number of Units <span style={{ color: '#ba1a1a' }}>*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className={styles.formInput}
+                  placeholder="e.g. 25"
+                  value={newProductForm.quantity}
+                  onChange={(e) => setNewProductForm((p) => ({ ...p, quantity: e.target.value }))}
+                  required
+                />
               </div>
 
               <div className={styles.modalActions}>
@@ -351,8 +494,8 @@ export function StockPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className={styles.btnPrimary}>
-                  Save to Stock
+                <button type="submit" className={styles.btnPrimary} disabled={addMutation.isPending}>
+                  {addMutation.isPending ? 'Saving...' : 'Save to Stock'}
                 </button>
               </div>
             </form>
@@ -374,4 +517,5 @@ export function StockPage() {
     </div>
   );
 }
+
 export default StockPage;

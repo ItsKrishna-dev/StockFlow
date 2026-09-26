@@ -33,12 +33,16 @@ class UOMOut(UOMCreate):
 
 
 class ProductCreate(BaseModel):
-    sku: str = Field(min_length=1, max_length=50)
+    sku: str | None = Field(default=None, max_length=50)
     name: str = Field(min_length=1, max_length=200)
     description: str | None = None
     category_id: uuid.UUID | None = None
-    uom_id: uuid.UUID
+    uom_id: uuid.UUID | None = None
     barcode: str | None = None
+    unit_cost: Decimal | None = None
+    warehouse_id: uuid.UUID | None = None
+    location_id: uuid.UUID | None = None
+    quantity: Decimal | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -53,11 +57,18 @@ class ProductOut(BaseModel):
     id: uuid.UUID
     sku: str
     name: str
-    description: str | None
-    category_id: uuid.UUID | None
-    uom_id: uuid.UUID
-    barcode: str | None
+    description: str | None = None
+    category_id: uuid.UUID | None = None
+    uom_id: uuid.UUID | None = None
+    barcode: str | None = None
     is_active: bool
+    unit_cost: Decimal | None = None
+    warehouse_id: uuid.UUID | None = None
+    warehouse_name: str | None = None
+    location_id: uuid.UUID | None = None
+    location_name: str | None = None
+    qty_on_hand: Decimal | None = None
+    qty_available: Decimal | None = None
     model_config = {"from_attributes": True}
 
 

@@ -68,6 +68,7 @@ export function StockTable({ products, onAddProduct, onDeleteProduct }) {
                   />
                 </th>
                 <th className={styles.th}>Product</th>
+                <th className={styles.th}>Warehouse & Location</th>
                 <th className={cn(styles.th, styles.thRight)}>Per Unit Cost</th>
                 <th className={cn(styles.th, styles.thRight)}>On Hand</th>
                 <th className={cn(styles.th, styles.thRight)}>Free to Use</th>
@@ -111,6 +112,20 @@ export function StockTable({ products, onAddProduct, onDeleteProduct }) {
                           </div>
                           <span className={styles.productCode}>{item.code}</span>
                         </div>
+                      </div>
+                    </td>
+                    <td className={styles.td}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', fontWeight: 600, color: '#332d3b' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#714b67' }}>warehouse</span>
+                          <span>{item.warehouseName || 'Main Hub'}</span>
+                        </div>
+                        {item.locationName && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: '#714b67' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>pin_drop</span>
+                            <span>{item.locationName}</span>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className={cn(styles.td, styles.textRight, styles.costCell)}>
@@ -174,6 +189,9 @@ export function StockTable({ products, onAddProduct, onDeleteProduct }) {
                       onChange={(e) => setNewRow({ ...newRow, name: e.target.value })}
                       onKeyDown={(e) => e.key === 'Enter' && handleSaveNewRow()}
                     />
+                  </td>
+                  <td className={styles.td}>
+                    <span style={{ color: '#8d8594', fontSize: '12px' }}>Auto-assigned</span>
                   </td>
                   <td className={cn(styles.td, styles.textRight)}>
                     <input
@@ -244,7 +262,7 @@ export function StockTable({ products, onAddProduct, onDeleteProduct }) {
                       subdirectory_arrow_right
                     </span>
                   </td>
-                  <td className={styles.td} colSpan={6}>
+                  <td className={styles.td} colSpan={7}>
                     <button
                       type="button"
                       className={styles.btnAddLine}

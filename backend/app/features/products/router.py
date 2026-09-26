@@ -81,10 +81,19 @@ async def list_products(
     search: str | None = None,
     category_id: uuid.UUID | None = None,
     is_active: bool | None = None,
+    warehouse_id: uuid.UUID | None = None,
+    location_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[ProductOut]:
-    return await service.list_products(db, search=search, category_id=category_id, is_active=is_active)
+    return await service.list_products(
+        db,
+        search=search,
+        category_id=category_id,
+        is_active=is_active,
+        warehouse_id=warehouse_id,
+        location_id=location_id,
+    )
 
 
 @router.get("/products/{product_id}", response_model=ProductOut)
@@ -104,6 +113,15 @@ async def update_product(
     _: User = Depends(manager_or_admin),
 ) -> ProductOut:
     return await service.update_product(product_id, payload, db)
+
+
+@router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product(
+    product_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(manager_or_admin),
+):
+    await service.delete_product(product_id, db)
 
 
 @router.get("/products/{product_id}/stock", response_model=ProductStockSummary)
