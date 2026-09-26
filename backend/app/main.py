@@ -1,22 +1,27 @@
 """
 app/main.py
-
-Application entrypoint. Mounts all v1 routers under /api/v1 and exposes
-/health for uptime checks. As you add products.py, receipts.py, etc. to
-app/api/v1/, just import and include them here (or better, aggregate
-them in app/api/v1/router.py and include that single router — shown
-commented below for when you have more than 2-3 route modules).
+Application entrypoint. Every module's router is mounted here under
+/api/v1 — this is the only file that needs to change when a new module
+is added.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.adjustments import router as adjustments_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.dashboard import router as dashboard_router
+from app.api.v1.deliveries import router as deliveries_router
+from app.api.v1.ledger import router as ledger_router
+from app.api.v1.products import router as products_router
+from app.api.v1.receipts import router as receipts_router
+from app.api.v1.transfers import router as transfers_router
+from app.api.v1.warehouses import router as warehouses_router
 from app.core.config import settings
 
 app = FastAPI(
     title="StockSense API",
     description="Modular Inventory Management System backend",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 app.add_middleware(
@@ -27,13 +32,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router, prefix="/api/v1")
+API_PREFIX = "/api/v1"
 
-# As more modules are ready, add them the same way, e.g.:
-# from app.api.v1.products import router as products_router
-# app.include_router(products_router, prefix="/api/v1")
+app.include_router(auth_router, prefix=API_PREFIX)
+app.include_router(products_router, prefix=API_PREFIX)
+app.include_router(warehouses_router, prefix=API_PREFIX)
+app.include_router(receipts_router, prefix=API_PREFIX)
+app.include_router(deliveries_router, prefix=API_PREFIX)
+app.include_router(transfers_router, prefix=API_PREFIX)
+app.include_router(adjustments_router, prefix=API_PREFIX)
+app.include_router(ledger_router, prefix=API_PREFIX)
+app.include_router(dashboard_router, prefix=API_PREFIX)
 
 
 @app.get("/health", tags=["system"])
 async def health_check() -> dict:
     return {"status": "ok", "environment": settings.ENVIRONMENT}
+
+
+@app.get("/health/db", tags=["system"])
+async def database_health_check() -> dict:
+    from sqlalchemy import text
+
+    from app.core.database import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(text("SELECT current_database(), now()"))
+        database_name, server_time = result.one()
+
+    return {"status": "ok", "database": database_name, "server_time": server_time.isoformat()}
