@@ -1,0 +1,156 @@
+"""
+app/core/email.py
+
+Real-time transactional email delivery service.
+Handles OTP emails with responsive HTML templates via SMTP.
+Runs network I/O asynchronously in thread pools to avoid blocking the event loop.
+"""
+import asyncio
+import smtplib
+from email.message import EmailMessage
+
+from app.core.config import settings
+
+
+def _build_otp_html(otp_code: str, recipient_name: str | None = None) -> str:
+    name_greeting = f"Hello {recipient_name}," if recipient_name else "Hello,"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockSense Password Reset OTP</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0f172a; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 540px; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+          <!-- Brand Header -->
+          <tr>
+            <td style="padding: 32px 32px 20px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); text-align: center;">
+              <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">StockSense</h1>
+              <p style="margin: 6px 0 0; font-size: 14px; color: #e0e7ff; font-weight: 500;">Modular Inventory Management System</p>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.5; color: #cbd5e1;">{name_greeting}</p>
+              <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #94a3b8;">
+                We received a request to reset the password for your StockSense account. Use the following One-Time Password (OTP) to proceed:
+              </p>
+
+              <!-- OTP Code Display Card -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 28px 0;">
+                <tr>
+                  <td align="center" style="background-color: #0f172a; border: 2px dashed #6366f1; border-radius: 12px; padding: 24px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 800; letter-spacing: 10px; color: #38bdf8; display: inline-block;">
+                      {otp_code}
+                    </span>
+                    <p style="margin: 10px 0 0; font-size: 13px; color: #64748b; font-weight: 500;">
+                      Valid for <strong>15 minutes</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #94a3b8;">
+                Enter this code in your password reset screen along with your new password.
+              </p>
+
+              <div style="background-color: #0f172a; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 12px 16px; margin: 24px 0 0;">
+                <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #fbbf24;">
+                  <strong>Security Note:</strong> If you did not request this password reset, please disregard this email or report it to your administrator immediately.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 32px; background-color: #0f172a; border-top: 1px solid #334155; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #64748b;">
+                &copy; StockSense Inventory Platform &bull; Automated System Dispatch
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+
+def _send_smtp_sync(to_email: str, subject: str, html_body: str, plain_body: str) -> None:
+    """Synchronous SMTP worker function executed inside asyncio.to_thread."""
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+    msg["To"] = to_email
+    msg.set_content(plain_body)
+    msg.add_alternative(html_body, subtype="html")
+
+    if not settings.SMTP_HOST:
+        raise ValueError("SMTP_HOST is not configured in settings")
+
+    # Connect via SSL or TLS
+    if settings.SMTP_PORT == 465:
+        with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as server:
+            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+    else:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as server:
+            if settings.SMTP_TLS:
+                server.starttls()
+            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+
+
+async def send_otp_email(
+    to_email: str,
+    otp_code: str,
+    user_name: str | None = None,
+) -> bool:
+    """
+    Sends the 6-digit OTP code to the recipient's email in real-time.
+    If SMTP credentials are configured in .env, sends via SMTP.
+    If SMTP credentials are not configured, prints clear terminal dev instructions.
+    """
+    subject = f"Your StockSense Password Reset Code: {otp_code}"
+    plain_body = (
+        f"Hello {user_name or ''},\n\n"
+        f"Your StockSense password reset OTP is: {otp_code}\n\n"
+        f"This code will expire in 15 minutes.\n"
+        f"If you did not request a password reset, please ignore this email."
+    )
+    html_body = _build_otp_html(otp_code, user_name)
+
+    if settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD:
+        try:
+            await asyncio.to_thread(_send_smtp_sync, to_email, subject, html_body, plain_body)
+            print(f"\n[REAL-TIME EMAIL] Successfully sent OTP email to: {to_email} via {settings.SMTP_HOST}\n")
+            return True
+        except Exception as exc:
+            print(f"\n[EMAIL ERROR] Failed to send email via SMTP ({settings.SMTP_HOST}): {exc}\n")
+            # Fallback to dev console so the user is never locked out
+            print(f"[FALLBACK DEV OTP] OTP for {to_email}: {otp_code} (Valid for 15 mins)\n")
+            return False
+    else:
+        # Development mode without SMTP credentials
+        print(f"\n==================== [REAL-TIME OTP DISPATCH] ====================")
+        print(f" Recipient: {to_email}")
+        print(f" OTP Code : {otp_code}  (Valid for 15 mins)")
+        print(f" Status   : SMTP not configured in .env.")
+        print(f"            To send real emails to your Gmail inbox, add:")
+        print(f"            SMTP_HOST=smtp.gmail.com")
+        print(f"            SMTP_PORT=587")
+        print(f"            SMTP_USER=your_email@gmail.com")
+        print(f"            SMTP_PASSWORD=your_16_digit_app_password")
+        print(f"===================================================================\n")
+        return True

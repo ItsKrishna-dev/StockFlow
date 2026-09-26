@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # --- Database ---
     DATABASE_URL: str
@@ -27,6 +27,15 @@ class Settings(BaseSettings):
     # --- AI copilot (free-tier provider, not OpenAI) ---
     GROQ_API_KEY: str | None = None
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # --- SMTP / Real-Time Email Delivery ---
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = 587
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_TLS: bool = True
+    EMAILS_FROM_EMAIL: str = "support@stocksense.io"
+    EMAILS_FROM_NAME: str = "StockSense Inventory"
 
     ENVIRONMENT: str = "development"
 

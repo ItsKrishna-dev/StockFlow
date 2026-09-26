@@ -56,4 +56,5 @@ async def test_move_history_and_explain_stock(
     assert len(timeline["entries"]) >= 1
     first_entry = timeline["entries"][0]
     assert float(first_entry["quantity"]) == 25.0
-    assert first_entry["dest_location_name"] == "Main Storage"
+    assert first_entry["dest_location_name"] == seed_data["loc_main"].name
+

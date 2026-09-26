@@ -197,8 +197,9 @@ async def generate_reset_otp(email: str, db: AsyncSession) -> dict:
     db.add(otp_entry)
     await db.commit()
 
-    if settings.ENVIRONMENT == "development":
-        print(f"\n[DEV OTP] Password reset OTP for {user.email}: {otp_code} (Valid for 15 mins)\n")
+    # Deliver real-time email
+    from app.core.email import send_otp_email
+    await send_otp_email(user.email, otp_code, user.full_name)
 
     return generic_msg
 
