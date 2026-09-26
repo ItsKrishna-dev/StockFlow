@@ -15,6 +15,7 @@ from app.core.email import send_staff_credentials_email
 from app.features.warehouses.schemas import (
     LocationCreate,
     LocationOut,
+    LocationStockItemOut,
     PartnerCreate,
     PartnerOut,
     StaffCreate,
@@ -23,7 +24,7 @@ from app.features.warehouses.schemas import (
     WarehouseOut,
     WarehouseUpdate,
 )
-from app.models.models import Location, Partner, User, Warehouse
+from app.models.models import Location, Partner, Product, StockQuant, User, Warehouse
 
 
 # --- Warehouse Service Functions ---
@@ -259,6 +260,36 @@ async def list_locations(
 
     result = await db.execute(query.order_by(Location.name))
     return [LocationOut.model_validate(l) for l in result.scalars().all()]
+
+
+async def list_location_stock(
+    db: AsyncSession,
+    location_id: uuid.UUID,
+) -> list[LocationStockItemOut]:
+    stmt = (
+        select(StockQuant, Product)
+        .join(Product, StockQuant.product_id == Product.id)
+        .where(
+            StockQuant.location_id == location_id,
+            (StockQuant.quantity - StockQuant.reserved_qty) > 0,
+        )
+        .order_by(Product.name)
+    )
+    res = await db.execute(stmt)
+    items = []
+    for quant, prod in res.all():
+        items.append(
+            LocationStockItemOut(
+                product_id=prod.id,
+                product_name=prod.name,
+                sku=prod.sku,
+                uom_id=prod.uom_id,
+                quantity=quant.quantity,
+                reserved_qty=quant.reserved_qty,
+                available_qty=quant.quantity - quant.reserved_qty,
+            )
+        )
+    return items
 
 
 # --- Partner Service Functions ---

@@ -55,6 +55,10 @@ export const warehousesApi = {
     return apiClient.post('/locations', payload);
   },
 
+  async getLocationStock(locationId) {
+    return apiClient.get(`/locations/${locationId}/stock`);
+  },
+
   // ─── Partners ────────────────────────────────────────────────────────────
 
   /**
