@@ -705,3 +705,188 @@
     transform: translateY(0);
   }
 }
+
+/* ── Adjustment Popup Styles ─────────────────────────────────────────────── */
+.itemSummaryCard {
+  background: #fbf9f8;
+  border: 1.5px solid #e8e4ec;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.itemSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+}
+
+.itemSummaryLabel {
+  color: #756f82;
+  font-weight: 500;
+}
+
+.itemSummaryValue {
+  color: #212529;
+  font-weight: 700;
+}
+
+.toggleGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #d8d4dc;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: #4e444a;
+}
+
+.toggleBtn:hover {
+  background: #fbf9f8;
+}
+
+.toggleBtnAddActive {
+  background: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.toggleBtnRemoveActive {
+  background: #fff1f2 !important;
+  border-color: #f43f5e !important;
+  color: #9f1239 !important;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.2);
+}
+
+.calcPreview {
+  background: #f4f0f6;
+  border: 1.5px solid #e2d9e6;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13.5px;
+  color: #3b333a;
+}
+
+.reasonChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.reasonChip {
+  background: #f0edf2;
+  border: 1px solid #d8d4dc;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4e444a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reasonChip:hover {
+  background: #714b67;
+  color: #ffffff;
+  border-color: #714b67;
+}
+
+.badgeInStock {
+  background: #d1fae5;
+  color: #006443;
+  border: 1px solid rgba(0, 100, 67, 0.25);
+}
+
+.badgeLowStock {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.badgeOutOfStock {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid rgba(186, 26, 26, 0.25);
+}
+
+.btnAdjustAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1.5px solid #714b67;
+  color: #714b67;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btnAdjustAction:hover {
+  background: #714b67;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(113, 75, 103, 0.25);
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  background: #f4f0f6;
+  border: 1px solid #e2d9e6;
+  font-size: 12px;
+  font-weight: 700;
+  color: #714b67;
+}
+
+.deltaPositive {
+  color: #006443;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.deltaNegative {
+  color: #ba1a1a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.pendingNotice {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  color: #92400e;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 10px;
+}

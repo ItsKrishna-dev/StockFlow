@@ -17,10 +17,13 @@ from sqlalchemy.orm import selectinload
 
 from app.models.models import (
     Location,
+    Product,
+    ProductCategory,
     StockDocument,
     StockDocumentLine,
     StockLedger,
     StockQuant,
+    UnitOfMeasure,
     Warehouse,
 )
 
@@ -289,15 +292,125 @@ async def get_virtual_adjustment_location_id(db: AsyncSession) -> uuid.UUID:
     )
     location_id = result.scalar_one_or_none()
     if location_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=(
-                "No active location of type 'virtual_adjustment' exists. "
-                "Seed one first, e.g. via POST /api/v1/locations "
-                "{'name': 'Adjustment Account', 'code': 'ADJ-VIRTUAL', 'type': 'virtual_adjustment'}"
-            ),
+        loc = Location(
+            name="Adjustment Account",
+            code="ADJ-VIRTUAL",
+            type="virtual_adjustment",
+            is_active=True,
         )
+        db.add(loc)
+        await db.commit()
+        await db.refresh(loc)
+        return loc.id
     return location_id
+
+
+async def list_adjustment_stock_items(
+    db: AsyncSession,
+    warehouse_id: uuid.UUID | None = None,
+    search: str | None = None,
+) -> list[dict]:
+    # 1. Quants currently in internal locations
+    query = (
+        select(
+            StockQuant,
+            Product,
+            Location,
+            Warehouse,
+            ProductCategory.name.label("category_name"),
+            UnitOfMeasure.name.label("uom_name"),
+        )
+        .join(Product, StockQuant.product_id == Product.id)
+        .join(Location, StockQuant.location_id == Location.id)
+        .join(Warehouse, Location.warehouse_id == Warehouse.id)
+        .outerjoin(ProductCategory, Product.category_id == ProductCategory.id)
+        .outerjoin(UnitOfMeasure, Product.uom_id == UnitOfMeasure.id)
+        .where(Location.type == "internal", Product.is_active.is_(True))
+    )
+    if warehouse_id:
+        query = query.where(Warehouse.id == warehouse_id)
+    if search:
+        s = f"%{search.strip().lower()}%"
+        query = query.where(
+            func.lower(Product.name).like(s)
+            | func.lower(Product.sku).like(s)
+            | func.lower(Location.name).like(s)
+            | func.lower(Warehouse.name).like(s)
+        )
+    query = query.order_by(Product.name, Location.name)
+    result = await db.execute(query)
+
+    seen_products = set()
+    items = []
+    for quant, prod, loc, wh, cat_name, uom_name in result.all():
+        seen_products.add(prod.id)
+        items.append(
+            {
+                "id": f"{prod.id}_{loc.id}",
+                "product_id": prod.id,
+                "product_name": prod.name,
+                "sku": prod.sku,
+                "uom_id": prod.uom_id,
+                "uom_name": uom_name,
+                "category_name": cat_name,
+                "location_id": loc.id,
+                "location_name": loc.name,
+                "warehouse_id": wh.id,
+                "warehouse_name": wh.name,
+                "quantity_on_hand": quant.quantity,
+                "reserved_qty": quant.reserved_qty,
+                "available_qty": quant.quantity - quant.reserved_qty,
+            }
+        )
+
+    # 2. Also include active products not yet in stock_quants so users can adjust/add initial count
+    prod_query = (
+        select(Product, ProductCategory.name.label("category_name"), UnitOfMeasure.name.label("uom_name"))
+        .outerjoin(ProductCategory, Product.category_id == ProductCategory.id)
+        .outerjoin(UnitOfMeasure, Product.uom_id == UnitOfMeasure.id)
+        .where(Product.is_active.is_(True))
+    )
+    if search:
+        s = f"%{search.strip().lower()}%"
+        prod_query = prod_query.where(
+            func.lower(Product.name).like(s) | func.lower(Product.sku).like(s)
+        )
+    prod_res = await db.execute(prod_query)
+
+    loc_query = (
+        select(Location, Warehouse)
+        .join(Warehouse, Location.warehouse_id == Warehouse.id)
+        .where(Location.type == "internal", Location.is_active.is_(True))
+    )
+    if warehouse_id:
+        loc_query = loc_query.where(Warehouse.id == warehouse_id)
+    loc_res = await db.execute(loc_query)
+    all_locs = loc_res.all()
+
+    if all_locs:
+        for prod, cat_name, uom_name in prod_res.all():
+            if prod.id not in seen_products:
+                loc, wh = all_locs[0]
+                items.append(
+                    {
+                        "id": f"{prod.id}_{loc.id}",
+                        "product_id": prod.id,
+                        "product_name": prod.name,
+                        "sku": prod.sku,
+                        "uom_id": prod.uom_id,
+                        "uom_name": uom_name,
+                        "category_name": cat_name,
+                        "location_id": loc.id,
+                        "location_name": loc.name,
+                        "warehouse_id": wh.id,
+                        "warehouse_name": wh.name,
+                        "quantity_on_hand": Decimal("0"),
+                        "reserved_qty": Decimal("0"),
+                        "available_qty": Decimal("0"),
+                    }
+                )
+
+    return items
 
 
 async def build_adjustment_lines(

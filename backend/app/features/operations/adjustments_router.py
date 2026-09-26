@@ -11,7 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import get_current_user, require_role
 from app.features.operations import service
-from app.features.operations.schemas import AdjustmentCreate, DocumentOut
+from app.features.operations.schemas import (
+    AdjustmentCreate,
+    DocumentOut,
+    StockAdjustmentItemOut,
+)
 from app.models.models import User
 
 router = APIRouter(prefix="/adjustments", tags=["adjustments"])
@@ -51,7 +55,31 @@ async def create_adjustment(
         created_by=current_user.id,
         lines=resolved_lines,
     )
+
+    # Role-based rule:
+    # If the creator is a manager/admin and requested auto_validate, directly validate so it moves
+    # straight to the 'done' (validated) section without staying in draft.
+    # Staff adjustments ALWAYS remain in 'draft' and require separate manager/admin validation.
+    if payload.auto_validate and current_user.role in ("admin", "inventory_manager"):
+        document = await service.validate_document(db, document.id, current_user.id)
+
     return DocumentOut.model_validate(document)
+
+
+@router.get("/stock-items", response_model=list[StockAdjustmentItemOut])
+async def list_stock_items_for_adjustment(
+    warehouse_id: uuid.UUID | None = None,
+    search: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[StockAdjustmentItemOut]:
+    """
+    List all products with their location and warehouse for direct stock adjustments.
+    """
+    items = await service.list_adjustment_stock_items(
+        db, warehouse_id=warehouse_id, search=search
+    )
+    return [StockAdjustmentItemOut(**item) for item in items]
 
 
 @router.get("", response_model=list[DocumentOut])
