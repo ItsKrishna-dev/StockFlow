@@ -424,20 +424,6 @@ export default function WarehouseSettingsPage() {
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
             <span>New Warehouse</span>
           </button>
-
-          <div className="breadcrumbs">
-            <Link to={ROUTES.DASHBOARD} className="crumb-parent">StockFlow</Link>
-            <span className="crumb-separator">/</span>
-            <span className="crumb-parent">Settings</span>
-            <span className="crumb-separator">/</span>
-            <h1 className="crumb-current">
-              {activeSection === 'overview'
-                ? 'Warehouses Directory'
-                : activeSection === 'locations'
-                ? 'Locations & Racks'
-                : 'Warehouse Staff'}
-            </h1>
-          </div>
         </div>
 
         <div className="ribbon-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

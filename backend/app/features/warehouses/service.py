@@ -44,18 +44,32 @@ async def create_warehouse(payload: WarehouseCreate, db: AsyncSession) -> Wareho
 
     # Automatically create user-specified locations if provided
     if payload.location_names:
+        used_codes: set[str] = set()
         for idx, loc_name in enumerate(payload.location_names, 1):
             trimmed_name = loc_name.strip()
             if not trimmed_name:
                 continue
-            # Create a clean unique location code, e.g. WH/LOC-1 or WH/MAIN-STOCK
-            safe_slug = re.sub(r'[^A-Za-z0-9_-]', '', trimmed_name.replace(' ', '-')).upper()[:15]
-            loc_code = f"{clean_code}/{safe_slug or f'LOC-{idx}'}"
+
+            # Clean alphanumeric slug from name
+            safe_slug = re.sub(r'[^A-Za-z0-9]', '', trimmed_name).upper()
+            slug_part = safe_slug[:10] if safe_slug else "STOCK"
             
-            # Ensure unique code
+            # Format: e.g. KYN-01/L1-STOCK (always unique per index idx, max 30 chars)
+            wh_prefix = clean_code[:12]
+            loc_code = f"{wh_prefix}/L{idx}-{slug_part}"[:29]
+
+            counter = 1
+            while loc_code in used_codes:
+                loc_code = f"{wh_prefix}/L{idx}-{slug_part[:6]}-{counter}"[:29]
+                counter += 1
+
+            # Verify against database for cross-warehouse collisions
             code_check = await db.execute(select(Location).where(Location.code == loc_code))
-            if code_check.scalar_one_or_none() is not None:
-                loc_code = f"{clean_code}/L{idx}-{uuid.uuid4().hex[:4].upper()}"
+            while code_check.scalar_one_or_none() is not None:
+                loc_code = f"{wh_prefix}/L{idx}-{uuid.uuid4().hex[:4].upper()}"[:29]
+                code_check = await db.execute(select(Location).where(Location.code == loc_code))
+
+            used_codes.add(loc_code)
 
             location = Location(
                 name=trimmed_name,
@@ -64,6 +78,7 @@ async def create_warehouse(payload: WarehouseCreate, db: AsyncSession) -> Wareho
                 warehouse_id=warehouse.id,
             )
             db.add(location)
+
 
     await db.commit()
     await db.refresh(warehouse)
