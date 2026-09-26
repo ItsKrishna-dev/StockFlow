@@ -10,37 +10,49 @@ const INITIAL_WAREHOUSES = [
     id: 'WH-01',
     name: 'Central Warehouse (WH)',
     code: 'WH',
+    category: 'Primary Distribution Center',
+    city: 'San Francisco, CA',
+    country: 'United States',
     address: '250 Executive Park Blvd, Suite 3400\nSan Francisco, CA 94134\nUnited States',
     incomingShipments: true,
     outgoingShipments: true,
     resupplySubcontractors: false,
     manager: 'Mitchell Admin',
-    totalLocations: 5,
-    staffCount: 4,
+    operatingHours: '24/7 Multi-Shift',
+    totalCapacity: 2000,
+    status: 'Active',
   },
   {
     id: 'WH-02',
     name: 'East Coast Distribution Hub (WH-EAST)',
     code: 'WH-EAST',
+    category: 'Regional Fulfillment Center',
+    city: 'Secaucus, NJ',
+    country: 'United States',
     address: '100 Industrial Parkway, Dock 12\nSecaucus, NJ 07094\nUnited States',
     incomingShipments: true,
     outgoingShipments: true,
     resupplySubcontractors: true,
     manager: 'Sarah Jenkins',
-    totalLocations: 3,
-    staffCount: 2,
+    operatingHours: '06:00 - 23:00 EST',
+    totalCapacity: 3500,
+    status: 'Active',
   },
   {
     id: 'WH-03',
     name: 'Europe Distribution Center (WH-EU)',
     code: 'WH-EU',
+    category: 'International Gateway Hub',
+    city: 'Brussels',
+    country: 'Belgium',
     address: 'Havenlaan 86C, Box 402\n1000 Brussels\nBelgium',
     incomingShipments: true,
     outgoingShipments: true,
     resupplySubcontractors: false,
     manager: 'Jean-Luc Dubois',
-    totalLocations: 2,
-    staffCount: 1,
+    operatingHours: '08:00 - 18:00 CET',
+    totalCapacity: 1800,
+    status: 'Active',
   },
 ];
 
@@ -252,14 +264,43 @@ export default function WarehouseSettingsPage() {
   const [subLocations, setSubLocations] = useState(INITIAL_SUB_LOCATIONS);
   const [staffMembers, setStaffMembers] = useState(INITIAL_STAFF_MEMBERS);
 
-  const [activeSection, setActiveSection] = useState('profile'); // 'profile' | 'locations' | 'staff'
+  // Active navigation tab: 'overview' | 'profile' | 'locations' | 'staff'
+  const [activeSection, setActiveSection] = useState('overview');
   const [isModified, setIsModified] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [expandedWarehouseIds, setExpandedWarehouseIds] = useState(['WH-01']);
+
+  // Search queries
+  const [warehouseSearchQuery, setWarehouseSearchQuery] = useState('');
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+  const [staffSearchQuery, setStaffSearchQuery] = useState('');
+
+  // Filters
+  const [locationWarehouseFilter, setLocationWarehouseFilter] = useState('ALL');
+  const [staffWarehouseFilter, setStaffWarehouseFilter] = useState('ALL');
 
   // Modals state
+  const [showNewWarehouseModal, setShowNewWarehouseModal] = useState(false);
+  const [newWarehouseForm, setNewWarehouseForm] = useState({
+    name: '',
+    code: '',
+    category: 'Regional Fulfillment Center',
+    city: '',
+    country: 'United States',
+    address: '',
+    manager: '',
+    operatingHours: '08:00 - 18:00',
+    totalCapacity: 2000,
+    incomingShipments: true,
+    outgoingShipments: true,
+    resupplySubcontractors: false,
+    autoCreateDefaultLocations: true,
+  });
+
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [newLocationForm, setNewLocationForm] = useState({
+    warehouseCode: 'WH',
     name: '',
     pathSuffix: '',
     zone: 'Zone A (Ground Floor)',
@@ -279,8 +320,6 @@ export default function WarehouseSettingsPage() {
     accessLevel: 'Operator',
     email: '',
   });
-
-  const [staffWarehouseFilter, setStaffWarehouseFilter] = useState('ALL');
 
   const currentWarehouse =
     warehousesList.find((w) => w.id === selectedWarehouseId) || warehousesList[0];
@@ -307,24 +346,134 @@ export default function WarehouseSettingsPage() {
     showToast('Changes discarded');
   };
 
+  // Toggle Accordion in Master Warehouses Table
+  const toggleWarehouseExpand = (whId) => {
+    setExpandedWarehouseIds((prev) =>
+      prev.includes(whId) ? prev.filter((id) => id !== whId) : [...prev, whId]
+    );
+  };
+
+  // Create New Warehouse Submit
+  const handleCreateWarehouseSubmit = (e) => {
+    e.preventDefault();
+    const cleanCode = newWarehouseForm.code.trim().toUpperCase();
+    const cleanName = newWarehouseForm.name.trim();
+
+    if (!cleanName || !cleanCode) {
+      showToast('Please enter warehouse name and unique short code');
+      return;
+    }
+
+    if (warehousesList.some((w) => w.code === cleanCode)) {
+      showToast(`Warehouse code "${cleanCode}" already exists. Please choose a unique code.`);
+      return;
+    }
+
+    const newWhId = `WH-${Date.now().toString().slice(-4)}`;
+    const newWarehouse = {
+      id: newWhId,
+      name: cleanName,
+      code: cleanCode,
+      category: newWarehouseForm.category,
+      city: newWarehouseForm.city || 'Undisclosed City',
+      country: newWarehouseForm.country || 'United States',
+      address: newWarehouseForm.address || `${cleanName}\n${newWarehouseForm.city || ''}`,
+      incomingShipments: newWarehouseForm.incomingShipments,
+      outgoingShipments: newWarehouseForm.outgoingShipments,
+      resupplySubcontractors: newWarehouseForm.resupplySubcontractors,
+      manager: newWarehouseForm.manager || 'Unassigned Lead',
+      operatingHours: newWarehouseForm.operatingHours,
+      totalCapacity: Number(newWarehouseForm.totalCapacity) || 2000,
+      status: 'Active',
+    };
+
+    setWarehousesList((prev) => [...prev, newWarehouse]);
+
+    // Automatically generate standard sub-locations if selected
+    if (newWarehouseForm.autoCreateDefaultLocations) {
+      const generatedLocations = [
+        {
+          id: `LOC-${Date.now().toString().slice(-3)}-1`,
+          warehouseCode: cleanCode,
+          name: 'Main Storage Racks',
+          path: `${cleanCode}/Stock1`,
+          zone: 'Zone A (Ground Floor)',
+          type: 'Internal Storage',
+          category: 'Standard Pallet Rack (5T)',
+          barcode: `LOC-${cleanCode}-001`,
+          itemsHeld: 0,
+          maxCapacity: Math.round(Number(newWarehouseForm.totalCapacity) * 0.6) || 1200,
+          status: 'In Service',
+        },
+        {
+          id: `LOC-${Date.now().toString().slice(-3)}-2`,
+          warehouseCode: cleanCode,
+          name: 'Receiving Dock 1',
+          path: `${cleanCode}/Input-Dock-1`,
+          zone: 'Docking Staging',
+          type: 'Incoming Staging',
+          category: 'Cross-Dock Buffer',
+          barcode: `LOC-${cleanCode}-002`,
+          itemsHeld: 0,
+          maxCapacity: 300,
+          status: 'In Service',
+        },
+        {
+          id: `LOC-${Date.now().toString().slice(-3)}-3`,
+          warehouseCode: cleanCode,
+          name: 'Outbound Dispatch Bay',
+          path: `${cleanCode}/Output-Dock-1`,
+          zone: 'Dispatch Bay',
+          type: 'Outgoing Dispatch',
+          category: 'Fast Packing Station',
+          barcode: `LOC-${cleanCode}-003`,
+          itemsHeld: 0,
+          maxCapacity: 300,
+          status: 'In Service',
+        },
+      ];
+      setSubLocations((prev) => [...prev, ...generatedLocations]);
+    }
+
+    setSelectedWarehouseId(newWhId);
+    setShowNewWarehouseModal(false);
+    setNewWarehouseForm({
+      name: '',
+      code: '',
+      category: 'Regional Fulfillment Center',
+      city: '',
+      country: 'United States',
+      address: '',
+      manager: '',
+      operatingHours: '08:00 - 18:00',
+      totalCapacity: 2000,
+      incomingShipments: true,
+      outgoingShipments: true,
+      resupplySubcontractors: false,
+      autoCreateDefaultLocations: true,
+    });
+    showToast(`Warehouse "${cleanName} (${cleanCode})" created successfully!`);
+  };
+
   // Add Location Submit
   const handleAddLocationSubmit = (e) => {
     e.preventDefault();
     if (!newLocationForm.name.trim() || !newLocationForm.pathSuffix.trim()) {
-      showToast('Please enter both location name and path suffix');
+      showToast('Please enter both location name and path identifier');
       return;
     }
 
-    const fullPath = `${currentWarehouse.code}/${newLocationForm.pathSuffix.replace(/^\/+/, '')}`;
+    const targetWhCode = newLocationForm.warehouseCode || currentWarehouse.code;
+    const fullPath = `${targetWhCode}/${newLocationForm.pathSuffix.replace(/^\/+/, '')}`;
     const newLoc = {
       id: `LOC-${Date.now().toString().slice(-4)}`,
-      warehouseCode: currentWarehouse.code,
+      warehouseCode: targetWhCode,
       name: newLocationForm.name,
       path: fullPath,
       zone: newLocationForm.zone,
       type: newLocationForm.type,
       category: newLocationForm.category,
-      barcode: newLocationForm.barcode || `LOC-${currentWarehouse.code}-${Date.now().toString().slice(-3)}`,
+      barcode: newLocationForm.barcode || `LOC-${targetWhCode}-${Date.now().toString().slice(-3)}`,
       itemsHeld: 0,
       maxCapacity: Number(newLocationForm.maxCapacity) || 500,
       status: 'In Service',
@@ -333,6 +482,7 @@ export default function WarehouseSettingsPage() {
     setSubLocations((prev) => [newLoc, ...prev]);
     setShowLocationModal(false);
     setNewLocationForm({
+      warehouseCode: currentWarehouse.code,
       name: '',
       pathSuffix: '',
       zone: 'Zone A (Ground Floor)',
@@ -341,7 +491,7 @@ export default function WarehouseSettingsPage() {
       barcode: '',
       maxCapacity: 500,
     });
-    showToast(`Added sub-location "${fullPath}" to ${currentWarehouse.name}`);
+    showToast(`Added sub-location "${fullPath}"`);
   };
 
   // Delete Location
@@ -378,7 +528,7 @@ export default function WarehouseSettingsPage() {
       shift: newStaffForm.shift,
       accessLevel: newStaffForm.accessLevel,
       email: newStaffForm.email,
-      status: 'Active',
+      status: 'On Shift',
     };
 
     setStaffMembers((prev) => [newStaff, ...prev]);
@@ -395,15 +545,44 @@ export default function WarehouseSettingsPage() {
     showToast(`Assigned ${newStaff.name} to ${targetWh.name}`);
   };
 
-  // Filtered sub-locations for current warehouse
-  const currentWarehouseLocations = subLocations.filter(
-    (loc) => loc.warehouseCode === currentWarehouse.code
-  );
+  // Calculate totals
+  const totalHeldItemsGlobal = subLocations.reduce((sum, l) => sum + l.itemsHeld, 0);
+  const totalCapacityGlobal = subLocations.reduce((sum, l) => sum + l.maxCapacity, 0);
+  const globalOccupancyRate = totalCapacityGlobal > 0 ? Math.round((totalHeldItemsGlobal / totalCapacityGlobal) * 100) : 0;
+
+  // Filtered warehouses
+  const filteredWarehouses = warehousesList.filter((wh) => {
+    const q = warehouseSearchQuery.toLowerCase();
+    return (
+      wh.name.toLowerCase().includes(q) ||
+      wh.code.toLowerCase().includes(q) ||
+      wh.manager.toLowerCase().includes(q) ||
+      (wh.city && wh.city.toLowerCase().includes(q))
+    );
+  });
+
+  // Filtered sub-locations
+  const filteredSubLocations = subLocations.filter((loc) => {
+    const matchesWh = locationWarehouseFilter === 'ALL' || loc.warehouseCode === locationWarehouseFilter;
+    const q = locationSearchQuery.toLowerCase();
+    const matchesQuery =
+      loc.name.toLowerCase().includes(q) ||
+      loc.path.toLowerCase().includes(q) ||
+      loc.zone.toLowerCase().includes(q) ||
+      loc.type.toLowerCase().includes(q);
+    return matchesWh && matchesQuery;
+  });
 
   // Filtered staff members
   const filteredStaff = staffMembers.filter((staff) => {
-    if (staffWarehouseFilter === 'ALL') return true;
-    return staff.warehouseCode === staffWarehouseFilter;
+    const matchesWh = staffWarehouseFilter === 'ALL' || staff.warehouseCode === staffWarehouseFilter;
+    const q = staffSearchQuery.toLowerCase();
+    const matchesQuery =
+      staff.name.toLowerCase().includes(q) ||
+      staff.role.toLowerCase().includes(q) ||
+      staff.assignedZone.toLowerCase().includes(q) ||
+      staff.email.toLowerCase().includes(q);
+    return matchesWh && matchesQuery;
   });
 
   return (
@@ -420,62 +599,110 @@ export default function WarehouseSettingsPage() {
             <span style={{ color: '#b0a8b4' }}>/</span>
             <span style={{ color: '#756f82' }}>Configuration</span>
             <span style={{ color: '#b0a8b4' }}>/</span>
-            <span style={{ color: '#756f82' }}>Warehouses</span>
+            <span style={{ color: '#756f82' }}>Warehouses & Locations</span>
             <span style={{ color: '#b0a8b4' }}>/</span>
-            <span className="settings-crumb-active">{currentWarehouse.name}</span>
+            <span className="settings-crumb-active">
+              {activeSection === 'overview'
+                ? 'All Warehouses Directory'
+                : currentWarehouse.name}
+            </span>
           </div>
           <span className="status-badge-active">
             <span className="sync-dot-green"></span>
-            Active
+            {warehousesList.length} Active Facilities
           </span>
         </div>
 
-        {/* Warehouse Selector Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label style={{ fontSize: '13px', fontWeight: 700, color: '#4e444a' }}>
-            Switch Warehouse:
-          </label>
-          <select
-            className="form-input-select"
-            style={{ width: 'auto', minWidth: '240px', padding: '6px 12px', fontWeight: 600 }}
-            value={selectedWarehouseId}
-            onChange={(e) => {
-              setSelectedWarehouseId(e.target.value);
-              setIsModified(false);
-            }}
+        {/* Global Action Header Right */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn-create-warehouse-highlight"
+            onClick={() => setShowNewWarehouseModal(true)}
           >
-            {warehousesList.map((wh) => (
-              <option key={wh.id} value={wh.id}>
-                {wh.name} ({wh.code})
-              </option>
-            ))}
-          </select>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_business</span>
+            <span>+ Create Warehouse</span>
+          </button>
+
+          {activeSection !== 'overview' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 700, color: '#4e444a' }}>
+                Active Facility:
+              </label>
+              <select
+                className="form-input-select"
+                style={{ width: 'auto', minWidth: '220px', padding: '6px 12px', fontWeight: 600 }}
+                value={selectedWarehouseId}
+                onChange={(e) => {
+                  setSelectedWarehouseId(e.target.value);
+                  setIsModified(false);
+                }}
+              >
+                {warehousesList.map((wh) => (
+                  <option key={wh.id} value={wh.id}>
+                    {wh.name} ({wh.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Operational Actions Bar */}
       <div className="settings-actions-bar">
         <div className="settings-buttons-group">
-          <button
-            type="button"
-            className="btn-primary-action"
-            onClick={handleSave}
-            disabled={!isModified && activeSection === 'profile'}
-            style={{ opacity: !isModified && activeSection === 'profile' ? 0.7 : 1 }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>save</span>
-            <span>Save Profile</span>
-          </button>
+          {activeSection === 'profile' ? (
+            <>
+              <button
+                type="button"
+                className="btn-primary-action"
+                onClick={handleSave}
+                disabled={!isModified}
+                style={{ opacity: !isModified ? 0.7 : 1 }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>save</span>
+                <span>Save Profile</span>
+              </button>
 
-          <button
-            type="button"
-            className="btn-secondary-action"
-            onClick={handleDiscard}
-            disabled={!isModified}
-            style={{ opacity: !isModified ? 0.6 : 1 }}
-          >
-            <span>Discard</span>
-          </button>
+              <button
+                type="button"
+                className="btn-secondary-action"
+                onClick={handleDiscard}
+                disabled={!isModified}
+                style={{ opacity: !isModified ? 0.6 : 1 }}
+              >
+                <span>Discard</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="btn-primary-action"
+                onClick={() => {
+                  if (activeSection === 'overview') setShowNewWarehouseModal(true);
+                  else if (activeSection === 'locations') setShowLocationModal(true);
+                  else if (activeSection === 'staff') setShowStaffModal(true);
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  {activeSection === 'overview'
+                    ? 'add_business'
+                    : activeSection === 'locations'
+                    ? 'add_location'
+                    : 'person_add'}
+                </span>
+                <span>
+                  {activeSection === 'overview'
+                    ? '+ New Warehouse'
+                    : activeSection === 'locations'
+                    ? '+ Add Sub-Location'
+                    : '+ Assign Staff'}
+                </span>
+              </button>
+            </>
+          )}
 
           {/* Action Menu Trigger */}
           <div style={{ position: 'relative' }}>
@@ -490,59 +717,23 @@ export default function WarehouseSettingsPage() {
             </button>
 
             {showActionMenu && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: '4px',
-                  backgroundColor: '#ffffff',
-                  border: '1.5px solid #e8e4ec',
-                  borderRadius: '8px',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                  minWidth: '200px',
-                  zIndex: 200,
-                  padding: '6px 0',
-                }}
-              >
+              <div className="settings-dropdown-menu">
                 <button
                   type="button"
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '8px 16px',
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: '13.5px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
+                  className="settings-dropdown-item"
                   onClick={() => {
                     setShowActionMenu(false);
-                    showToast(`Barcode labels printed for ${currentWarehouse.code}`);
+                    showToast(`Warehouse master barcodes exported for all ${warehousesList.length} facilities`);
                   }}
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
                     qr_code_2
                   </span>
-                  Print Warehouse Barcodes
+                  Print Facility Barcode Catalog
                 </button>
                 <button
                   type="button"
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '8px 16px',
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: '13.5px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
+                  className="settings-dropdown-item"
                   onClick={() => {
                     setShowActionMenu(false);
                     navigate(ROUTES.LOCATION_SETTINGS);
@@ -553,6 +744,19 @@ export default function WarehouseSettingsPage() {
                   </span>
                   Global Location Rules
                 </button>
+                <button
+                  type="button"
+                  className="settings-dropdown-item"
+                  onClick={() => {
+                    setShowActionMenu(false);
+                    setShowNewWarehouseModal(true);
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#714b67' }}>
+                    domain_add
+                  </span>
+                  Register Additional Warehouse
+                </button>
               </div>
             )}
           </div>
@@ -560,12 +764,21 @@ export default function WarehouseSettingsPage() {
 
         <div className={`settings-sync-status ${isModified ? 'unsaved' : ''}`}>
           <span className={isModified ? 'sync-dot-amber' : 'sync-dot-green'}></span>
-          <span>{isModified ? 'Unsaved changes in profile...' : 'Database in sync'}</span>
+          <span>{isModified ? 'Unsaved modifications...' : 'All facilities in sync'}</span>
         </div>
       </div>
 
       {/* Subnav Navigation Switcher */}
       <div className="settings-subnav">
+        <button
+          type="button"
+          className={`settings-subnav-btn ${activeSection === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveSection('overview')}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>domain</span>
+          <span>All Warehouses Directory ({warehousesList.length})</span>
+        </button>
+
         <button
           type="button"
           className={`settings-subnav-btn ${activeSection === 'profile' ? 'active' : ''}`}
@@ -581,7 +794,7 @@ export default function WarehouseSettingsPage() {
           onClick={() => setActiveSection('locations')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>location_on</span>
-          <span>Sub-Locations & Racks ({currentWarehouseLocations.length})</span>
+          <span>Sub-Locations & Racks ({subLocations.length})</span>
         </button>
 
         <button
@@ -590,14 +803,391 @@ export default function WarehouseSettingsPage() {
           onClick={() => setActiveSection('staff')}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>badge</span>
-          <span>Staff Members & Personnel ({staffMembers.length})</span>
+          <span>Staff Roster & Deployments ({staffMembers.length})</span>
         </button>
       </div>
 
       {/* Main Canvas Container */}
       <main className="settings-canvas">
         {/* ============================================================== */}
-        {/* SECTION 1: WAREHOUSE PROFILE & CONFIGURATION */}
+        {/* SECTION 1: MASTER ALL WAREHOUSES DIRECTORY (ADMIN OVERVIEW)   */}
+        {/* ============================================================== */}
+        {activeSection === 'overview' && (
+          <div className="settings-sheet-card">
+            {/* KPI Metrics Row */}
+            <div className="wh-kpi-grid">
+              <div className="wh-kpi-card">
+                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#f3e8ff', color: '#714b67' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>domain</span>
+                </div>
+                <div>
+                  <div className="wh-kpi-val">{warehousesList.length} Facilities</div>
+                  <div className="wh-kpi-lbl">Operational Warehouses</div>
+                </div>
+              </div>
+
+              <div className="wh-kpi-card">
+                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>shelves</span>
+                </div>
+                <div>
+                  <div className="wh-kpi-val">{subLocations.length} Sub-Locations</div>
+                  <div className="wh-kpi-lbl">Total Storage Zones & Racks</div>
+                </div>
+              </div>
+
+              <div className="wh-kpi-card">
+                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>groups</span>
+                </div>
+                <div>
+                  <div className="wh-kpi-val">{staffMembers.length} Personnel</div>
+                  <div className="wh-kpi-lbl">Active Staff Deployed</div>
+                </div>
+              </div>
+
+              <div className="wh-kpi-card">
+                <div className="wh-kpi-icon-box" style={{ backgroundColor: '#fef3c7', color: '#b45309' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>speed</span>
+                </div>
+                <div>
+                  <div className="wh-kpi-val">{globalOccupancyRate}% Occupancy</div>
+                  <div className="wh-kpi-lbl">{totalHeldItemsGlobal.toLocaleString()} / {totalCapacityGlobal.toLocaleString()} Units</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Header with Search and Create Button */}
+            <div className="enterprise-section-header" style={{ marginTop: '16px' }}>
+              <div>
+                <h2 className="section-heading-title">Multi-Facility Warehouse Master Table</h2>
+                <p className="section-heading-sub">
+                  Unified administrator matrix of all registered warehouses, their localized sub-locations, and stationed staff members.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="table-search-box">
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#756f82' }}>search</span>
+                  <input
+                    type="text"
+                    className="table-search-input"
+                    placeholder="Search warehouse, code, manager..."
+                    value={warehouseSearchQuery}
+                    onChange={(e) => setWarehouseSearchQuery(e.target.value)}
+                  />
+                  {warehouseSearchQuery && (
+                    <button
+                      type="button"
+                      className="search-clear-btn"
+                      onClick={() => setWarehouseSearchQuery('')}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn-add-entity"
+                  onClick={() => setShowNewWarehouseModal(true)}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_business</span>
+                  <span>+ Create Warehouse</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Warehouses Directory Master Table */}
+            <div className="settings-table-wrapper">
+              <table className="settings-data-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '40px' }}></th>
+                    <th>Warehouse & Code</th>
+                    <th>Facility Category</th>
+                    <th>City / Location</th>
+                    <th>Facility Manager</th>
+                    <th>Sub-Locations</th>
+                    <th>Staff Deployed</th>
+                    <th>Logistics Capabilities</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'center' }}>Quick Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredWarehouses.map((wh) => {
+                    const whLocs = subLocations.filter((l) => l.warehouseCode === wh.code);
+                    const whStaff = staffMembers.filter((s) => s.warehouseCode === wh.code);
+                    const isExpanded = expandedWarehouseIds.includes(wh.id);
+                    const totalHeld = whLocs.reduce((sum, l) => sum + l.itemsHeld, 0);
+                    const totalCap = whLocs.reduce((sum, l) => sum + l.maxCapacity, 0);
+                    const percentUsed = totalCap > 0 ? Math.round((totalHeld / totalCap) * 100) : 0;
+
+                    return (
+                      <React.Fragment key={wh.id}>
+                        <tr className={isExpanded ? 'warehouse-row-expanded' : ''}>
+                          <td>
+                            <button
+                              type="button"
+                              className="expand-row-toggle"
+                              onClick={() => toggleWarehouseExpand(wh.id)}
+                              title={isExpanded ? 'Collapse breakdown' : 'Expand sub-locations and staff'}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                                {isExpanded ? 'expand_less' : 'expand_more'}
+                              </span>
+                            </button>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div className="wh-table-icon">
+                                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>warehouse</span>
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: 800, color: '#212529', fontSize: '14.5px' }}>
+                                  {wh.name}
+                                </div>
+                                <span className="wh-code-badge">{wh.code}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#4e444a' }}>
+                              {wh.category || 'Fulfillment Hub'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#4e444a' }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: '16px', color: '#714b67' }}>location_on</span>
+                              <span>{wh.city}, {wh.country}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 700, color: '#212529' }}>{wh.manager}</div>
+                            <div style={{ fontSize: '11.5px', color: '#756f82' }}>{wh.operatingHours}</div>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              <button
+                                type="button"
+                                className="count-badge-btn"
+                                onClick={() => {
+                                  setSelectedWarehouseId(wh.id);
+                                  setLocationWarehouseFilter(wh.code);
+                                  setActiveSection('locations');
+                                }}
+                                title="Inspect sub-locations"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>shelves</span>
+                                <span>{whLocs.length} Racks/Zones ({percentUsed}% cap)</span>
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="count-badge-btn staff-badge"
+                              onClick={() => {
+                                setStaffWarehouseFilter(wh.code);
+                                setActiveSection('staff');
+                              }}
+                              title="Inspect stationed staff"
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>badge</span>
+                              <span>{whStaff.length} Members</span>
+                            </button>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                              {wh.incomingShipments && <span className="feature-chip">Inbound</span>}
+                              {wh.outgoingShipments && <span className="feature-chip">Outbound</span>}
+                              {wh.resupplySubcontractors && <span className="feature-chip resupply">Resupply</span>}
+                            </div>
+                          </td>
+                          <td>
+                            <span className="status-badge-active">
+                              <span className="sync-dot-green"></span>
+                              {wh.status}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                              <button
+                                type="button"
+                                className="action-pill-btn"
+                                onClick={() => {
+                                  setSelectedWarehouseId(wh.id);
+                                  setActiveSection('profile');
+                                }}
+                                title="Edit Warehouse Profile"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="action-pill-btn"
+                                onClick={() => {
+                                  setNewLocationForm((p) => ({ ...p, warehouseCode: wh.code }));
+                                  setShowLocationModal(true);
+                                }}
+                                title="Add Sub-Location to this warehouse"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add_location</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="action-pill-btn"
+                                onClick={() => {
+                                  setNewStaffForm((p) => ({ ...p, warehouseCode: wh.code, assignedZone: `${wh.code}/Stock1` }));
+                                  setShowStaffModal(true);
+                                }}
+                                title="Assign Staff to this warehouse"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person_add</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Expandable Child Row: Sub-Locations & Stationed Staff for this Warehouse */}
+                        {isExpanded && (
+                          <tr className="expanded-detail-row">
+                            <td colSpan={10}>
+                              <div className="expanded-detail-container">
+                                {/* Left Sub-Locations Card */}
+                                <div className="expanded-subcard">
+                                  <div className="expanded-subcard-header">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span className="material-symbols-outlined" style={{ color: '#714b67' }}>shelves</span>
+                                      <span style={{ fontWeight: 800, color: '#212529', fontSize: '14px' }}>
+                                        Sub-Locations & Racks in {wh.name} ({whLocs.length})
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="action-pill-btn"
+                                      onClick={() => {
+                                        setNewLocationForm((p) => ({ ...p, warehouseCode: wh.code }));
+                                        setShowLocationModal(true);
+                                      }}
+                                    >
+                                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>add</span>
+                                      <span>Add Rack</span>
+                                    </button>
+                                  </div>
+
+                                  {whLocs.length === 0 ? (
+                                    <div className="empty-state-notice">
+                                      No sub-locations configured for this warehouse yet.
+                                    </div>
+                                  ) : (
+                                    <div className="mini-locations-grid">
+                                      {whLocs.map((loc) => {
+                                        const locLoadPercent = loc.maxCapacity > 0 ? Math.round((loc.itemsHeld / loc.maxCapacity) * 100) : 0;
+                                        return (
+                                          <div key={loc.id} className="mini-loc-item">
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                              <div>
+                                                <div style={{ fontWeight: 800, color: '#212529', fontSize: '13.5px' }}>
+                                                  {loc.name}
+                                                </div>
+                                                <div style={{ fontFamily: 'monospace', color: '#714b67', fontWeight: 700, fontSize: '12px' }}>
+                                                  {loc.path}
+                                                </div>
+                                              </div>
+                                              <span className="barcode-badge">{loc.barcode}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11.5px', color: '#756f82', marginTop: '6px' }}>
+                                              <span>{loc.zone} • {loc.type}</span>
+                                              <span style={{ fontWeight: 700, color: '#212529' }}>
+                                                {loc.itemsHeld} / {loc.maxCapacity} units ({locLoadPercent}%)
+                                              </span>
+                                            </div>
+                                            <div className="progress-bar-bg">
+                                              <div
+                                                className="progress-bar-fill"
+                                                style={{
+                                                  width: `${Math.min(locLoadPercent, 100)}%`,
+                                                  backgroundColor: locLoadPercent > 85 ? '#e11d48' : '#714b67',
+                                                }}
+                                              ></div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Right Stationed Staff Card */}
+                                <div className="expanded-subcard">
+                                  <div className="expanded-subcard-header">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span className="material-symbols-outlined" style={{ color: '#006443' }}>badge</span>
+                                      <span style={{ fontWeight: 800, color: '#212529', fontSize: '14px' }}>
+                                        Stationed Personnel at {wh.code} ({whStaff.length})
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="action-pill-btn"
+                                      onClick={() => {
+                                        setNewStaffForm((p) => ({ ...p, warehouseCode: wh.code, assignedZone: `${wh.code}/Stock1` }));
+                                        setShowStaffModal(true);
+                                      }}
+                                    >
+                                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>add</span>
+                                      <span>Assign Staff</span>
+                                    </button>
+                                  </div>
+
+                                  {whStaff.length === 0 ? (
+                                    <div className="empty-state-notice">
+                                      No staff members assigned to this facility yet.
+                                    </div>
+                                  ) : (
+                                    <div className="mini-staff-list">
+                                      {whStaff.map((staff) => (
+                                        <div key={staff.id} className="mini-staff-item">
+                                          <div className="staff-avatar-circle" style={{ width: '30px', height: '30px', fontSize: '11px' }}>
+                                            {staff.initials}
+                                          </div>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: 800, color: '#212529', fontSize: '13px' }}>
+                                              {staff.name}
+                                            </div>
+                                            <div style={{ fontSize: '11.5px', color: '#756f82' }}>
+                                              {staff.role} • <span style={{ color: '#714b67', fontWeight: 600 }}>{staff.assignedZone}</span>
+                                            </div>
+                                          </div>
+                                          <div style={{ textAlign: 'right' }}>
+                                            <span className="shift-pill" style={{ fontSize: '10.5px' }}>{staff.shift}</span>
+                                            <div style={{ fontSize: '11px', color: '#006443', fontWeight: 700, marginTop: '2px' }}>
+                                              {staff.status}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* SECTION 2: WAREHOUSE PROFILE & CONFIGURATION */}
         {/* ============================================================== */}
         {activeSection === 'profile' && (
           <div className="settings-sheet-card">
@@ -617,14 +1207,19 @@ export default function WarehouseSettingsPage() {
                 <button
                   type="button"
                   className="smart-stat-btn"
-                  onClick={() => setActiveSection('locations')}
+                  onClick={() => {
+                    setLocationWarehouseFilter(currentWarehouse.code);
+                    setActiveSection('locations');
+                  }}
                   title="View Locations of this warehouse"
                 >
                   <span className="material-symbols-outlined stat-icon" style={{ fontSize: '24px' }}>
                     location_on
                   </span>
                   <div>
-                    <div className="stat-value">{currentWarehouseLocations.length}</div>
+                    <div className="stat-value">
+                      {subLocations.filter((l) => l.warehouseCode === currentWarehouse.code).length}
+                    </div>
                     <div className="stat-label">Sub-Locations</div>
                   </div>
                 </button>
@@ -632,7 +1227,10 @@ export default function WarehouseSettingsPage() {
                 <button
                   type="button"
                   className="smart-stat-btn"
-                  onClick={() => setActiveSection('staff')}
+                  onClick={() => {
+                    setStaffWarehouseFilter(currentWarehouse.code);
+                    setActiveSection('staff');
+                  }}
                   title="View Staff working here"
                 >
                   <span className="material-symbols-outlined stat-icon" style={{ fontSize: '24px' }}>
@@ -693,6 +1291,16 @@ export default function WarehouseSettingsPage() {
               </div>
 
               <div className="form-field-group">
+                <label className="form-label">Facility Category</label>
+                <input
+                  type="text"
+                  className="form-input-text"
+                  value={currentWarehouse.category || 'Regional Distribution Hub'}
+                  onChange={(e) => handleWarehouseFieldChange('category', e.target.value)}
+                />
+              </div>
+
+              <div className="form-field-group">
                 <label className="form-label">Facility Manager</label>
                 <input
                   type="text"
@@ -709,6 +1317,16 @@ export default function WarehouseSettingsPage() {
                   rows={3}
                   value={currentWarehouse.address}
                   onChange={(e) => handleWarehouseFieldChange('address', e.target.value)}
+                />
+              </div>
+
+              <div className="form-field-group">
+                <label className="form-label">Operating Schedule</label>
+                <input
+                  type="text"
+                  className="form-input-text"
+                  value={currentWarehouse.operatingHours}
+                  onChange={(e) => handleWarehouseFieldChange('operatingHours', e.target.value)}
                 />
               </div>
             </div>
@@ -754,28 +1372,75 @@ export default function WarehouseSettingsPage() {
         )}
 
         {/* ============================================================== */}
-        {/* SECTION 2: WAREHOUSE SUB-LOCATIONS & ZONES */}
+        {/* SECTION 3: WAREHOUSE SUB-LOCATIONS & ZONES                     */}
         {/* ============================================================== */}
         {activeSection === 'locations' && (
           <div className="settings-sheet-card">
             <div className="enterprise-section-header">
               <div>
                 <h2 className="section-heading-title">
-                  Sub-Locations & Zones in {currentWarehouse.name}
+                  Sub-Locations, Storage Racks & Docks
                 </h2>
                 <p className="section-heading-sub">
-                  Define specific storage racks, aisles, bays, and inspection zones belonging to {currentWarehouse.code}.
+                  Define specific storage racks, aisles, bays, and inspection zones across all warehouses.
                 </p>
               </div>
 
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="table-search-box">
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#756f82' }}>search</span>
+                  <input
+                    type="text"
+                    className="table-search-input"
+                    placeholder="Search rack, path, zone..."
+                    value={locationSearchQuery}
+                    onChange={(e) => setLocationSearchQuery(e.target.value)}
+                  />
+                  {locationSearchQuery && (
+                    <button
+                      type="button"
+                      className="search-clear-btn"
+                      onClick={() => setLocationSearchQuery('')}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn-add-entity"
+                  onClick={() => {
+                    setNewLocationForm((p) => ({ ...p, warehouseCode: currentWarehouse.code }));
+                    setShowLocationModal(true);
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>add_location</span>
+                  <span>+ Add Sub-Location</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Warehouse Filter Chips */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#756f82' }}>Filter by Facility:</span>
               <button
                 type="button"
-                className="btn-add-entity"
-                onClick={() => setShowLocationModal(true)}
+                className={`filter-pill-btn ${locationWarehouseFilter === 'ALL' ? 'active' : ''}`}
+                onClick={() => setLocationWarehouseFilter('ALL')}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>add_location</span>
-                <span>+ Add Sub-Location</span>
+                All Facilities ({subLocations.length})
               </button>
+              {warehousesList.map((wh) => (
+                <button
+                  key={wh.code}
+                  type="button"
+                  className={`filter-pill-btn ${locationWarehouseFilter === wh.code ? 'active' : ''}`}
+                  onClick={() => setLocationWarehouseFilter(wh.code)}
+                >
+                  {wh.name} ({subLocations.filter((l) => l.warehouseCode === wh.code).length})
+                </button>
+              ))}
             </div>
 
             {/* Sub-Locations Table */}
@@ -783,6 +1448,7 @@ export default function WarehouseSettingsPage() {
               <table className="settings-data-table">
                 <thead>
                   <tr>
+                    <th>Warehouse</th>
                     <th>Location Name</th>
                     <th>Full Path Hierarchy</th>
                     <th>Zone / Area</th>
@@ -794,62 +1460,83 @@ export default function WarehouseSettingsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentWarehouseLocations.map((loc) => (
-                    <tr key={loc.id}>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span className="material-symbols-outlined" style={{ color: '#714b67', fontSize: '18px' }}>
-                            shelves
+                  {filteredSubLocations.map((loc) => {
+                    const parentWh = warehousesList.find((w) => w.code === loc.warehouseCode);
+                    const loadPct = loc.maxCapacity > 0 ? Math.round((loc.itemsHeld / loc.maxCapacity) * 100) : 0;
+                    return (
+                      <tr key={loc.id}>
+                        <td>
+                          <span className="wh-code-badge">{loc.warehouseCode}</span>
+                          <div style={{ fontSize: '11.5px', color: '#756f82' }}>
+                            {parentWh ? parentWh.name : loc.warehouseCode}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="material-symbols-outlined" style={{ color: '#714b67', fontSize: '18px' }}>
+                              shelves
+                            </span>
+                            <span style={{ fontWeight: 800, color: '#212529' }}>{loc.name}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: 700, color: '#714b67', fontFamily: 'monospace' }}>
+                            {loc.path}
                           </span>
-                          <span style={{ fontWeight: 800, color: '#212529' }}>{loc.name}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span style={{ fontWeight: 700, color: '#714b67', fontFamily: 'monospace' }}>
-                          {loc.path}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="zone-pill">{loc.zone}</span>
-                      </td>
-                      <td>
-                        <span style={{ fontSize: '13px', color: '#4e444a', fontWeight: 600 }}>
-                          {loc.type}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="barcode-badge">{loc.barcode}</span>
-                      </td>
-                      <td>
-                        <span style={{ fontWeight: 700, color: '#212529' }}>
-                          {loc.itemsHeld} / {loc.maxCapacity} units
-                        </span>
-                      </td>
-                      <td>
-                        <span className="status-badge-active">
-                          <span className="sync-dot-green"></span>
-                          {loc.status}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: '#ba1a1a',
-                            cursor: 'pointer',
-                            padding: '4px',
-                            borderRadius: '4px',
-                          }}
-                          onClick={() => handleDeleteLocation(loc.id, loc.path)}
-                          title="Delete Location"
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>
+                          <span className="zone-pill">{loc.zone}</span>
+                        </td>
+                        <td>
+                          <span style={{ fontSize: '13px', color: '#4e444a', fontWeight: 600 }}>
+                            {loc.type}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="barcode-badge">{loc.barcode}</span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <span style={{ fontWeight: 700, color: '#212529', fontSize: '12.5px' }}>
+                              {loc.itemsHeld} / {loc.maxCapacity} units ({loadPct}%)
+                            </span>
+                            <div className="progress-bar-bg" style={{ width: '120px' }}>
+                              <div
+                                className="progress-bar-fill"
+                                style={{
+                                  width: `${Math.min(loadPct, 100)}%`,
+                                  backgroundColor: loadPct > 85 ? '#e11d48' : '#714b67',
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="status-badge-active">
+                            <span className="sync-dot-green"></span>
+                            {loc.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            type="button"
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#ba1a1a',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              borderRadius: '4px',
+                            }}
+                            onClick={() => handleDeleteLocation(loc.id, loc.path)}
+                            title="Delete Location"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -857,26 +1544,48 @@ export default function WarehouseSettingsPage() {
         )}
 
         {/* ============================================================== */}
-        {/* SECTION 3: STAFF MEMBERS DIRECTORY (ADMIN TABLE) */}
+        {/* SECTION 4: STAFF MEMBERS DIRECTORY (ADMIN TABLE)              */}
         {/* ============================================================== */}
         {activeSection === 'staff' && (
           <div className="settings-sheet-card">
             <div className="enterprise-section-header">
               <div>
-                <h2 className="section-heading-title">Warehouse Staff & Personnel Directory</h2>
+                <h2 className="section-heading-title">Warehouse Staff & Deployment Directory</h2>
                 <p className="section-heading-sub">
-                  Admin view of active personnel, assigned facilities, work shifts, and security clearance.
+                  Admin view of active personnel, assigned warehouses, stationed storage zones, work shifts, and clearance.
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="btn-add-entity"
-                onClick={() => setShowStaffModal(true)}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>person_add</span>
-                <span>+ Assign Staff Member</span>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="table-search-box">
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#756f82' }}>search</span>
+                  <input
+                    type="text"
+                    className="table-search-input"
+                    placeholder="Search staff name, role, zone..."
+                    value={staffSearchQuery}
+                    onChange={(e) => setStaffSearchQuery(e.target.value)}
+                  />
+                  {staffSearchQuery && (
+                    <button
+                      type="button"
+                      className="search-clear-btn"
+                      onClick={() => setStaffSearchQuery('')}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn-add-entity"
+                  onClick={() => setShowStaffModal(true)}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>person_add</span>
+                  <span>+ Assign Staff Member</span>
+                </button>
+              </div>
             </div>
 
             {/* Warehouse Filter Chips */}
@@ -884,8 +1593,7 @@ export default function WarehouseSettingsPage() {
               <span style={{ fontSize: '13px', fontWeight: 700, color: '#756f82' }}>Filter Facility:</span>
               <button
                 type="button"
-                className={`settings-subnav-btn ${staffWarehouseFilter === 'ALL' ? 'active' : ''}`}
-                style={{ padding: '4px 14px', fontSize: '12.5px' }}
+                className={`filter-pill-btn ${staffWarehouseFilter === 'ALL' ? 'active' : ''}`}
                 onClick={() => setStaffWarehouseFilter('ALL')}
               >
                 All Facilities ({staffMembers.length})
@@ -894,8 +1602,7 @@ export default function WarehouseSettingsPage() {
                 <button
                   key={wh.code}
                   type="button"
-                  className={`settings-subnav-btn ${staffWarehouseFilter === wh.code ? 'active' : ''}`}
-                  style={{ padding: '4px 14px', fontSize: '12.5px' }}
+                  className={`filter-pill-btn ${staffWarehouseFilter === wh.code ? 'active' : ''}`}
                   onClick={() => setStaffWarehouseFilter(wh.code)}
                 >
                   {wh.name} ({staffMembers.filter((s) => s.warehouseCode === wh.code).length})
@@ -934,11 +1641,11 @@ export default function WarehouseSettingsPage() {
                         <span className="role-pill">{staff.role}</span>
                       </td>
                       <td>
-                        <span style={{ fontWeight: 700, color: '#714b67' }}>
-                          {staff.warehouseCode}
-                        </span>
-                        <div style={{ fontSize: '11.5px', color: '#756f82' }}>
-                          {staff.warehouseName}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span className="wh-code-badge">{staff.warehouseCode}</span>
+                          <span style={{ fontWeight: 700, color: '#212529', fontSize: '13px' }}>
+                            {staff.warehouseName}
+                          </span>
                         </div>
                       </td>
                       <td>
@@ -985,15 +1692,187 @@ export default function WarehouseSettingsPage() {
       </main>
 
       {/* ============================================================== */}
-      {/* MODAL 1: ADD SUB-LOCATION */}
+      {/* MODAL 0: CREATE NEW WAREHOUSE                                  */}
+      {/* ============================================================== */}
+      {showNewWarehouseModal && (
+        <div className="modal-overlay" onClick={() => setShowNewWarehouseModal(false)}>
+          <div className="modal-content-card" style={{ maxWidth: '680px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-row">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="sheet-icon-box" style={{ width: '40px', height: '40px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>domain_add</span>
+                </div>
+                <div>
+                  <h3 className="modal-header-title">Create New Warehouse Facility</h3>
+                  <p style={{ fontSize: '12px', color: '#756f82', margin: 0 }}>
+                    Register an operating facility, storage capacity, and automatic sub-location routing.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#756f82' }}
+                onClick={() => setShowNewWarehouseModal(false)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateWarehouseSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
+                <div className="form-field-group">
+                  <label className="form-label">
+                    Warehouse Name <span className="req-star">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input-text"
+                    placeholder="e.g. Pacific Northwest Fulfillment Center"
+                    value={newWarehouseForm.name}
+                    onChange={(e) => setNewWarehouseForm((p) => ({ ...p, name: e.target.value }))}
+                    autoFocus
+                    required
+                  />
+                </div>
+
+                <div className="form-field-group">
+                  <label className="form-label">
+                    Short Code <span className="req-star">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input-text"
+                    style={{ textTransform: 'uppercase' }}
+                    placeholder="WH-PACIFIC"
+                    value={newWarehouseForm.code}
+                    onChange={(e) => setNewWarehouseForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="form-field-group">
+                  <label className="form-label">Facility Category</label>
+                  <select
+                    className="form-input-select"
+                    value={newWarehouseForm.category}
+                    onChange={(e) => setNewWarehouseForm((p) => ({ ...p, category: e.target.value }))}
+                  >
+                    <option value="Primary Distribution Center">Primary Distribution Center</option>
+                    <option value="Regional Fulfillment Center">Regional Fulfillment Center</option>
+                    <option value="Cross-Dock Depot">Cross-Dock Depot</option>
+                    <option value="Cold Chain Storage Vault">Cold Chain Storage Vault</option>
+                    <option value="International Gateway Hub">International Gateway Hub</option>
+                  </select>
+                </div>
+
+                <div className="form-field-group">
+                  <label className="form-label">Facility Lead / Manager</label>
+                  <input
+                    type="text"
+                    className="form-input-text"
+                    placeholder="e.g. Rachel Adams"
+                    value={newWarehouseForm.manager}
+                    onChange={(e) => setNewWarehouseForm((p) => ({ ...p, manager: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="form-field-group">
+                  <label className="form-label">City / Region</label>
+                  <input
+                    type="text"
+                    className="form-input-text"
+                    placeholder="e.g. Seattle, WA"
+                    value={newWarehouseForm.city}
+                    onChange={(e) => setNewWarehouseForm((p) => ({ ...p, city: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-field-group">
+                  <label className="form-label">Operating Schedule</label>
+                  <input
+                    type="text"
+                    className="form-input-text"
+                    placeholder="e.g. 06:00 - 22:00 PST"
+                    value={newWarehouseForm.operatingHours}
+                    onChange={(e) => setNewWarehouseForm((p) => ({ ...p, operatingHours: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="form-field-group">
+                <label className="form-label">Full Street Address & Dock Location</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  placeholder="e.g. 450 Logistics Way, Dock Bay 10, Seattle, WA 98101"
+                  value={newWarehouseForm.address}
+                  onChange={(e) => setNewWarehouseForm((p) => ({ ...p, address: e.target.value }))}
+                />
+              </div>
+
+              <div style={{ backgroundColor: '#fcfbfd', border: '1.5px solid #f0edf2', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#212529' }}>Logistics Configuration</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#4e444a', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      style={{ accentColor: '#714b67' }}
+                      checked={newWarehouseForm.incomingShipments}
+                      onChange={(e) => setNewWarehouseForm((p) => ({ ...p, incomingShipments: e.target.checked }))}
+                    />
+                    <span>Direct Inbound Receiving</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#4e444a', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      style={{ accentColor: '#714b67' }}
+                      checked={newWarehouseForm.outgoingShipments}
+                      onChange={(e) => setNewWarehouseForm((p) => ({ ...p, outgoingShipments: e.target.checked }))}
+                    />
+                    <span>Direct Outbound Dispatch</span>
+                  </label>
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#714b67', fontWeight: 700, cursor: 'pointer', marginTop: '4px' }}>
+                  <input
+                    type="checkbox"
+                    style={{ accentColor: '#714b67' }}
+                    checked={newWarehouseForm.autoCreateDefaultLocations}
+                    onChange={(e) => setNewWarehouseForm((p) => ({ ...p, autoCreateDefaultLocations: e.target.checked }))}
+                  />
+                  <span>Auto-generate standard sub-locations (Stock Floor, Inbound Dock, Dispatch Bay)</span>
+                </label>
+              </div>
+
+              <div className="modal-footer-actions">
+                <button
+                  type="button"
+                  className="btn-secondary-action"
+                  onClick={() => setShowNewWarehouseModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary-action">
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check</span>
+                  <span>Register Warehouse</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL 1: ADD SUB-LOCATION                                      */}
       {/* ============================================================== */}
       {showLocationModal && (
         <div className="modal-overlay" onClick={() => setShowLocationModal(false)}>
           <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-row">
-              <h3 className="modal-header-title">
-                Add Sub-Location to {currentWarehouse.name}
-              </h3>
+              <h3 className="modal-header-title">Add Sub-Location / Storage Rack</h3>
               <button
                 type="button"
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#756f82' }}
@@ -1004,6 +1883,21 @@ export default function WarehouseSettingsPage() {
             </div>
 
             <form onSubmit={handleAddLocationSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="form-field-group">
+                <label className="form-label">Target Warehouse Facility</label>
+                <select
+                  className="form-input-select"
+                  value={newLocationForm.warehouseCode}
+                  onChange={(e) => setNewLocationForm((p) => ({ ...p, warehouseCode: e.target.value }))}
+                >
+                  {warehousesList.map((wh) => (
+                    <option key={wh.code} value={wh.code}>
+                      {wh.name} ({wh.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="form-field-group">
                 <label className="form-label">
                   Location Name <span className="req-star">*</span>
@@ -1025,7 +1919,7 @@ export default function WarehouseSettingsPage() {
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontWeight: 800, color: '#714b67', fontFamily: 'monospace' }}>
-                    {currentWarehouse.code}/
+                    {newLocationForm.warehouseCode}/
                   </span>
                   <input
                     type="text"
@@ -1086,7 +1980,7 @@ export default function WarehouseSettingsPage() {
                   <input
                     type="text"
                     className="form-input-text"
-                    placeholder={`LOC-${currentWarehouse.code}-AUTO`}
+                    placeholder={`LOC-${newLocationForm.warehouseCode}-AUTO`}
                     value={newLocationForm.barcode}
                     onChange={(e) => setNewLocationForm((p) => ({ ...p, barcode: e.target.value }))}
                   />
@@ -1111,7 +2005,7 @@ export default function WarehouseSettingsPage() {
       )}
 
       {/* ============================================================== */}
-      {/* MODAL 2: ASSIGN STAFF MEMBER */}
+      {/* MODAL 2: ASSIGN STAFF MEMBER                                  */}
       {/* ============================================================== */}
       {showStaffModal && (
         <div className="modal-overlay" onClick={() => setShowStaffModal(false)}>
@@ -1176,7 +2070,7 @@ export default function WarehouseSettingsPage() {
                   >
                     {warehousesList.map((wh) => (
                       <option key={wh.code} value={wh.code}>
-                        {wh.name}
+                        {wh.name} ({wh.code})
                       </option>
                     ))}
                   </select>
