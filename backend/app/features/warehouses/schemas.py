@@ -4,6 +4,7 @@ app/features/warehouses/schemas.py
 Pydantic request/response contracts for warehouses, locations, partners, and warehouse staff.
 """
 import uuid
+from decimal import Decimal
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 LOCATION_TYPES = {"internal", "vendor", "customer", "virtual_adjustment"}
@@ -79,6 +80,17 @@ class LocationOut(BaseModel):
     warehouse_id: uuid.UUID | None
     parent_location_id: uuid.UUID | None
     is_active: bool
+    model_config = {"from_attributes": True}
+
+
+class LocationStockItemOut(BaseModel):
+    product_id: uuid.UUID
+    product_name: str
+    sku: str
+    uom_id: uuid.UUID
+    quantity: Decimal
+    reserved_qty: Decimal
+    available_qty: Decimal
     model_config = {"from_attributes": True}
 
 

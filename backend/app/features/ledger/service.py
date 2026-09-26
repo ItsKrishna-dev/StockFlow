@@ -18,14 +18,17 @@ from app.features.ledger.schemas import (
     ProductLedgerSummaryOut,
     StockTimelineOut,
 )
+from app.features.operations.schemas import DocumentOut, DocumentLineOut
 from app.models.models import (
     Location,
+    Partner,
     Product,
     StockDocument,
     StockDocumentLine,
     StockLedger,
     StockQuant,
     User,
+    Warehouse,
 )
 
 
@@ -34,8 +37,9 @@ async def get_move_history(
     document_type: str | None = None,
     status_filter: str | None = None,
     warehouse_id: uuid.UUID | None = None,
-    limit: int = 200,
-) -> list[StockDocument]:
+    location_id: uuid.UUID | None = None,
+    limit: int = 300,
+) -> list[DocumentOut]:
     query = select(StockDocument).options(selectinload(StockDocument.lines))
     if document_type:
         query = query.where(StockDocument.type == document_type)
@@ -43,9 +47,88 @@ async def get_move_history(
         query = query.where(StockDocument.status == status_filter)
     if warehouse_id:
         query = query.where(StockDocument.warehouse_id == warehouse_id)
+    if location_id:
+        query = query.where(
+            (StockDocument.source_location_id == location_id)
+            | (StockDocument.dest_location_id == location_id)
+        )
 
     result = await db.execute(query.order_by(StockDocument.created_at.desc()).limit(limit))
-    return list(result.scalars().all())
+    docs = list(result.scalars().all())
+
+    all_locs = {loc.id: loc for loc in (await db.execute(select(Location))).scalars().all()}
+    all_whs = {wh.id: wh for wh in (await db.execute(select(Warehouse))).scalars().all()}
+    all_partners = {p.id: p for p in (await db.execute(select(Partner))).scalars().all()}
+    all_users = {u.id: u for u in (await db.execute(select(User))).scalars().all()}
+    all_prods = {p.id: p for p in (await db.execute(select(Product))).scalars().all()}
+
+    output: list[DocumentOut] = []
+    for doc in docs:
+        src_loc = all_locs.get(doc.source_location_id)
+        dst_loc = all_locs.get(doc.dest_location_id)
+        wh = all_whs.get(doc.warehouse_id)
+        partner = all_partners.get(doc.partner_id) if doc.partner_id else None
+        creator = all_users.get(doc.created_by)
+        validator = all_users.get(doc.validated_by) if doc.validated_by else None
+
+        enriched_lines = []
+        prod_names = []
+        prod_skus = []
+        total_qty = Decimal("0")
+
+        for line in doc.lines:
+            prod = all_prods.get(line.product_id)
+            pname = prod.name if prod else None
+            psku = prod.sku if prod else None
+            if pname:
+                prod_names.append(pname)
+            if psku:
+                prod_skus.append(psku)
+            qty = line.quantity_done if line.quantity_done is not None and line.quantity_done > 0 else line.quantity_expected
+            total_qty += qty or Decimal("0")
+
+            enriched_lines.append(
+                DocumentLineOut(
+                    id=line.id,
+                    product_id=line.product_id,
+                    product_name=pname,
+                    product_sku=psku,
+                    uom_id=line.uom_id,
+                    quantity_expected=line.quantity_expected,
+                    quantity_done=line.quantity_done,
+                    reason=line.reason,
+                )
+            )
+
+        output.append(
+            DocumentOut(
+                id=doc.id,
+                document_number=doc.document_number,
+                type=doc.type,
+                status=doc.status,
+                partner_id=doc.partner_id,
+                partner_name=partner.name if partner else None,
+                source_location_id=doc.source_location_id,
+                source_location_name=src_loc.name if src_loc else None,
+                dest_location_id=doc.dest_location_id,
+                dest_location_name=dst_loc.name if dst_loc else None,
+                warehouse_id=doc.warehouse_id,
+                warehouse_name=wh.name if wh else (src_loc.name if src_loc else None),
+                notes=doc.notes,
+                created_by=doc.created_by,
+                created_by_name=creator.full_name or creator.email if creator else None,
+                validated_by=doc.validated_by,
+                validated_by_name=validator.full_name or validator.email if validator else None,
+                created_at=doc.created_at,
+                validated_at=doc.validated_at,
+                lines=enriched_lines,
+                product_name=", ".join(prod_names) if prod_names else None,
+                product_sku=", ".join(prod_skus) if prod_skus else None,
+                total_quantity=total_qty,
+            )
+        )
+
+    return output
 
 
 async def get_product_ledger_rows(

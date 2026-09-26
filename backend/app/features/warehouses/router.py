@@ -14,6 +14,7 @@ from app.features.warehouses import service
 from app.features.warehouses.schemas import (
     LocationCreate,
     LocationOut,
+    LocationStockItemOut,
     PartnerCreate,
     PartnerOut,
     StaffCreate,
@@ -114,6 +115,16 @@ async def list_locations(
     _: User = Depends(get_current_user),
 ) -> list[LocationOut]:
     return await service.list_locations(db, warehouse_id=warehouse_id, type=type)
+
+
+@router.get("/locations/{location_id}/stock", response_model=list[LocationStockItemOut])
+async def get_location_stock(
+    location_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[LocationStockItemOut]:
+    """Retrieve available products and quantities directly from DB for a given location."""
+    return await service.list_location_stock(db, location_id=location_id)
 
 
 # --- Partners ---

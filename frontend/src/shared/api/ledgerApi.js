@@ -8,13 +8,14 @@ import { apiClient } from '../lib/apiClient';
 export const ledgerApi = {
   /**
    * GET /api/v1/ledger/move-history
-   * Optional filters: document_type, status, warehouse_id
+   * Optional filters: document_type, status, warehouse_id, location_id
    */
-  async getMoveHistory({ document_type, status, warehouse_id } = {}) {
+  async getMoveHistory({ document_type, status, warehouse_id, location_id } = {}) {
     const params = new URLSearchParams();
-    if (document_type) params.set('document_type', document_type);
-    if (status) params.set('status', status);
-    if (warehouse_id) params.set('warehouse_id', warehouse_id);
+    if (document_type && document_type !== 'all') params.set('document_type', document_type);
+    if (status && status !== 'all') params.set('status', status);
+    if (warehouse_id && warehouse_id !== 'all' && warehouse_id !== 'ALL') params.set('warehouse_id', warehouse_id);
+    if (location_id && location_id !== 'all' && location_id !== 'ALL') params.set('location_id', location_id);
     const query = params.toString() ? `?${params.toString()}` : '';
     return apiClient.get(`/ledger/move-history${query}`);
   },

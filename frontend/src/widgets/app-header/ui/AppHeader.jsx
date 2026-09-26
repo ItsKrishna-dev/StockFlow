@@ -148,17 +148,6 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
 
         {/* Right Section: Quick Utilities & Profile */}
         <div className={styles.rightSection}>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            title="Stock Inventory Quick View"
-            onClick={() => navigate(ROUTES.STOCK)}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '19px' }}>
-              search
-            </span>
-          </button>
-
           {/* Activity / Notifications dropdown */}
           <div ref={notifMenuRef} className={styles.menuContainer}>
             <button

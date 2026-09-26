@@ -25,16 +25,17 @@ async def move_history(
     document_type: str | None = None,
     status: str | None = None,
     warehouse_id: uuid.UUID | None = None,
+    location_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[DocumentOut]:
-    docs = await service.get_move_history(
+    return await service.get_move_history(
         db,
         document_type=document_type,
         status_filter=status,
         warehouse_id=warehouse_id,
+        location_id=location_id,
     )
-    return [DocumentOut.model_validate(d) for d in docs]
 
 
 @router.get("/products/{product_id}/summary", response_model=ProductLedgerSummaryOut)
