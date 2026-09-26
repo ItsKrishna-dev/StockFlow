@@ -2,14 +2,15 @@ import React, { useState, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Input, Alert } from '../../../shared/ui';
 import { ROUTES } from '../../../shared/config/routes';
+import { authApi } from '../../../entities/session';
 import styles from './ResetPasswordForm.module.css';
 
 export function ResetPasswordForm() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Retrieve email or identifier from route state if available
-  const email = location.state?.email || 'your account';
+  const email = location.state?.email || '';
+  const otp = location.state?.otp || '';
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,7 +43,7 @@ export function ResetPasswordForm() {
     }
   }, [newPassword]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -51,8 +52,8 @@ export function ResetPasswordForm() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('Password must contain at least 6 characters');
+    if (newPassword.length < 8) {
+      setError('Password must contain at least 8 characters');
       return;
     }
 
@@ -61,12 +62,24 @@ export function ResetPasswordForm() {
       return;
     }
 
-    setIsPending(true);
+    if (!email || !otp) {
+      setError('Invalid reset session. Please start the forgot-password process again.');
+      return;
+    }
 
-    setTimeout(() => {
-      setIsPending(false);
+    setIsPending(true);
+    try {
+      await authApi.resetPassword({
+        email,
+        otp_code: otp,
+        new_password: newPassword,
+      });
       setIsSuccess(true);
-    }, 900);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password. Please try again.');
+    } finally {
+      setIsPending(false);
+    }
   };
 
   if (isSuccess) {

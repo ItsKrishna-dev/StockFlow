@@ -1,44 +1,67 @@
+/**
+ * entities/session/api/authApi.js
+ *
+ * Real HTTP calls to backend /api/v1/auth/* endpoints.
+ */
+import { apiClient } from '../../../shared/lib/apiClient';
+
 export const authApi = {
+  /**
+   * POST /api/v1/auth/login
+   * Returns TokenResponse: { access_token, refresh_token, token_type }
+   */
   async login({ loginId, password }) {
-    // Simulated network delay for realistic enterprise feel
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    if (!loginId || !password) {
-      throw new Error('Please enter both Login Id and Password');
-    }
-
-    // Example mock authentication response
-    return {
-      user: {
-        id: 'user_1',
-        loginId,
-      },
-      token: 'stockflow_session_token_' + Date.now(),
-    };
+    return apiClient.post('/auth/login', {
+      email: loginId,
+      password,
+    });
   },
 
-  async signUp({ loginId, email, password, confirmPassword }) {
-    await new Promise((resolve) => setTimeout(resolve, 700));
+  /**
+   * POST /api/v1/auth/signup
+   * Returns UserOut
+   */
+  async signUp({ email, password, full_name, role }) {
+    return apiClient.post('/auth/signup', {
+      email,
+      password,
+      full_name,
+      role,
+    });
+  },
 
-    if (!loginId || !email || !password) {
-      throw new Error('All fields are required');
-    }
+  /**
+   * POST /api/v1/auth/refresh
+   */
+  async refresh(refresh_token) {
+    return apiClient.post('/auth/refresh', { refresh_token });
+  },
 
-    if (password !== confirmPassword) {
-      throw new Error('Passwords do not match');
-    }
+  /**
+   * POST /api/v1/auth/logout
+   */
+  async logout(refresh_token) {
+    return apiClient.post('/auth/logout', { refresh_token });
+  },
 
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
-    }
+  /**
+   * POST /api/v1/auth/forgot-password
+   */
+  async forgotPassword(email) {
+    return apiClient.post('/auth/forgot-password', { email });
+  },
 
-    return {
-      user: {
-        id: 'user_' + Date.now(),
-        loginId,
-        email,
-      },
-      token: 'stockflow_session_token_' + Date.now(),
-    };
+  /**
+   * POST /api/v1/auth/reset-password
+   */
+  async resetPassword({ email, otp, new_password }) {
+    return apiClient.post('/auth/reset-password', { email, otp, new_password });
+  },
+
+  /**
+   * GET /api/v1/auth/me
+   */
+  async getMe() {
+    return apiClient.get('/auth/me');
   },
 };

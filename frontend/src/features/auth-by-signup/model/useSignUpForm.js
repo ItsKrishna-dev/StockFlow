@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { authApi, sessionStore } from '../../../entities/session';
+import { authApi } from '../../../entities/session';
 
 export function useSignUpForm({ onSuccess } = {}) {
   const [values, setValues] = useState({
-    loginId: '',
+    full_name: '',
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'warehouse_staff',
   });
 
   const [errors, setErrors] = useState({});
 
   const mutation = useMutation({
-    mutationFn: (data) => authApi.signUp(data),
+    mutationFn: (data) =>
+      authApi.signUp({
+        email: data.email,
+        password: data.password,
+        full_name: data.full_name,
+        role: data.role || 'warehouse_staff',
+      }),
     onSuccess: (data) => {
-      sessionStore.setUser(data);
       if (onSuccess) onSuccess(data);
     },
   });
@@ -30,8 +36,8 @@ export function useSignUpForm({ onSuccess } = {}) {
 
   const validate = () => {
     const newErrors = {};
-    if (!values.loginId.trim()) {
-      newErrors.loginId = 'Login Id is required';
+    if (!values.full_name.trim()) {
+      newErrors.full_name = 'Full name is required';
     }
     if (!values.email.trim()) {
       newErrors.email = 'Email is required';
@@ -40,8 +46,8 @@ export function useSignUpForm({ onSuccess } = {}) {
     }
     if (!values.password) {
       newErrors.password = 'Password is required';
-    } else if (values.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (values.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
     }
     if (values.password !== values.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';

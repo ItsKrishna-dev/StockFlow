@@ -1,64 +1,41 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
+import { receiptsApi } from '../../shared/api/operationsApi';
 import './ReceiptsList.css';
 
-const INITIAL_RECEIPTS = [
-  {
-    id: 'WH-IN-0001',
-    reference: 'WH/IN/0001',
-    fromLocation: 'vendor',
-    toLocation: 'WH/Stock',
-    contact: 'Acme Interior',
-    scheduledDate: '2023-12-01',
-    status: 'ready',
-    productsCount: 1,
-    purchaseOrder: 'P000042',
-  },
-  {
-    id: 'WH-IN-0002',
-    reference: 'WH/IN/0002',
-    fromLocation: 'vendor',
-    toLocation: 'WH/Stock2',
-    contact: 'Deco Addict',
-    scheduledDate: '2023-12-02',
-    status: 'draft',
-    productsCount: 2,
-    purchaseOrder: 'P000043',
-  },
-  {
-    id: 'WH-IN-0003',
-    reference: 'WH/IN/0003',
-    fromLocation: 'vendor',
-    toLocation: 'WH/Stock1',
-    contact: 'Azure Interior',
-    scheduledDate: '2023-12-05',
-    status: 'ready',
-    productsCount: 3,
-    purchaseOrder: 'P000045',
-  },
-  {
-    id: 'WH-IN-0004',
-    reference: 'WH/IN/0004',
-    fromLocation: 'vendor',
-    toLocation: 'WH/Stock',
-    contact: 'Geminate Tech',
-    scheduledDate: '2023-11-28',
-    status: 'done',
-    productsCount: 1,
-    purchaseOrder: 'P000039',
-  },
-];
+/** Map backend DocumentOut to display shape */
+function mapReceipt(doc) {
+  return {
+    id: doc.id,
+    reference: doc.document_number || `#${String(doc.id).slice(0, 8).toUpperCase()}`,
+    fromLocation: doc.source_location_id,
+    toLocation: doc.dest_location_id,
+    contact: doc.partner_id || '—',
+    scheduledDate: doc.created_at ? new Date(doc.created_at).toLocaleDateString() : '—',
+    status: doc.status,
+    productsCount: doc.lines?.length || 0,
+    purchaseOrder: doc.notes || '',
+  };
+}
 
 export default function ReceiptsListPage() {
   const navigate = useNavigate();
-  const [receipts, setReceipts] = useState(INITIAL_RECEIPTS);
+  const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [activeView, setActiveView] = useState('list'); // list | kanban
   const [toastMessage, setToastMessage] = useState('');
+
+  const { data: rawReceipts = [], isLoading, error } = useQuery({
+    queryKey: ['receipts'],
+    queryFn: () => receiptsApi.list(),
+  });
+
+  const receipts = useMemo(() => rawReceipts.map(mapReceipt), [rawReceipts]);
 
   const showToast = (msg) => {
     setToastMessage(msg);

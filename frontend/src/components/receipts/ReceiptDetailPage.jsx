@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '../../shared/config/routes';
 import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
+import { receiptsApi } from '../../shared/api/operationsApi';
 import './ReceiptDetail.css';
 
 const MOCK_RECEIPTS = [
@@ -82,20 +84,56 @@ const MOCK_RECEIPTS = [
 export default function ReceiptDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [receiptIndex, setReceiptIndex] = useState(() => {
-    if (id) {
-      const normalizedId = id.toLowerCase().replace(/-/g, '/');
-      const idx = MOCK_RECEIPTS.findIndex(
-        (r) =>
-          r.id.toLowerCase() === normalizedId ||
-          r.id.toLowerCase() === id.toLowerCase() ||
-          r.id.replace(/\//g, '-').toLowerCase() === id.toLowerCase()
-      );
-      if (idx !== -1) return idx;
-    }
-    return 0;
+  const queryClient = useQueryClient();
+
+  const { data: receiptDoc, isLoading, error } = useQuery({
+    queryKey: ['receipt', id],
+    queryFn: () => receiptsApi.get(id),
+    enabled: !!id,
   });
-  const [receiptsData, setReceiptsData] = useState(MOCK_RECEIPTS);
+
+  const validateMutation = useMutation({
+    mutationFn: () => receiptsApi.validate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['receipt', id] });
+      queryClient.invalidateQueries({ queryKey: ['receipts'] });
+      showToast('Receipt validated successfully!');
+    },
+    onError: (err) => showToast(err.message || 'Validation failed'),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => receiptsApi.cancel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['receipt', id] });
+      queryClient.invalidateQueries({ queryKey: ['receipts'] });
+      showToast('Receipt cancelled');
+    },
+    onError: (err) => showToast(err.message || 'Cancel failed'),
+  });
+
+  // Map backend DocumentOut to the view shape
+  const currentReceipt = useMemo(() => {
+    if (!receiptDoc) return null;
+    return {
+      id: receiptDoc.document_number || receiptDoc.id,
+      stage: receiptDoc.status,
+      scheduleDate: receiptDoc.created_at ? new Date(receiptDoc.created_at).toLocaleString() : '—',
+      receiveFrom: receiptDoc.partner_id || '—',
+      responsible: '—',
+      purchaseOrder: receiptDoc.notes || '—',
+      destinationLocation: receiptDoc.dest_location_id,
+      transfersCount: receiptDoc.lines?.length || 0,
+      products: (receiptDoc.lines || []).map((l, i) => ({
+        id: l.id || i + 1,
+        code: l.product_id,
+        name: l.product_id,
+        quantity: Number(l.quantity_expected),
+        unit: l.uom_id || 'Units',
+      })),
+      logs: [],
+    };
+  }, [receiptDoc]);
 
   const [activeTab, setActiveTab] = useState('operations'); // operations | additional | note
   const [showComposer, setShowComposer] = useState(false);
@@ -103,59 +141,23 @@ export default function ReceiptDetailPage() {
   const [composerText, setComposerText] = useState('');
   const [toastMessage, setToastMessage] = useState('');
 
-  const currentReceipt = receiptsData[receiptIndex] || receiptsData[0];
-
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3500);
   };
 
-  // Stage change handler
-  const handleStageChange = (newStage) => {
-    const updated = [...receiptsData];
-    const oldStage = currentReceipt.stage;
-    updated[receiptIndex] = {
-      ...currentReceipt,
-      stage: newStage,
-      logs: [
-        {
-          id: Date.now(),
-          author: 'Mitchell Admin',
-          isSystem: false,
-          time: new Date().toLocaleString(),
-          body: `Stage manually changed from ${oldStage.toUpperCase()} to ${newStage.toUpperCase()}.`,
-        },
-        ...currentReceipt.logs,
-      ],
-    };
-    setReceiptsData(updated);
-    showToast(`Status updated to ${newStage.toUpperCase()}`);
-  };
-
-  // Validate handler
+  // Validate handler — calls real API
   const handleValidate = () => {
-    if (currentReceipt.stage === 'done') {
-      showToast('Receipt is already validated and done.');
+    if (!currentReceipt || currentReceipt.stage === 'done') {
+      showToast('Receipt is already validated.');
       return;
     }
-    const updated = [...receiptsData];
-    updated[receiptIndex] = {
-      ...currentReceipt,
-      stage: 'done',
-      logs: [
-        {
-          id: Date.now(),
-          author: 'Automated Stock Control',
-          isSystem: true,
-          time: new Date().toLocaleString(),
-          stageTransition: { from: 'Ready', to: 'Done' },
-          body: 'Validated and received into WH/Stock inventory. Stock levels updated.',
-        },
-        ...currentReceipt.logs,
-      ],
-    };
-    setReceiptsData(updated);
-    showToast(`Receipt ${currentReceipt.id} successfully Validated!`);
+    validateMutation.mutate();
+  };
+
+  // Cancel handler — calls real API
+  const handleCancelOrder = () => {
+    cancelMutation.mutate();
   };
 
   // Add Product line
