@@ -6,6 +6,7 @@ is added.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.api.v1.adjustments import router as adjustments_router
 from app.api.v1.auth import router as auth_router
@@ -17,6 +18,7 @@ from app.api.v1.receipts import router as receipts_router
 from app.api.v1.transfers import router as transfers_router
 from app.api.v1.warehouses import router as warehouses_router
 from app.core.config import settings
+from app.core.database import AsyncSessionLocal
 
 app = FastAPI(
     title="StockSense API",
@@ -52,12 +54,13 @@ async def health_check() -> dict:
 
 @app.get("/health/db", tags=["system"])
 async def database_health_check() -> dict:
-    from sqlalchemy import text
-
-    from app.core.database import AsyncSessionLocal
-
     async with AsyncSessionLocal() as session:
         result = await session.execute(text("SELECT current_database(), now()"))
         database_name, server_time = result.one()
 
-    return {"status": "ok", "database": database_name, "server_time": server_time.isoformat()}
+    return {
+        "status": "ok",
+        "database": database_name,
+        "server_time": server_time.isoformat(),
+    }
+
