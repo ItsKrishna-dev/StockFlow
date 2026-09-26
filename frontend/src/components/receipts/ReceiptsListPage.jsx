@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../../shared/config/routes';
 import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
 import './ReceiptsList.css';
 
-export const INITIAL_RECEIPTS = [
+const INITIAL_RECEIPTS = [
   {
     id: 'WH-IN-0001',
     reference: 'WH/IN/0001',

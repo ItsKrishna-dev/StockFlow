@@ -1,10 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './DeliveryOrders.css';
 import DeliveryDetailModal from './DeliveryDetailModal';
 import NewDeliveryModal from './NewDeliveryModal';
 import DeliveryOrderDetailView from './DeliveryOrderDetailView';
-import { ROUTES } from '../../shared/config/routes';
 import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
 
@@ -88,13 +86,11 @@ const INITIAL_ORDERS = [
 ];
 
 export default function DeliveryOrdersPage() {
-  const navigate = useNavigate();
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ready');
   const [activeView, setActiveView] = useState('list');
-  const [activeTab, setActiveTab] = useState('delivery-orders');
   const [toastMessage, setToastMessage] = useState('');
   
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);

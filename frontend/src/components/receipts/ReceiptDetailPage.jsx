@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { ROUTES } from '../../shared/config/routes';
 import { AppHeader } from '../../widgets/app-header';
@@ -82,23 +82,20 @@ const MOCK_RECEIPTS = [
 export default function ReceiptDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [receiptIndex, setReceiptIndex] = useState(0);
-  const [receiptsData, setReceiptsData] = useState(MOCK_RECEIPTS);
-
-  useEffect(() => {
+  const [receiptIndex, setReceiptIndex] = useState(() => {
     if (id) {
       const normalizedId = id.toLowerCase().replace(/-/g, '/');
-      const idx = receiptsData.findIndex(
+      const idx = MOCK_RECEIPTS.findIndex(
         (r) =>
           r.id.toLowerCase() === normalizedId ||
           r.id.toLowerCase() === id.toLowerCase() ||
           r.id.replace(/\//g, '-').toLowerCase() === id.toLowerCase()
       );
-      if (idx !== -1) {
-        setReceiptIndex(idx);
-      }
+      if (idx !== -1) return idx;
     }
-  }, [id, receiptsData]);
+    return 0;
+  });
+  const [receiptsData, setReceiptsData] = useState(MOCK_RECEIPTS);
 
   const [activeTab, setActiveTab] = useState('operations'); // operations | additional | note
   const [showComposer, setShowComposer] = useState(false);

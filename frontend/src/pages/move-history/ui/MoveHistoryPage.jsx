@@ -75,7 +75,7 @@ const INITIAL_MOVES = [
 
 export default function MoveHistoryPage() {
   const navigate = useNavigate();
-  const [moves, setMoves] = useState(INITIAL_MOVES);
+  const [moves] = useState(INITIAL_MOVES);
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
