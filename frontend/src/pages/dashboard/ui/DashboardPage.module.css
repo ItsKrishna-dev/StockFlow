@@ -26,6 +26,53 @@
   gap: 24px;
 }
 
+/* ── Stats Strip ─────────────────────────────────────────────────────────── */
+.statsStrip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .statsStrip { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1024px) {
+  .statsStrip { grid-template-columns: repeat(5, 1fr); }
+}
+
+.statCard {
+  background: #ffffff;
+  border: 1px solid #d1c3ca;
+  border-left: 4px solid #57344f;
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.statCard:hover {
+  box-shadow: 0 4px 16px rgba(87, 52, 79, 0.1);
+  transform: translateY(-1px);
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: #57344f;
+  line-height: 1.1;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #80747a;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+}
+
+/* ── KPI Grid ────────────────────────────────────────────────────────────── */
 .kpiGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -33,7 +80,63 @@
 }
 
 @media (min-width: 768px) {
-  .kpiGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .kpiGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Quick Links ─────────────────────────────────────────────────────────── */
+.quickLinks {
+  background: #ffffff;
+  border: 1px solid #d1c3ca;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.quickLinksTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: #80747a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 14px 0;
+}
+
+.quickLinksGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .quickLinksGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .quickLinksGrid { grid-template-columns: repeat(8, 1fr); }
+}
+
+.quickLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1b1c1c;
+  border: 1px solid #efeded;
+  background: #fbf9f8;
+  transition: all 0.15s;
+  text-align: center;
+}
+.quickLink:hover {
+  background: #efeded;
+  border-color: #d1c3ca;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.quickLinkLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #4e444a;
 }

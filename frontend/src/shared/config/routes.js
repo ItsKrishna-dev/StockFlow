@@ -11,6 +11,8 @@ export const ROUTES = {
   DELIVERY_DETAIL: '/delivery-orders/:id',
   RECEIPTS: '/receipts',
   RECEIPT_DETAIL: '/receipts/:id',
+  TRANSFERS: '/transfers',
+  ADJUSTMENTS: '/adjustments',
   MOVE_HISTORY: '/move-history',
   SETTINGS: '/settings',
   WAREHOUSE_SETTINGS: '/settings/warehouse',
