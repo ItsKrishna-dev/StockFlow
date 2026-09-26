@@ -231,3 +231,108 @@ async def test_cancel_document(
     # Cannot validate a canceled document
     val_res = await manager_client.post(f"/api/v1/receipts/{doc_id}/validate")
     assert val_res.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_list_documents_eager_loading_lines(
+    manager_client: httpx.AsyncClient,
+    staff_client: httpx.AsyncClient,
+    seed_data: dict,
+):
+    """
+    Test 2: Verify all list endpoints (receipts, deliveries, transfers, adjustments, move-history)
+    safely return documents with eagerly loaded lines across isolated requests without lazy-loading / MissingGreenlet errors.
+    """
+    unique = uuid.uuid4().hex[:6].upper()
+    sku = f"EAGER-{unique}"
+    uom_id = str(seed_data["uom_pcs"].id)
+    wh_id = str(seed_data["warehouse"].id)
+    loc_vendor = str(seed_data["loc_vendor"].id)
+    loc_main = str(seed_data["loc_main"].id)
+    loc_prod = str(seed_data["loc_prod"].id)
+    loc_cust = str(seed_data["loc_cust"].id)
+
+    # Create product
+    prod = (await manager_client.post(
+        "/api/v1/products",
+        json={"sku": sku, "name": f"Eager Item {sku}", "uom_id": uom_id},
+    )).json()
+    prod_id = prod["id"]
+
+    # 1. Create Receipt & validate
+    rcpt_res = await staff_client.post(
+        "/api/v1/receipts",
+        json={
+            "vendor_location_id": loc_vendor,
+            "internal_location_id": loc_main,
+            "warehouse_id": wh_id,
+            "lines": [{"product_id": prod_id, "uom_id": uom_id, "quantity_expected": 100.0}],
+        },
+    )
+    assert rcpt_res.status_code == 201
+    rcpt_id = rcpt_res.json()["id"]
+    await staff_client.patch(
+        f"/api/v1/receipts/{rcpt_id}/lines/{rcpt_res.json()['lines'][0]['id']}",
+        json={"quantity_done": 100.0},
+    )
+    await manager_client.post(f"/api/v1/receipts/{rcpt_id}/validate")
+
+    # 2. Create Transfer
+    trf_res = await staff_client.post(
+        "/api/v1/transfers",
+        json={
+            "source_location_id": loc_main,
+            "dest_location_id": loc_prod,
+            "warehouse_id": wh_id,
+            "lines": [{"product_id": prod_id, "uom_id": uom_id, "quantity_expected": 30.0}],
+        },
+    )
+    assert trf_res.status_code == 201
+    trf_id = trf_res.json()["id"]
+
+    # 3. Create Delivery
+    deliv_res = await staff_client.post(
+        "/api/v1/deliveries",
+        json={
+            "internal_location_id": loc_main,
+            "customer_location_id": loc_cust,
+            "warehouse_id": wh_id,
+            "lines": [{"product_id": prod_id, "uom_id": uom_id, "quantity_expected": 10.0}],
+        },
+    )
+    assert deliv_res.status_code == 201
+    deliv_id = deliv_res.json()["id"]
+
+    # 4. Create Adjustment
+    adj_res = await staff_client.post(
+        "/api/v1/adjustments",
+        json={
+            "internal_location_id": loc_main,
+            "warehouse_id": wh_id,
+            "lines": [{"product_id": prod_id, "uom_id": uom_id, "counted_quantity": 65.0, "reason": "Stock check count"}],
+        },
+    )
+    assert adj_res.status_code == 201
+    adj_id = adj_res.json()["id"]
+
+    # Now verify all list endpoints with fresh requests:
+    endpoints = [
+        ("/api/v1/receipts", rcpt_id),
+        ("/api/v1/transfers", trf_id),
+        ("/api/v1/deliveries", deliv_id),
+        ("/api/v1/adjustments", adj_id),
+        ("/api/v1/ledger/move-history", rcpt_id),
+    ]
+
+    for path, expected_id in endpoints:
+        res = await staff_client.get(path)
+        assert res.status_code == 200, f"Failed at {path}: {res.text}"
+        docs = res.json()
+        assert isinstance(docs, list)
+        matching = [d for d in docs if d["id"] == expected_id]
+        assert len(matching) == 1, f"Expected document {expected_id} not found in {path}"
+        doc = matching[0]
+        assert "lines" in doc
+        assert len(doc["lines"]) >= 1, f"Lines not populated in {path}"
+        assert doc["lines"][0]["product_id"] == prod_id
+

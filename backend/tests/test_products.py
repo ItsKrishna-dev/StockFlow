@@ -147,14 +147,24 @@ async def test_reorder_rules(
             "min_qty": 10.0,
             "max_qty": 100.0,
             "reorder_qty": 50.0,
+            "lead_time_days": 7.0,
+            "safety_stock_qty": 15.0,
         },
     )
     assert rr_res.status_code == 201, rr_res.text
     rule = rr_res.json()
     assert rule["product_id"] == prod_id
     assert rule["is_active"] is True
+    assert float(rule["lead_time_days"]) == 7.0
+    assert float(rule["safety_stock_qty"]) == 15.0
 
     # Staff lists reorder rules
     list_res = await staff_client.get(f"/api/v1/reorder-rules?product_id={prod_id}")
     assert list_res.status_code == 200
-    assert len(list_res.json()) >= 1
+    rules = list_res.json()
+    assert len(rules) >= 1
+    matched = next((r for r in rules if r["id"] == rule["id"]), None)
+    assert matched is not None
+    assert float(matched["lead_time_days"]) == 7.0
+    assert float(matched["safety_stock_qty"]) == 15.0
+
