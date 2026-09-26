@@ -5,15 +5,19 @@ Audit and projection services over stock_ledger and stock_documents.
 Read-only queries — nothing in this service writes to the database.
 """
 import uuid
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased, selectinload
 
-from sqlalchemy.orm import selectinload
-
-from app.features.ledger.schemas import LedgerEntryOut, StockTimelineOut
+from app.features.ledger.schemas import (
+    LedgerEntryOut,
+    ProductLedgerSummaryOut,
+    StockTimelineOut,
+)
 from app.models.models import (
     Location,
     Product,
@@ -122,3 +126,137 @@ async def explain_product_stock(
         current_total_quantity=current_total,
         entries=entries,
     )
+
+
+async def get_ledger_document(db: AsyncSession, document_id: uuid.UUID) -> StockDocument:
+    """Retrieve full detail of a single document with lines."""
+    result = await db.execute(
+        select(StockDocument)
+        .options(selectinload(StockDocument.lines))
+        .where(StockDocument.id == document_id)
+    )
+    document = result.scalar_one_or_none()
+    if document is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+    return document
+
+
+async def get_product_ledger_summary(
+    db: AsyncSession,
+    product_id: uuid.UUID,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+) -> ProductLedgerSummaryOut:
+    """Aggregate stock movements for a product over a given date range using SQL aggregation."""
+    product = await db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    now = datetime.now(timezone.utc)
+    if date_to is None:
+        date_to = now
+    elif date_to.tzinfo is None:
+        date_to = date_to.replace(tzinfo=timezone.utc)
+
+    if date_from is None:
+        date_from = date_to - timedelta(days=30)
+    elif date_from.tzinfo is None:
+        date_from = date_from.replace(tzinfo=timezone.utc)
+
+    source_loc_alias = aliased(Location)
+    dest_loc_alias = aliased(Location)
+
+    # 1. Opening balance before date_from
+    opening_query = (
+        select(
+            func.coalesce(
+                func.sum(
+                    case((dest_loc_alias.type == "internal", StockLedger.quantity), else_=Decimal("0"))
+                    - case((source_loc_alias.type == "internal", StockLedger.quantity), else_=Decimal("0"))
+                ),
+                Decimal("0"),
+            )
+        )
+        .join(dest_loc_alias, StockLedger.dest_location_id == dest_loc_alias.id)
+        .join(source_loc_alias, StockLedger.source_location_id == source_loc_alias.id)
+        .where(
+            StockLedger.product_id == product_id,
+            StockLedger.created_at < date_from,
+        )
+    )
+    opening_result = await db.execute(opening_query)
+    opening_quantity = Decimal(str(opening_result.scalar_one() or "0"))
+
+    # 2. SQL aggregation grouped by document type
+    period_query = (
+        select(
+            StockDocument.type.label("doc_type"),
+            func.sum(StockLedger.quantity).label("total_qty"),
+            func.sum(
+                case((dest_loc_alias.type == "internal", StockLedger.quantity), else_=Decimal("0"))
+            ).label("in_qty"),
+            func.sum(
+                case((source_loc_alias.type == "internal", StockLedger.quantity), else_=Decimal("0"))
+            ).label("out_qty"),
+            func.count(StockLedger.id).label("op_count"),
+            func.max(StockLedger.created_at).label("last_created_at"),
+        )
+        .join(StockDocumentLine, StockLedger.document_line_id == StockDocumentLine.id)
+        .join(StockDocument, StockDocumentLine.document_id == StockDocument.id)
+        .join(dest_loc_alias, StockLedger.dest_location_id == dest_loc_alias.id)
+        .join(source_loc_alias, StockLedger.source_location_id == source_loc_alias.id)
+        .where(
+            StockLedger.product_id == product_id,
+            StockLedger.created_at >= date_from,
+            StockLedger.created_at <= date_to,
+        )
+        .group_by(StockDocument.type)
+    )
+    period_result = await db.execute(period_query)
+    rows = period_result.all()
+
+    received_quantity = Decimal("0")
+    delivered_quantity = Decimal("0")
+    transferred_in = Decimal("0")
+    transferred_out = Decimal("0")
+    adjustment_quantity = Decimal("0")
+    operation_count = 0
+    last_movement_at: datetime | None = None
+
+    for row in rows:
+        operation_count += int(row.op_count)
+        if row.last_created_at:
+            if last_movement_at is None or row.last_created_at > last_movement_at:
+                last_movement_at = row.last_created_at
+
+        if row.doc_type == "receipt":
+            received_quantity += Decimal(str(row.total_qty or "0"))
+        elif row.doc_type == "delivery":
+            delivered_quantity += Decimal(str(row.total_qty or "0"))
+        elif row.doc_type == "internal_transfer":
+            transferred_in += Decimal(str(row.in_qty or "0"))
+            transferred_out += Decimal(str(row.out_qty or "0"))
+        elif row.doc_type == "adjustment":
+            adjustment_quantity += Decimal(str(row.in_qty or "0")) - Decimal(str(row.out_qty or "0"))
+
+    closing_quantity = opening_quantity + received_quantity - delivered_quantity + adjustment_quantity
+
+    return ProductLedgerSummaryOut(
+        product_id=product.id,
+        sku=product.sku,
+        name=product.name,
+        period={
+            "from": date_from.isoformat(),
+            "to": date_to.isoformat(),
+        },
+        opening_quantity=opening_quantity,
+        received_quantity=received_quantity,
+        delivered_quantity=delivered_quantity,
+        transferred_in=transferred_in,
+        transferred_out=transferred_out,
+        adjustment_quantity=adjustment_quantity,
+        closing_quantity=closing_quantity,
+        operation_count=operation_count,
+        last_movement_at=last_movement_at.isoformat() if last_movement_at else None,
+    )
+

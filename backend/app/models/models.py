@@ -151,6 +151,8 @@ class ReorderRule(Base):
     min_qty: Mapped[float] = mapped_column(Numeric(18, 3), nullable=False)
     max_qty: Mapped[float] = mapped_column(Numeric(18, 3), nullable=False)
     reorder_qty: Mapped[float] = mapped_column(Numeric(18, 3), nullable=False)
+    lead_time_days: Mapped[float] = mapped_column(Numeric(10, 2), default=0)
+    safety_stock_qty: Mapped[float] = mapped_column(Numeric(18, 3), default=0)
     is_active: Mapped[bool] = mapped_column(default=True)
 
 

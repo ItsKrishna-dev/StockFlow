@@ -31,3 +31,20 @@ class StockTimelineOut(BaseModel):
     name: str
     current_total_quantity: Decimal
     entries: list[LedgerEntryOut]
+
+
+class ProductLedgerSummaryOut(BaseModel):
+    product_id: uuid.UUID
+    sku: str
+    name: str
+    period: dict[str, str]
+    opening_quantity: Decimal
+    received_quantity: Decimal
+    delivered_quantity: Decimal
+    transferred_in: Decimal
+    transferred_out: Decimal
+    adjustment_quantity: Decimal
+    closing_quantity: Decimal
+    operation_count: int
+    last_movement_at: str | None = None
+

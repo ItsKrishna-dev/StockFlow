@@ -86,6 +86,9 @@ class ReorderRuleCreate(BaseModel):
     min_qty: Decimal = Field(ge=0)
     max_qty: Decimal = Field(ge=0)
     reorder_qty: Decimal = Field(gt=0)
+    lead_time_days: Decimal = Field(default=Decimal("0"), ge=0)
+    safety_stock_qty: Decimal = Field(default=Decimal("0"), ge=0)
+
 
 
 class ReorderRuleOut(ReorderRuleCreate):

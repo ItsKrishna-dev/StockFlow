@@ -9,13 +9,17 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.features.auth.router import router as auth_router
+from app.features.copilot.router import router as copilot_router
 from app.features.dashboard.router import router as dashboard_router
+from app.features.integrity.router import router as integrity_router
 from app.features.ledger.router import router as ledger_router
 from app.features.operations.adjustments_router import router as adjustments_router
 from app.features.operations.deliveries_router import router as deliveries_router
 from app.features.operations.receipts_router import router as receipts_router
 from app.features.operations.transfers_router import router as transfers_router
 from app.features.products.router import router as products_router
+from app.features.recommendations.router import router as recommendations_router
+from app.features.risk.router import router as risk_router
 from app.features.warehouses.router import router as warehouses_router
 
 app = FastAPI(
@@ -44,6 +48,14 @@ app.include_router(transfers_router, prefix=API_PREFIX)
 app.include_router(adjustments_router, prefix=API_PREFIX)
 app.include_router(ledger_router, prefix=API_PREFIX)
 app.include_router(dashboard_router, prefix=API_PREFIX)
+app.include_router(integrity_router, prefix=API_PREFIX)
+app.include_router(recommendations_router, prefix=API_PREFIX)
+app.include_router(risk_router, prefix=API_PREFIX)
+app.include_router(copilot_router, prefix=API_PREFIX)
+
+
+
+
 
 
 @app.get("/health", tags=["system"])

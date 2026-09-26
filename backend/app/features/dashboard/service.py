@@ -22,29 +22,36 @@ from app.models.models import (
 PENDING_STATUSES = ("draft", "waiting", "ready")
 
 
+def build_warehouse_stock_subquery():
+    """Subquery returning total stock quantity grouped by (product_id, warehouse_id) for internal locations."""
+    return (
+        select(
+            StockQuant.product_id,
+            Location.warehouse_id,
+            func.sum(StockQuant.quantity).label("total_qty"),
+        )
+        .join(Location, StockQuant.location_id == Location.id)
+        .where(Location.type == "internal")
+        .group_by(StockQuant.product_id, Location.warehouse_id)
+        .subquery()
+    )
+
+
 async def get_kpis(db: AsyncSession) -> DashboardKPIs:
     total_products_result = await db.execute(
         select(func.count()).select_from(Product).where(Product.is_active.is_(True))
     )
     total_products = int(total_products_result.scalar_one())
 
-    product_totals = (
-        select(
-            StockQuant.product_id,
-            func.sum(StockQuant.quantity).label("total_qty"),
-        )
-        .join(Location, StockQuant.location_id == Location.id)
-        .where(Location.type == "internal")
-        .group_by(StockQuant.product_id)
-        .subquery()
-    )
+    product_totals = build_warehouse_stock_subquery()
 
     low_stock_result = await db.execute(
         select(func.count())
         .select_from(ReorderRule)
         .outerjoin(
             product_totals,
-            product_totals.c.product_id == ReorderRule.product_id,
+            (product_totals.c.product_id == ReorderRule.product_id)
+            & (product_totals.c.warehouse_id == ReorderRule.warehouse_id),
         )
         .where(
             ReorderRule.is_active.is_(True),
@@ -58,7 +65,8 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
         .select_from(ReorderRule)
         .outerjoin(
             product_totals,
-            product_totals.c.product_id == ReorderRule.product_id,
+            (product_totals.c.product_id == ReorderRule.product_id)
+            & (product_totals.c.warehouse_id == ReorderRule.warehouse_id),
         )
         .where(
             ReorderRule.is_active.is_(True),
@@ -108,16 +116,7 @@ async def get_kpis(db: AsyncSession) -> DashboardKPIs:
 
 
 async def get_low_stock_items(db: AsyncSession) -> list[LowStockItem]:
-    product_totals = (
-        select(
-            StockQuant.product_id,
-            func.sum(StockQuant.quantity).label("total_qty"),
-        )
-        .join(Location, StockQuant.location_id == Location.id)
-        .where(Location.type == "internal")
-        .group_by(StockQuant.product_id)
-        .subquery()
-    )
+    product_totals = build_warehouse_stock_subquery()
 
     query = (
         select(
@@ -132,7 +131,11 @@ async def get_low_stock_items(db: AsyncSession) -> list[LowStockItem]:
         )
         .join(ReorderRule, ReorderRule.product_id == Product.id)
         .outerjoin(Warehouse, Warehouse.id == ReorderRule.warehouse_id)
-        .outerjoin(product_totals, product_totals.c.product_id == Product.id)
+        .outerjoin(
+            product_totals,
+            (product_totals.c.product_id == Product.id)
+            & (product_totals.c.warehouse_id == ReorderRule.warehouse_id),
+        )
         .where(
             Product.is_active.is_(True),
             ReorderRule.is_active.is_(True),
