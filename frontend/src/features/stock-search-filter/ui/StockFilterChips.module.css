@@ -1,0 +1,71 @@
+.bar {
+  width: 100%;
+  background-color: var(--stockflow-surface-subtle);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--stockflow-border);
+}
+
+.activeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--stockflow-primary);
+  color: #FFFFFF;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  user-select: none;
+}
+
+.chipCloseBtn {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  opacity: 0.8;
+}
+
+.chipCloseBtn:hover {
+  opacity: 1;
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #FFFFFF;
+  color: var(--stockflow-text-secondary);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--stockflow-border);
+  cursor: pointer;
+  transition: var(--stockflow-transition);
+  user-select: none;
+}
+
+.filterChip:hover {
+  background-color: #EAE8E7;
+  color: var(--stockflow-text-primary);
+}
+
+.customFilter {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--stockflow-primary);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.customFilter:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,142 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 48px;
+  background-color: var(--stockflow-primary);
+  color: #FFFFFF;
+  z-index: 50;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.inner {
+  height: 100%;
+  width: 100%;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  padding: 6px;
+  border-radius: var(--stockflow-radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--stockflow-transition);
+}
+
+.iconBtn:hover {
+  background-color: var(--stockflow-primary-hover);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-right: 8px;
+  user-select: none;
+}
+
+.appBadge {
+  font-size: 11px;
+  font-weight: 600;
+  background-color: #57344f;
+  color: #f0bfe0;
+  padding: 2px 6px;
+  border-radius: var(--stockflow-radius);
+  text-transform: lowercase;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.navLink {
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: var(--stockflow-radius);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--stockflow-transition);
+}
+
+.navLink:hover {
+  background-color: var(--stockflow-primary-hover);
+}
+
+.navLinkActive {
+  background-color: #57344f;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+}
+
+.notifWrapper {
+  position: relative;
+}
+
+.notifDot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #6ffbbe;
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 6px;
+}
+
+.userName {
+  font-size: 13px;
+  font-weight: 500;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .userName {
+    display: inline-block;
+  }
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #57344f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+}

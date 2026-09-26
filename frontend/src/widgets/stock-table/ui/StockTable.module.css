@@ -1,0 +1,319 @@
+.sheetContainer {
+  width: 100%;
+  background-color: #FFFFFF;
+  border-radius: var(--stockflow-radius);
+  border: 1px solid var(--stockflow-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.theadRow {
+  background-color: var(--stockflow-surface-subtle);
+  border-bottom: 1px solid var(--stockflow-border);
+  height: 36px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--stockflow-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.th {
+  padding: 6px 16px;
+}
+
+.thCheckbox {
+  width: 40px;
+  text-align: center;
+}
+
+.thRight {
+  text-align: right;
+}
+
+.thCenter {
+  text-align: center;
+}
+
+.tbody {
+  divide-y: 1px solid var(--stockflow-border);
+}
+
+.tr {
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.tr:hover {
+  background-color: #f9f5f8;
+}
+
+.td {
+  padding: 8px 16px;
+  color: var(--stockflow-text-primary);
+  vertical-align: middle;
+}
+
+.tdCheckbox {
+  text-align: center;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--stockflow-primary);
+}
+
+.productCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.productIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--stockflow-radius);
+  background-color: #efeded;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--stockflow-primary);
+  flex-shrink: 0;
+}
+
+.productInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.productTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--stockflow-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.productCode {
+  font-size: 11px;
+  color: var(--stockflow-text-secondary);
+}
+
+.textRight {
+  text-align: right;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.costCell {
+  font-weight: 500;
+}
+
+.quantityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--stockflow-radius);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.freeToUseBadge {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+.greenDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+.statusPill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background-color: rgba(0, 99, 152, 0.1);
+  color: #006398;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.actionsCell {
+  width: 48px;
+  text-align: center;
+}
+
+.actionIconBtn {
+  background: transparent;
+  border: none;
+  color: var(--stockflow-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--stockflow-radius);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.tr:hover .actionIconBtn {
+  opacity: 1;
+}
+
+.actionIconBtn:hover {
+  color: var(--stockflow-primary);
+  background-color: #efeded;
+}
+
+.addLineRow {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--stockflow-border);
+}
+
+.btnAddLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--stockflow-primary);
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.15s ease;
+}
+
+.btnAddLine:hover {
+  text-decoration: underline;
+}
+
+.editingRow {
+  background-color: #fcf9fb;
+}
+
+.editInput {
+  height: 28px;
+  padding: 2px 8px;
+  font-size: 13px;
+  border: 1px solid var(--stockflow-primary);
+  border-radius: var(--stockflow-radius);
+  outline: none;
+  background-color: #FFFFFF;
+}
+
+/* Aggregation footer */
+.aggregationFooter {
+  width: 100%;
+  background-color: var(--stockflow-surface-subtle);
+  border-top: 1px solid var(--stockflow-border);
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--stockflow-text-secondary);
+}
+
+@media (min-width: 640px) {
+  .aggregationFooter {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.aggLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.aggItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aggValue {
+  font-weight: 600;
+  color: var(--stockflow-text-primary);
+}
+
+.aggValueHighlight {
+  font-weight: 600;
+  color: #047857;
+}
+
+.aggRight {
+  display: flex;
+  align-items: center;
+}
+
+.totalValueBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #efeded;
+  padding: 4px 12px;
+  border-radius: var(--stockflow-radius);
+}
+
+.totalLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--stockflow-text-secondary);
+}
+
+.totalAmount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--stockflow-primary);
+}
+
+.helperSection {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--stockflow-text-secondary);
+  padding: 0 4px;
+}
+
+.helperTip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.helperMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -1,0 +1,18 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--stockflow-bg);
+}
+
+.mainContent {
+  flex: 1;
+  padding-top: 48px; /* space for fixed header */
+  display: flex;
+  flex-direction: column;
+}
+
+.canvasWrapper {
+  width: 100%;
+  padding: 16px;
+}
