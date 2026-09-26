@@ -53,6 +53,9 @@ It supports:
 
 > **Core invariant:** Stock changes only through a validated, traceable movement between source and destination locations.
 
+<div align="center">
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
+</div>
 
 ## Features
 
@@ -92,7 +95,9 @@ Every validated operation creates an append-only ledger entry. PostgreSQL trigge
 - **Risk Center:** identifies large adjustments, frequent adjustments, repeated cancellations, and recurring stockout patterns.
 - **AI copilot:** answers fixed read-only inventory questions using verified backend data. It cannot execute SQL, create documents, validate operations, or modify stock.
 
-
+<div align="center">
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
+</div>
 
 ## Architecture
 
@@ -160,6 +165,10 @@ backend/app/features/
 Each feature contains its own router, service, and schemas. Shared configuration, security, database, and ORM models live under `backend/app/core/` and `backend/app/models/`.
 
 
+<div align="center">
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
+</div>
+
 ## Database Design
 
 
@@ -183,6 +192,9 @@ Important PostgreSQL protections:
 - Database constraints prevent invalid quantities and locations.
 - Internal stock deductions use row-level locking.
 
+<div align="center">
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
+</div>
 
 ## Quickstart
 
@@ -299,6 +311,10 @@ VITE_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
 
+<div align="center">
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
+</div>
+
 ## Testing
 
 
@@ -323,6 +339,9 @@ curl http://localhost:8000/health/db
 
 The test suite covers authentication, operations, dashboard warehouse scoping, eager loading, ledger summaries, integrity checks, replenishment recommendations, risk rules, and copilot behavior.
 
+<div align="center">
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
+</div>
 
 ## Scope
 
@@ -345,11 +364,6 @@ The current hackathon scope intentionally excludes:
 
 
 This project is licensed under the [MIT License](LICENSE).
-
-
-<div align="center">
-<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
-</div>
 
 
 ![Wave](https://raw.githubusercontent.com/mayhemantt/mayhemantt/Update/svg/Bottom.svg)
