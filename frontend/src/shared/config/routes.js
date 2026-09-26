@@ -11,4 +11,6 @@ export const ROUTES = {
   RECEIPT_DETAIL: '/receipts/:id',
   MOVE_HISTORY: '/move-history',
   SETTINGS: '/settings',
+  WAREHOUSE_SETTINGS: '/settings/warehouse',
+  LOCATION_SETTINGS: '/settings/location',
 };

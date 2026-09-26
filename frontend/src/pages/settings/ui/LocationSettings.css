@@ -1,0 +1,61 @@
+/* ==========================================================================
+   StockFlow Enterprise - Location Settings Styles
+   ========================================================================== */
+
+.location-settings-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: 48px;
+  background-color: #f7f5f2;
+  color: #2f2937;
+  font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sub-locations table */
+.sublocations-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.sublocations-table thead {
+  background-color: #f8f9fa;
+  border-bottom: 1.5px solid #e8e4ec;
+}
+
+.sublocations-table th {
+  padding: 8px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #756f82;
+  letter-spacing: 0.04em;
+}
+
+.sublocations-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0edf2;
+  vertical-align: middle;
+}
+
+.sublocations-table tbody tr:hover {
+  background-color: #f7f3f6;
+}
+
+.status-pill-inservice {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #d1fae5;
+  color: #047857;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}

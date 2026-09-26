@@ -37,7 +37,7 @@ export function AppHeader({ user = { name: 'Mitchell Admin' } }) {
       return location.pathname === ROUTES.MOVE_HISTORY;
     }
     if (itemPath === ROUTES.SETTINGS) {
-      return location.pathname === ROUTES.SETTINGS;
+      return location.pathname.startsWith('/settings');
     }
     return location.pathname === itemPath;
   };

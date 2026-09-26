@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { ROUTES } from '../../shared/config/routes';
 import { AppHeader } from '../../widgets/app-header';
 import { AppFooter } from '../../widgets/app-footer';
@@ -81,8 +81,25 @@ const MOCK_RECEIPTS = [
 
 export default function ReceiptDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [receiptIndex, setReceiptIndex] = useState(0);
   const [receiptsData, setReceiptsData] = useState(MOCK_RECEIPTS);
+
+  useEffect(() => {
+    if (id) {
+      const normalizedId = id.toLowerCase().replace(/-/g, '/');
+      const idx = receiptsData.findIndex(
+        (r) =>
+          r.id.toLowerCase() === normalizedId ||
+          r.id.toLowerCase() === id.toLowerCase() ||
+          r.id.replace(/\//g, '-').toLowerCase() === id.toLowerCase()
+      );
+      if (idx !== -1) {
+        setReceiptIndex(idx);
+      }
+    }
+  }, [id, receiptsData]);
+
   const [activeTab, setActiveTab] = useState('operations'); // operations | additional | note
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState('note'); // note | message
@@ -207,9 +224,27 @@ export default function ReceiptDetailPage() {
               Inventory
             </Link>
             <span className="crumb-separator">/</span>
-            <span className="crumb-parent" onClick={() => navigate(ROUTES.RECEIPTS)}>
-              Receipts
-            </span>
+            <button
+              className="back-link-btn"
+              type="button"
+              onClick={() => navigate(ROUTES.RECEIPTS)}
+              title="Back to Receipts list"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#714b67',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '0 4px',
+                fontSize: '14px',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>arrow_back</span>
+              <span>Receipts</span>
+            </button>
             <span className="crumb-separator">/</span>
             <span className="crumb-current">{currentReceipt.id}</span>
           </div>
