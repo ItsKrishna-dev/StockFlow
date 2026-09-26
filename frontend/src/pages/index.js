@@ -1,5 +1,6 @@
 export * from './login';
 export * from './signup';
+export * from './forgot-password';
 export * from './dashboard';
 export * from './stock';
 export * from './settings';

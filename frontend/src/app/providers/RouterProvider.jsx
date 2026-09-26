@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import {
   LoginPage,
   SignUpPage,
+  ForgotPasswordPage,
   DashboardPage,
   StockPage,
   WarehouseSettingsPage,
@@ -25,6 +26,7 @@ export function AppRouterProvider() {
         {/* Authentication Routes */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.SIGNUP} element={<SignUpPage />} />
+        <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
 
         {/* Core Inventory Routes */}
         <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />

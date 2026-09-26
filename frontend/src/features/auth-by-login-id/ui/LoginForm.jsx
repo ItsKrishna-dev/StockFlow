@@ -67,9 +67,9 @@ export function LoginForm() {
 
       {/* Below the button: Two small text links side by side */}
       <div className={styles.footerLinks}>
-        <a href="#forgot-password" className={styles.forgotLink}>
+        <Link to={ROUTES.FORGOT_PASSWORD} className={styles.forgotLink}>
           Forgot Password?
-        </a>
+        </Link>
         <Link to={ROUTES.SIGNUP} className={styles.signupLink}>
           Sign up
         </Link>
