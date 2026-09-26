@@ -42,10 +42,11 @@ async def create_receipt(
 @router.get("", response_model=list[DocumentOut])
 async def list_receipts(
     status: str | None = None,
+    warehouse_id: uuid.UUID | None = None,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[DocumentOut]:
-    docs = await service.list_documents(db, doc_type="receipt", status_filter=status)
+    docs = await service.list_documents(db, doc_type="receipt", status_filter=status, warehouse_id=warehouse_id)
     return [DocumentOut.model_validate(d) for d in docs]
 
 
@@ -56,6 +57,16 @@ async def get_receipt(
     _: User = Depends(get_current_user),
 ) -> DocumentOut:
     document = await service.get_document(db, document_id)
+    return DocumentOut.model_validate(document)
+
+
+@router.post("/{document_id}/mark-ready", response_model=DocumentOut)
+async def mark_receipt_ready(
+    document_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> DocumentOut:
+    document = await service.mark_document_ready(db, document_id)
     return DocumentOut.model_validate(document)
 
 

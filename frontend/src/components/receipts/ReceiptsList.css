@@ -504,19 +504,85 @@
   border-color: #714b67;
 }
 
-/* Kanban Cards Grid */
-.receipts-kanban-grid {
+/* Kanban Columns Board */
+.receipts-kanban-board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
   padding: 12px 24px 24px;
+  align-items: flex-start;
+}
+
+@media (max-width: 992px) {
+  .receipts-kanban-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+.receipts-kanban-column {
+  background-color: #f3f0f5;
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid #e5dfea;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.receipts-kanban-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e0d8e6;
+}
+
+.kanban-col-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanban-col-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot-draft { background-color: #756f82; }
+.dot-ready { background-color: #0284c7; }
+.dot-done { background-color: #006443; }
+
+.kanban-col-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #2f2937;
+}
+
+.kanban-col-count {
+  background-color: #e8e2ee;
+  color: #714b67;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.receipts-kanban-col-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
 }
 
 .receipt-kanban-card {
   background-color: #ffffff;
   border-radius: 6px;
   border: 1px solid #e8e4ec;
-  padding: 16px;
+  padding: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
@@ -532,26 +598,29 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .kanban-ref {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14.5px;
   color: #714b67;
 }
 
 .kanban-contact {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #2f2937;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .kanban-route {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #756f82;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .kanban-footer {
@@ -559,9 +628,283 @@
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid #f0edf2;
-  padding-top: 10px;
+  padding-top: 8px;
+  font-size: 11.5px;
+  color: #756f82;
+}
+
+.kanban-empty-col {
+  padding: 24px 12px;
+  text-align: center;
+  color: #9d96a6;
+  font-size: 12.5px;
+  font-style: italic;
+}
+
+/* Warehouse Selector */
+.receipts-warehouse-selector-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #d1c3ca;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.receipts-warehouse-select {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2f2937;
+  outline: none;
+  cursor: pointer;
+  max-width: 240px;
+}
+
+/* Modal Overlay & Card */
+.receipts-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(47, 41, 55, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+
+.receipts-modal-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.receipts-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e8e4ec;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #faf8fb;
+}
+
+.receipts-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #2f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receipts-modal-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #756f82;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  border-radius: 4px;
+}
+
+.receipts-modal-close-btn:hover {
+  background-color: #ede8f0;
+  color: #2f2937;
+}
+
+.receipts-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.receipts-modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .receipts-modal-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.receipts-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.receipts-field-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #57344f;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.receipts-field-label span {
+  color: #ba1a1a;
+}
+
+.receipts-field-input,
+.receipts-field-select {
+  border: 1px solid #d1c3ca;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  color: #2f2937;
+  outline: none;
+  transition: border-color 0.2s ease;
+  background-color: #ffffff;
+}
+
+.receipts-field-input:focus,
+.receipts-field-select:focus {
+  border-color: #714b67;
+  box-shadow: 0 0 0 2px rgba(113, 75, 103, 0.15);
+}
+
+.receipts-lines-section {
+  border-top: 1px solid #e8e4ec;
+  padding-top: 14px;
+}
+
+.receipts-lines-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.receipts-lines-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.receipts-lines-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.receipts-lines-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background-color: #f7f5f9;
+  border-bottom: 1px solid #e0d8e6;
   font-size: 12px;
   color: #756f82;
+  font-weight: 600;
+}
+
+.receipts-lines-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0edf2;
+}
+
+.btn-add-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f7f5f9;
+  border: 1px dashed #714b67;
+  color: #714b67;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-line:hover {
+  background-color: #714b67;
+  color: #ffffff;
+}
+
+.btn-remove-line {
+  background: transparent;
+  border: none;
+  color: #ba1a1a;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  border-radius: 4px;
+}
+
+.btn-remove-line:hover {
+  background-color: #ffebee;
+}
+
+.receipts-modal-footer {
+  padding: 14px 20px;
+  background-color: #faf8fb;
+  border-top: 1px solid #e8e4ec;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-modal-cancel {
+  background-color: transparent;
+  border: 1px solid #d1c3ca;
+  color: #57344f;
+  padding: 7px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modal-cancel:hover {
+  background-color: #ede8f0;
+}
+
+.btn-modal-submit {
+  background-color: #714b67;
+  border: 1px solid #714b67;
+  color: #ffffff;
+  padding: 7px 18px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(113, 75, 103, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-modal-submit:hover:not(:disabled) {
+  background-color: #57344f;
+  transform: translateY(-1px);
+}
+
+.btn-modal-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* Toast */
@@ -579,6 +922,6 @@
   align-items: center;
   gap: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-  z-index: 1000;
+  z-index: 10000;
   animation: fadeIn 0.2s ease;
 }

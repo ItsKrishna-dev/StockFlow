@@ -20,10 +20,13 @@ function formatDocNumber(doc) {
 
 export const receiptsApi = {
   /**
-   * GET /api/v1/receipts?status=...
+   * GET /api/v1/receipts?status=...&warehouse_id=...
    */
-  async list(status) {
-    const query = status ? `?status=${status}` : '';
+  async list({ status, warehouse_id } = {}) {
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.set('status', status);
+    if (warehouse_id && warehouse_id !== 'all') params.set('warehouse_id', warehouse_id);
+    const query = params.toString() ? `?${params.toString()}` : '';
     return apiClient.get(`/receipts${query}`);
   },
 
@@ -49,6 +52,13 @@ export const receiptsApi = {
       quantity_done,
       reason,
     });
+  },
+
+  /**
+   * POST /api/v1/receipts/{id}/mark-ready
+   */
+  async markReady(id) {
+    return apiClient.post(`/receipts/${id}/mark-ready`);
   },
 
   /**

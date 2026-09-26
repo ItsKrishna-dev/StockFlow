@@ -942,3 +942,15 @@
     transform: translateY(0);
   }
 }
+
+.btn-print-done {
+  background-color: #006443 !important;
+  color: #ffffff !important;
+  border-color: #006443 !important;
+  font-weight: 700 !important;
+}
+
+.btn-print-done:hover {
+  background-color: #004d34 !important;
+}
+
